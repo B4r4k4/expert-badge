@@ -1,0 +1,51 @@
+/* exam additions: domain weights, exam-style questions */
+.domains .wt b{font-size:44px}
+.domains .dn{display:block;font-size:12px;font-weight:600;color:var(--gold-deep);margin-bottom:2px}
+.domains .du{margin-top:8px!important;font-size:13.5px}
+.domains .du a{border-bottom:1px solid var(--gold);color:var(--navy)}
+.domains .du a:hover{color:var(--gold-deep)}
+
+.mcq{list-style:none;padding:0!important;margin:8px 0 24px!important;counter-reset:none}
+.mq{margin:0 0 20px!important;border:.67px solid var(--gold);border-radius:18px;padding:22px 24px}
+.mq-meta{display:flex;align-items:center;gap:12px;margin:0 0 10px!important;font-size:13.5px;color:var(--muted)}
+.mq-meta .qn{margin:0}
+.mq-meta em{font-style:normal;margin-inline-start:auto;font-size:12px;font-weight:600;color:var(--gold-deep);border:.67px solid var(--hair);border-radius:999px;padding:1px 10px}
+.mq-stem{font-family:var(--f-display);font-weight:700;font-size:18.5px;line-height:1.75;margin:0 0 14px!important}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{appearance:none;display:flex;gap:12px;align-items:flex-start;text-align:start;width:100%;background:none;border:1px solid var(--hair);border-radius:14px;padding:12px 14px;font:400 16px/1.7 var(--f-body);color:var(--navy);cursor:pointer;transition:border-color .2s,background .2s}
+.opt:hover:not([disabled]){border-color:var(--navy);background:var(--paper-2)}
+.opt .ol{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--gold);display:grid;place-items:center;font:700 13px var(--f-display);color:var(--gold-deep);margin-top:1px}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:#3E7B5B;background:#EAF2EC}
+.opt.right .ol{background:#3E7B5B;border-color:#3E7B5B;color:#fff}
+.opt.wrong{border-color:#A24B3C;background:#F6E9E5}
+.opt.wrong .ol{background:#A24B3C;border-color:#A24B3C;color:#fff}
+.mq-exp{margin-top:14px;padding:16px 18px;background:var(--paper-2);border-radius:12px;animation:fadeUp .4s var(--ease)}
+.mq-exp p{margin:0!important;font-size:16px;line-height:1.85;color:var(--navy-2)}
+.mq .table-wrap{margin-bottom:14px}
+@media (max-width:600px){ .mq{padding:18px 16px} .domains .wt b{font-size:34px} }
+@media print{ .mq-exp{display:block!important} }
+@media (max-width:1000px){ .reader{grid-template-columns:minmax(0,1fr)} .toc,.prose{min-width:0} }
+.prose{overflow-wrap:anywhere}
+
+/* beginner layer: plain idea, example, definitions, then the exam detail */
+.simple{background:var(--paper-2);border-radius:18px;padding:20px 24px;margin:0 0 16px}
+.simple p{margin:0 0 10px!important}
+.simple p:last-child{margin-bottom:0!important}
+.simple.before{margin-top:24px;border-inline-start:3px solid var(--gold)}
+.example{border:.67px dashed var(--gold-deep);border-radius:18px;padding:18px 24px;margin:0 0 16px}
+.example p{margin:0!important}
+.terms{border:.67px solid var(--gold);border-radius:18px;padding:18px 24px 8px;margin:0 0 20px}
+.terms dl{margin:0}
+.terms dl>div{padding:10px 0;border-top:.67px solid var(--hair)}
+.terms dl>div:first-child{border-top:0;padding-top:4px}
+.terms dt{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.terms dt b{font-family:var(--f-display);font-size:18px}
+.terms dt span{font:500 13px var(--f-mono);color:var(--gold-deep)}
+.terms dd{margin:4px 0 0;font-size:16px;line-height:1.8;color:var(--navy-2)}
+.deep-label{display:flex;align-items:center;gap:12px;margin:8px 0 16px!important;font-size:13px;font-weight:600;color:var(--gold-deep)}
+.deep-label::after{content:"";flex:1;height:.67px;background:var(--hair)}
+.gu{display:block;margin-top:2px;font-size:13px}
+.gu a{color:var(--gold-deep);border-bottom:1px solid var(--hair)}
+@media (max-width:600px){ .simple,.example,.terms{padding-inline:16px} }
+.simple .tag,.example .tag,.terms .tag{font-size:13.5px}
