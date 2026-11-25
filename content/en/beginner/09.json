@@ -159,7 +159,7 @@
           "def": "An attempt to recover the original text, or part of it, from its vectors. This is why vectors of personal data are treated as personal data."
         },
         {
-          "ar": "الشبكة الطرفية",
+          "ar": "أوامر الصدفة (سطر الأوامر)",
           "en": "Shell command",
           "def": "Operating-system commands that control the server directly. Executing model outputs as system commands is very dangerous."
         }

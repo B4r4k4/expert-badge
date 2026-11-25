@@ -902,7 +902,7 @@
               "p": "When C_FN is much larger than C_FP, the two formulas become practically equal. In both cases the optimal threshold lies far below 0.5. (Charging $10 on the 1,940 true positives of model Z as well adds about $19,000 and changes no ranking.)"
             },
             {
-              "quote": "The default threshold of 0.5 is not sacred: when a miss is hundreds of times more expensive, the optimal threshold falls to about a hundredth."
+              "quote": "The default threshold of 0.5 is not sacred: when a miss is hundreds of times more expensive, the optimal threshold falls to a fraction of one percent."
             }
           ]
         },

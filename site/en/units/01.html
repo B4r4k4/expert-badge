@@ -308,7 +308,7 @@
 <p>If the review cost is paid on <strong>every</strong> flag (fraud or not), the rule is:</p>
 <p class="formula" dir="ltr">P &gt; C_FP / C_FN</p>
 <p>When C_FN is much larger than C_FP, the two formulas become practically equal. In both cases the optimal threshold lies far below 0.5. (Charging $10 on the 1,940 true positives of model Z as well adds about $19,000 and changes no ranking.)</p>
-<blockquote>The default threshold of 0.5 is not sacred: when a miss is hundreds of times more expensive, the optimal threshold falls to about a hundredth.</blockquote>
+<blockquote>The default threshold of 0.5 is not sacred: when a miss is hundreds of times more expensive, the optimal threshold falls to a fraction of one percent.</blockquote>
 <h3 id="s5-5">4.5 Cost Arithmetic on One Page</h3>
 <div class="simple"><span class="tag">In Plain Terms</span><p>Almost all cost questions depend on two formulas. The first is for machines: <strong>hourly price × number of hours × number of machines</strong>. The second is for language models via an API: <strong>number of requests × (question tokens × their price + answer tokens × their price)</strong>.</p><p>Two important pieces of information: answer tokens are usually three to five times more expensive than question tokens. Arabic text often needs more tokens than English for the same meaning, so it costs more.</p></div>
 <div class="example"><span class="tag">Real-World Example</span><p>A machine priced at 3 dollars per hour running 24 hours for 30 days: 3 × 24 × 30 = 2,160 dollars per month. If it were scheduled to run only 12 hours a day: 3 × 12 × 30 = 1,080 dollars. Half the cost just by changing the running schedule.</p></div>
