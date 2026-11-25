@@ -1,0 +1,1325 @@
+{
+  "intro": "Terms are grouped by domain. The Arabic equivalent follows common Saudi usage and SDAIA terminology; where the English term is used as it is in Arabic technical speech, both forms are given. Search in Arabic or English, read the definition, then go back to the unit that explains the term when you need the detail.",
+  "terms": [
+    {
+      "ar": "الدقة الكلية",
+      "en": "Accuracy",
+      "def": "Share of all predictions that are correct.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الدقة (Precision)",
+      "en": "Precision",
+      "def": "Of the predicted positives, the share that are truly positive.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الاستدعاء / الحساسية",
+      "en": "Recall / sensitivity",
+      "def": "Of the actual positives, the share the model captures.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "النوعية",
+      "en": "Specificity",
+      "def": "Of the actual negatives, the share correctly rejected.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "مقياس F1",
+      "en": "F1 score",
+      "def": "Harmonic mean of precision and recall.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "مصفوفة الالتباس",
+      "en": "Confusion matrix",
+      "def": "Table of the counts of true positives, false positives, true negatives and false negatives (TP, FP, TN, FN).",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "المساحة تحت منحنى ROC",
+      "en": "ROC-AUC",
+      "def": "Quality of the model’s ranking of cases across all thresholds.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "المساحة تحت منحنى الدقة–الاستدعاء",
+      "en": "PR-AUC",
+      "def": "Ranking quality with a focus on the positive class; preferred when classes are imbalanced.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "العتبة",
+      "en": "Threshold",
+      "def": "The score cut-off that turns a probability into a decision.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "المعايرة",
+      "en": "Calibration",
+      "def": "Agreement between predicted probabilities and the observed frequencies.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "عدم توازن الفئات",
+      "en": "Class imbalance",
+      "def": "One class being far rarer than the others.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "تسريب البيانات",
+      "en": "Data leakage",
+      "def": "Using information in training that is not available at prediction time.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "فرط الملاءمة",
+      "en": "Overfitting",
+      "def": "The model memorises its training data and generalises poorly to new data.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "نقص الملاءمة",
+      "en": "Underfitting",
+      "def": "A model too simple to capture the pattern in the data.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "مفاضلة الانحياز والتباين",
+      "en": "Bias–variance trade-off",
+      "def": "The balance between errors from oversimplification and excessive sensitivity to the data.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "التحقق المتقاطع",
+      "en": "Cross-validation",
+      "def": "Repeated train/validation splits that give a stable estimate of performance.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "التقسيم الزمني",
+      "en": "Time-based split",
+      "def": "Training on past data and testing on later data.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "التقسيم بالمجموعة",
+      "en": "Group split",
+      "def": "Keeping all records of a single entity (such as a patient or customer) in one split.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "هندسة الميزات",
+      "en": "Feature engineering",
+      "def": "Building useful, informative inputs for the model.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "مخزن الميزات",
+      "en": "Feature store",
+      "def": "A system that defines, stores and serves features consistently between training and production.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الصحة الزمنية",
+      "en": "Point-in-time correctness",
+      "def": "Computing features only from the data that was available at that moment.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "ترميز الهدف",
+      "en": "Target encoding",
+      "def": "Replacing categories with outcome statistics, computed out-of-fold to avoid leakage.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الترميز الأحادي",
+      "en": "One-hot encoding",
+      "def": "A separate binary column for each category.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "تعويض القيم المفقودة",
+      "en": "Imputation",
+      "def": "Filling missing values with estimated values.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "القيمة الشاذة",
+      "en": "Outlier",
+      "def": "An observation far from the rest of the observations.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الأشجار المعززة بالتدرج",
+      "en": "Gradient-boosted trees",
+      "def": "Sequential trees, each correcting the errors of its predecessors.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الغابة العشوائية",
+      "en": "Random forest",
+      "def": "The average of a large number of randomised trees.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الانحدار اللوجستي",
+      "en": "Logistic regression",
+      "def": "A linear model that outputs probabilities.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "العنقدة",
+      "en": "Clustering",
+      "def": "Grouping similar records without labels.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "كشف الشذوذ",
+      "en": "Anomaly detection",
+      "def": "Finding records that deviate from usual behaviour.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "تقليل الأبعاد",
+      "en": "Dimensionality reduction",
+      "def": "Compressing features into fewer dimensions (such as PCA and UMAP).",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "انجراف البيانات",
+      "en": "Data drift",
+      "def": "A change in the distribution of the inputs compared with what the model was trained on.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "انجراف المفهوم",
+      "en": "Concept drift",
+      "def": "A change in the relationship between inputs and outputs.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "انحراف التدريب عن الخدمة",
+      "en": "Training–serving skew",
+      "def": "A difference in how features are computed between training and production.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "مؤشر استقرار المجتمع",
+      "en": "PSI",
+      "def": "Population Stability Index: a measure of distribution shift.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الاتفاق بين المُوسِّمين",
+      "en": "Inter-annotator agreement",
+      "def": "How consistent human labels are across annotators, measured for example by kappa.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "التعلّم النشط",
+      "en": "Active learning",
+      "def": "Labelling the most informative samples first.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "البيانات الاصطناعية",
+      "en": "Synthetic data",
+      "def": "Generated data that imitates real data.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "اختبار أ/ب",
+      "en": "A/B test",
+      "def": "A randomised comparison between two versions.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الدلالة الإحصائية",
+      "en": "Statistical significance",
+      "def": "A result that is unlikely to have arisen by chance alone.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "فترة الثقة",
+      "en": "Confidence interval",
+      "def": "The range likely to contain an estimated value.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "نمذجة الأثر الصافي",
+      "en": "Uplift modelling",
+      "def": "Predicting the causal effect of an action (such as an offer or a call) on each individual.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "قيم SHAP",
+      "en": "SHAP",
+      "def": "Each feature’s contribution to a prediction, based on Shapley values.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "مقاييس خطأ الانحدار",
+      "en": "WAPE / MAE / RMSE",
+      "def": "Error metrics for forecasting and regression.",
+      "domain": "Data and machine-learning foundations"
+    },
+    {
+      "ar": "الشبكة العصبية",
+      "en": "Neural network",
+      "def": "Layers of weighted sums and non-linear activations.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الانتشار العكسي",
+      "en": "Backpropagation",
+      "def": "Computing gradients using the chain rule.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "معدل التعلّم",
+      "en": "Learning rate",
+      "def": "The size of the step by which the weights are updated.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "المُحسِّن",
+      "en": "Optimiser (Adam/AdamW)",
+      "def": "An algorithm that updates the weights from the gradients.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الحقبة / الدفعة",
+      "en": "Epoch / batch",
+      "def": "An epoch is one full pass over the data; a batch is the portion used in each step.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الإسقاط",
+      "en": "Dropout",
+      "def": "Randomly disabling units during training to reduce overfitting.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "نقل التعلّم",
+      "en": "Transfer learning",
+      "def": "Reusing a pre-trained model for a new task.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الشبكة الالتفافية",
+      "en": "CNN",
+      "def": "A network that uses convolutional filters, mostly for images.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "المحوِّل",
+      "en": "Transformer",
+      "def": "An architecture based on self-attention.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الانتباه الذاتي",
+      "en": "Self-attention",
+      "def": "A mechanism in which each token weighs all the other tokens in the sequence.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الانتباه متعدد الرؤوس",
+      "en": "Multi-head attention",
+      "def": "Several attention operations running in parallel.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الانتباه المجمّع / أحادي الاستعلام",
+      "en": "GQA / MQA",
+      "def": "Sharing key and value heads across query heads to reduce the size of the KV cache.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "ذاكرة المفاتيح والقيم المؤقتة",
+      "en": "KV cache",
+      "def": "Stored keys and values that are reused during generation instead of being recomputed.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الترميز الموضعي الدوّار",
+      "en": "RoPE",
+      "def": "Rotary positional encoding, which represents the relative positions of tokens.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الانتباه السريع",
+      "en": "FlashAttention",
+      "def": "A memory-efficient kernel that computes exact attention.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "خليط الخبراء",
+      "en": "Mixture of Experts (MoE)",
+      "def": "A router that sends each token to a small number of expert sub-networks.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "النموذج اللغوي الكبير",
+      "en": "Large language model (LLM)",
+      "def": "A transformer trained on huge amounts of text to predict tokens.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "النموذج اللغوي الصغير",
+      "en": "Small language model (SLM)",
+      "def": "A compact model (according to SDAIA, fewer than 5 billion parameters) for edge devices or low cost.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الرمز",
+      "en": "Token",
+      "def": "The unit of text that the model processes.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "المُرمِّز",
+      "en": "Tokenizer",
+      "def": "A tool that splits text into tokens (such as BPE and SentencePiece).",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الخصوبة",
+      "en": "Fertility",
+      "def": "The number of tokens per word; higher for Arabic in tokenisers designed for English.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "نافذة السياق",
+      "en": "Context window",
+      "def": "The maximum number of tokens the model can attend to.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التضمين",
+      "en": "Embedding",
+      "def": "A vector that represents meaning.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التدريب المسبق",
+      "en": "Pre-training",
+      "def": "Learning to predict the next token on massive data.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الضبط الدقيق",
+      "en": "Fine-tuning",
+      "def": "Additional training on the data of a specific task.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الضبط الإشرافي",
+      "en": "SFT",
+      "def": "Fine-tuning on pairs of instructions and answers.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التعلّم المعزز من التغذية الراجعة البشرية",
+      "en": "RLHF",
+      "def": "A reward model with reinforcement learning to align the model with human preferences.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التحسين المباشر للتفضيلات",
+      "en": "DPO",
+      "def": "Alignment with preferences without a reward model.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الضبط الدقيق كفء المعاملات",
+      "en": "PEFT",
+      "def": "Training only a small fraction of the model’s parameters.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التكييف منخفض الرتبة",
+      "en": "LoRA / QLoRA",
+      "def": "Low-rank adapters trained on top of the base model; QLoRA applies them to a 4-bit quantised base.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التكميم",
+      "en": "Quantisation",
+      "def": "Reducing the numerical precision of weights and activations.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التقطير",
+      "en": "Distillation",
+      "def": "Training a small model to imitate a large one.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التقليم",
+      "en": "Pruning",
+      "def": "Removing weights, heads or layers from the model.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الحرارة",
+      "en": "Temperature",
+      "def": "The degree of randomness in sampling during generation.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "أخذ العينات النووي / أعلى k",
+      "en": "Top-p / top-k",
+      "def": "Restricting sampling to the most probable tokens.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الهلوسة",
+      "en": "Hallucination",
+      "def": "Confident output that is unsupported or wrong.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التأريض بالمصادر",
+      "en": "Grounding",
+      "def": "Basing answers on sources provided to the model.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "هندسة الأوامر",
+      "en": "Prompt engineering",
+      "def": "Designing the instructions given to models.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "هندسة السياق",
+      "en": "Context engineering",
+      "def": "Building the system that assembles the information and tools given to the model on each call.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "تسلسل الأفكار",
+      "en": "Chain-of-thought",
+      "def": "Step-by-step reasoning within the output.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التعلّم بأمثلة قليلة",
+      "en": "Few-shot",
+      "def": "Including examples in the prompt to guide the model.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الوكيل",
+      "en": "Agent",
+      "def": "An LLM-based system that plans and calls tools to achieve a goal.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الذكاء الاصطناعي التوكيلي",
+      "en": "Agentic AI",
+      "def": "AI with autonomy in planning and execution.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "استدعاء الأدوات / الدوال",
+      "en": "Tool / function calling",
+      "def": "The model emits structured calls to external functions.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "بروتوكول سياق النموذج",
+      "en": "MCP",
+      "def": "An open standard for connecting LLM applications to tools and data.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "متعدد الوسائط",
+      "en": "Multimodal",
+      "def": "Able to handle text, images, audio and video.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "نموذج الانتشار",
+      "en": "Diffusion model",
+      "def": "A model that generates images by gradually removing noise.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التزييف العميق",
+      "en": "Deepfake",
+      "def": "Synthetic media that impersonates real people or events.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "البرمجة التوليدية",
+      "en": "Vibe coding",
+      "def": "Software development that relies heavily on AI assistants.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "الحيرة",
+      "en": "Perplexity",
+      "def": "The natural exponential of the language model’s loss: exp(loss).",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "النموذج كمحكِّم",
+      "en": "LLM-as-judge",
+      "def": "Using a language model to evaluate outputs.",
+      "domain": "Deep learning and generative AI"
+    },
+    {
+      "ar": "التوليد المعزز بالاسترجاع",
+      "en": "RAG",
+      "def": "Retrieving relevant documents and then generating from them.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "التقطيع",
+      "en": "Chunking",
+      "def": "Splitting documents into retrievable pieces.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "قاعدة بيانات المتجهات",
+      "en": "Vector database",
+      "def": "A store that supports approximate nearest-neighbour search.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "البحث التقريبي عن أقرب الجيران",
+      "en": "ANN (HNSW, IVF)",
+      "def": "Indexes for fast approximate similarity search.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "البحث الهجين",
+      "en": "Hybrid search",
+      "def": "Combining keyword search (BM25) with vector search.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "BM25",
+      "en": "BM25",
+      "def": "A classic method for scoring a document’s relevance to keywords.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "دمج الرتب التبادلي",
+      "en": "Reciprocal Rank Fusion (RRF)",
+      "def": "Merging ranked lists by summing 1/(k + rank) for each document.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "مُعيد الترتيب",
+      "en": "Reranker",
+      "def": "A cross-encoder that re-scores the top candidates.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "الفهرسة التزايدية",
+      "en": "Incremental indexing",
+      "def": "Re-indexing only the documents that have changed.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "التقاط التغييرات",
+      "en": "Change data capture (CDC)",
+      "def": "Streaming database changes as events.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "الأمانة للمصادر",
+      "en": "Faithfulness",
+      "def": "The answer being supported by the retrieved context.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "الاستشهاد",
+      "en": "Citation",
+      "def": "A reference to the source of a claim.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "التخزين المؤقت الدلالي",
+      "en": "Semantic cache",
+      "def": "Reusing answers for questions that are similar in meaning.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "التخزين المؤقت للبادئة",
+      "en": "Prompt (prefix) caching",
+      "def": "Reusing computation for identical prompt prefixes.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "REST / gRPC",
+      "en": "REST / gRPC",
+      "def": "Two interface styles: JSON over HTTP, and binary-encoded remote procedure calls.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "أحداث مرسلة من الخادم",
+      "en": "Server-Sent Events (SSE)",
+      "def": "One-way streaming from the server to the client.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "خطاف الويب",
+      "en": "Webhook",
+      "def": "A callback that notifies the client that an event has occurred.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "مفتاح عدم التكرار",
+      "en": "Idempotency key",
+      "def": "A key that makes a retry safe from duplicated effects.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "التراجع الأُسّي",
+      "en": "Exponential backoff",
+      "def": "Increasing the waiting time between successive retries.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "قاطع الدائرة",
+      "en": "Circuit breaker",
+      "def": "A mechanism that stops calls to a failing dependency.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "تحديد المعدل",
+      "en": "Rate limiting",
+      "def": "Limiting the number of requests allowed per client.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "بوابة الواجهات البرمجية",
+      "en": "API gateway",
+      "def": "A central entry point for authentication, quotas and routing.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "بوابة النماذج اللغوية",
+      "en": "LLM gateway",
+      "def": "A central layer for routing requests to models, protecting data, controlling cost and applying guardrails.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "حواجز الحماية",
+      "en": "Guardrails",
+      "def": "Checks on inputs and outputs that enforce policies.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "المخرجات المهيكلة",
+      "en": "Structured output",
+      "def": "Output constrained to a defined schema (such as JSON).",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "OAuth 2.0 / JWT",
+      "en": "OAuth 2.0 / JWT",
+      "def": "Delegated authorisation for access / signed tokens.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "TLS المتبادل",
+      "en": "mTLS",
+      "def": "Authentication of both parties using certificates.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "قابلية الرصد",
+      "en": "Observability",
+      "def": "Metrics, logs and traces that explain a system’s behaviour.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "التتبّع",
+      "en": "Trace",
+      "def": "The path of a single request across the system’s components.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "اختبار العقد",
+      "en": "Contract test",
+      "def": "Verifying agreement on the interface schema between provider and consumer.",
+      "domain": "Engineering, integration and RAG"
+    },
+    {
+      "ar": "عمليات تعلّم الآلة",
+      "en": "MLOps",
+      "def": "Practices for building, deploying and operating models reliably.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "عمليات النماذج اللغوية",
+      "en": "LLMOps",
+      "def": "MLOps adapted to cover prompts, retrieval, tokens and the risks of language models.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "التكامل / التسليم / التدريب المستمر",
+      "en": "CI / CD / CT",
+      "def": "Automated testing, release and retraining.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "سجل النماذج",
+      "en": "Model registry",
+      "def": "A catalogue of models with their versions and metadata.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "بطاقة النموذج",
+      "en": "Model card",
+      "def": "A document that sets out the intended use, data, metrics and limitations.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "تتبّع الأصل",
+      "en": "Lineage",
+      "def": "A record of what produced each asset (data, model or output).",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "النشر الظلي",
+      "en": "Shadow deployment",
+      "def": "Running the new model on live traffic without it serving users.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "إطلاق الكناري",
+      "en": "Canary release",
+      "def": "Gradually exposing the new release to a small share of traffic.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "النشر الأزرق–الأخضر",
+      "en": "Blue–green deployment",
+      "def": "Two identical environments with an instant switch, and an instant rollback, between them.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "التراجع",
+      "en": "Rollback",
+      "def": "Returning to the previous version.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "مؤشر / هدف / اتفاقية مستوى الخدمة",
+      "en": "SLI / SLO / SLA",
+      "def": "A measured indicator / an internal target / an external contract.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "ميزانية الخطأ",
+      "en": "Error budget",
+      "def": "The amount of unreliability allowed: 1 − SLO.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "كمون المئين 95 / 99",
+      "en": "p95 / p99 latency",
+      "def": "The latency below which 95% / 99% of requests fall.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "زمن أول رمز",
+      "en": "TTFT",
+      "def": "Time to first token.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "الإنتاجية",
+      "en": "Throughput",
+      "def": "The number of requests or tokens processed per second.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "النسخة",
+      "en": "Replica",
+      "def": "An identical instance of the service.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "التوسع التلقائي",
+      "en": "Autoscaling",
+      "def": "Adjusting the number of replicas according to load.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "التوسع الأفقي / الرأسي",
+      "en": "Horizontal / vertical scaling",
+      "def": "More instances / a larger instance.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "البداية الباردة",
+      "en": "Cold start",
+      "def": "The delay in starting a new instance and loading the model into it.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "التجميع المستمر",
+      "en": "Continuous batching",
+      "def": "Dynamically adding requests to a batch that is already running.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "الانتباه المقسَّم لصفحات",
+      "en": "PagedAttention",
+      "def": "Managing the KV cache in pages.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "التوليد التخميني",
+      "en": "Speculative decoding",
+      "def": "A small draft model proposes tokens and the large model verifies them.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "المعالج الرسومي / ذاكرة HBM",
+      "en": "GPU / HBM",
+      "def": "A parallel-compute accelerator / its high-bandwidth memory.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "تقسيم المعالج متعدد المثيلات",
+      "en": "MIG",
+      "def": "Partitioning a single GPU into isolated slices.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "توازي البيانات / الموترات / خط الأنابيب",
+      "en": "Data / tensor / pipeline parallelism",
+      "def": "Ways of distributing training across multiple processors.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "التجزئة الكاملة للحالة",
+      "en": "ZeRO / FSDP",
+      "def": "Sharding optimiser states, gradients and parameters across processors.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "الدقة المختلطة",
+      "en": "Mixed precision",
+      "def": "Computing in low precision (BF16/FP16) with master weights in FP32.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "مثيلات Spot (القابلة للاسترداد)",
+      "en": "Spot instance",
+      "def": "Discounted capacity that the provider may reclaim at any time.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "السعة المحجوزة",
+      "en": "Reserved capacity",
+      "def": "Capacity committed to in exchange for a discount.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "إدارة التكلفة السحابية",
+      "en": "FinOps",
+      "def": "Financial accountability for cloud spending.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "هدف نقطة / زمن الاستعادة",
+      "en": "RPO / RTO",
+      "def": "The maximum acceptable data loss / the maximum acceptable downtime after a disaster.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "الموسِّع الأفقي للحاويات",
+      "en": "Kubernetes HPA",
+      "def": "An autoscaler for containers (pods) based on metrics.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "الذكاء الاصطناعي الطرفي",
+      "en": "Edge AI",
+      "def": "Running inference on devices close to the data source.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "قانون ليتل",
+      "en": "Little's Law",
+      "def": "Concurrency = arrival rate × time spent in the system.",
+      "domain": "MLOps, reliability and infrastructure"
+    },
+    {
+      "ar": "الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا)",
+      "en": "SDAIA",
+      "def": "The national authority for data and artificial intelligence.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "مكتب إدارة البيانات الوطنية",
+      "en": "NDMO",
+      "def": "An office within SDAIA that issues data-management policies.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الهيئة الوطنية للأمن السيبراني",
+      "en": "NCA",
+      "def": "The national authority for cybersecurity; its controls include ECC, CCC and DCC.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "نظام حماية البيانات الشخصية",
+      "en": "PDPL",
+      "def": "The Saudi Personal Data Protection Law (issued by Royal Decree No. M/19, as amended).",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "البيانات الشخصية",
+      "en": "Personal data",
+      "def": "Data that identifies a person directly or indirectly.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "البيانات الحساسة",
+      "en": "Sensitive data",
+      "def": "Special categories of personal data (health, genetic, biometric, beliefs, criminal records, etc.).",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "جهة التحكم / جهة المعالجة",
+      "en": "Controller / processor",
+      "def": "The controller determines the purpose and means of processing; the processor processes data on its behalf.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "صاحب البيانات الشخصية",
+      "en": "Data subject",
+      "def": "The person to whom the data relates.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "المسوّغ النظامي / الموافقة",
+      "en": "Lawful basis / consent",
+      "def": "The legal basis on which processing rests, including consent.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "تحديد الغرض",
+      "en": "Purpose limitation",
+      "def": "Using data only for the stated purpose.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "تقليل البيانات",
+      "en": "Data minimisation",
+      "def": "Collecting only the data that is necessary.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الاحتفاظ / الإتلاف",
+      "en": "Retention / destruction",
+      "def": "Keeping data only as long as needed, then destroying it.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "تقويم الأثر على حماية البيانات",
+      "en": "DPIA",
+      "def": "Assessing privacy risks before processing begins.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الإشعار بالتسرّب",
+      "en": "Breach notification",
+      "def": "Notifying SDAIA within 72 hours where harm may occur.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "النقل خارج المملكة",
+      "en": "Cross-border transfer",
+      "def": "Sending personal data outside the Kingdom.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "إخفاء الهوية",
+      "en": "Anonymisation",
+      "def": "Permanently and irreversibly removing the possibility of identifying a person.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الإخفاء الجزئي للهوية",
+      "en": "Pseudonymisation",
+      "def": "Replacing identifiers while retaining the ability to re-link them using a key.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "تصنيف البيانات",
+      "en": "Data classification",
+      "def": "Classification levels: top secret / secret / restricted / public.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "مبادئ أخلاقيات الذكاء الاصطناعي",
+      "en": "AI Ethics Principles",
+      "def": "The seven principles issued by SDAIA, applied across a four-stage lifecycle.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "النزاهة والإنصاف",
+      "en": "Fairness",
+      "def": "Principle 1: preventing bias and discrimination.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الخصوصية والأمن",
+      "en": "Privacy & Security",
+      "def": "Principle 2: protecting data, the system and model weights.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الإنسانية",
+      "en": "Humanity",
+      "def": "Principle 3: human-centredness and not manipulating people.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "المنافع الاجتماعية والبيئية",
+      "en": "Social & Environmental Benefits",
+      "def": "Principle 4: a positive social and environmental impact.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الموثوقية والسلامة",
+      "en": "Reliability & Safety",
+      "def": "Principle 5: operating to specification with human oversight.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الشفافية والقابلية للتفسير",
+      "en": "Transparency & Explainability",
+      "def": "Principle 6: a system that is understandable, traceable and disclosed.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "المساءلة والمسؤولية",
+      "en": "Accountability & Responsibility",
+      "def": "Principle 7: named responsible persons, oversight and redress for harm.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "مستويات المخاطر",
+      "en": "Risk levels",
+      "def": "Minimal or none · limited · high · unacceptable.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الإطار الوطني لإدارة مخاطر الذكاء الاصطناعي",
+      "en": "AI Risk Management Framework",
+      "def": "SDAIA’s 2026 framework: five stages, seven risk categories, and assessment by likelihood × impact.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الوسوم التحفيزية",
+      "en": "Incentive badges",
+      "def": "Optional badges with five levels of maturity in commitment to ethics.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الإنسان في الحلقة",
+      "en": "Human-in-the-loop",
+      "def": "Human approval within the decision-making path.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "حقن الأوامر",
+      "en": "Prompt injection",
+      "def": "Malicious instructions that hijack the model’s behaviour.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "كسر القيود",
+      "en": "Jailbreak",
+      "def": "Bypassing the model’s safety behaviour.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الوكالة المفرطة",
+      "en": "Excessive agency",
+      "def": "An agent that holds more permissions than it needs.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "تسميم البيانات",
+      "en": "Data poisoning",
+      "def": "Deliberately corrupting training data.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "استخراج النموذج",
+      "en": "Model extraction",
+      "def": "Copying a model through repeated queries.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "استدلال العضوية",
+      "en": "Membership inference",
+      "def": "Inferring whether a particular record was part of the training data.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الخصوصية التفاضلية",
+      "en": "Differential privacy",
+      "def": "A noise-based guarantee that limits the influence of any single individual on the results.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "التعلّم الموحّد",
+      "en": "Federated learning",
+      "def": "Training without centralising the raw data.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الحوسبة السرية",
+      "en": "Confidential computing",
+      "def": "Processing in encrypted memory that is isolated in hardware.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "التشفير أثناء التخزين / النقل",
+      "en": "Encryption at rest / in transit",
+      "def": "AES for storage, and TLS for networks.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "خدمة إدارة المفاتيح / وحدة الأمن العتادية",
+      "en": "KMS / HSM",
+      "def": "Managed storage of keys and key operations.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "منع فقدان البيانات",
+      "en": "DLP",
+      "def": "Detecting and preventing the exfiltration of sensitive data.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "العلامات المائية / إثبات المصدر",
+      "en": "Watermarking / provenance",
+      "def": "Labelling synthetic content and indicating its origin.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "نسبة الأثر المتفاوت",
+      "en": "Disparate impact ratio",
+      "def": "The ratio of selection rates (such as approval) between groups.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "المتغير البديل",
+      "en": "Proxy variable",
+      "def": "A feature correlated with a protected attribute that therefore carries its effect.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "الاختبار العدائي",
+      "en": "Red teaming",
+      "def": "Deliberate adversarial testing to uncover failures.",
+      "domain": "Responsible AI, security and governance"
+    },
+    {
+      "ar": "إثبات المفهوم",
+      "en": "Proof of concept (POC)",
+      "def": "A test of technical feasibility.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "المنتج الأدنى / التجربة",
+      "en": "MVP / pilot",
+      "def": "A limited launch that proves the value.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "العائد على الاستثمار",
+      "en": "ROI",
+      "def": "(Benefit − cost) ÷ cost.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "التكلفة الكلية للملكية",
+      "en": "Total cost of ownership (TCO)",
+      "def": "All the costs of building and operating the system over its lifetime.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "البناء / الشراء / الشراكة",
+      "en": "Build / buy / partner",
+      "def": "SDAIA’s three options for adopting AI.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "الارتهان للمورّد",
+      "en": "Vendor lock-in",
+      "def": "Costly dependence on a single vendor that is hard to leave.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "المنافسة على مرحلتين",
+      "en": "Two-stage competition",
+      "def": "A procurement method used when requirements are not yet clear.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "معايير القبول",
+      "en": "Acceptance criteria",
+      "def": "Testable conditions that define when the work is considered complete.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "مؤشر الأداء الرئيس",
+      "en": "KPI",
+      "def": "A metric tied to a business objective.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "مصفوفة المسؤوليات",
+      "en": "RACI",
+      "def": "Responsible, Accountable, Consulted and Informed.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "إدارة التغيير",
+      "en": "Change management",
+      "def": "Helping people adopt new ways of working.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "انحياز الأتمتة",
+      "en": "Automation bias",
+      "def": "Excessive trust in automated suggestions.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "اقتصاديات الوحدة",
+      "en": "Unit economics",
+      "def": "Cost and value per business unit (per answer, per case).",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "التصعيد",
+      "en": "Escalation",
+      "def": "Raising a problem to the party accountable for it.",
+      "domain": "Business and practice"
+    },
+    {
+      "ar": "إطار تبنّي الذكاء الاصطناعي",
+      "en": "AI Adoption Framework",
+      "def": "SDAIA’s framework: Orientations · Enablers · Outputs.",
+      "domain": "Business and practice"
+    }
+  ]
+}

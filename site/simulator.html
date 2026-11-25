@@ -608,6 +608,7 @@ function topbar() {
   return `<header class="topbar"><div class="wrap">
     <div class="brand"><div class="brand-mark" aria-hidden="true">AI</div><div><b>محاكي مهندس الذكاء الاصطناعي الخبير</b><span lang="en" dir="ltr">Expert AI Engineer · Exam Simulator</span></div></div>
     <nav class="tabs" role="tablist">${tabs.map(([k, t]) => `<button role="tab" aria-selected="${view === 'home' && homeTab === k}" data-act="tab" data-tab="${k}">${t}</button>`).join('')}</nav>
+    <div class="row" data-lang-links><a class="btn sm" href="index.html" hreflang="ar" lang="ar" style="margin-inline-start:8px;text-decoration:none">المنصة</a><a class="btn sm" href="en/simulator.html" hreflang="en" lang="en" style="margin-inline-start:8px;text-decoration:none">English</a></div>
   </div></header>`;
 }
 function countsByDiff() { const c = { easy: 0, medium: 0, hard: 0, very_hard: 0 }; BANK.forEach(q => { if (c[q.difficulty] !== undefined) c[q.difficulty]++; }); return c; }

@@ -1,0 +1,771 @@
+{
+  "before": [
+    "This unit is about **the Saudi rules**: SDAIA’s AI Ethics Principles, the National AI Risk Management Framework, the Personal Data Protection Law, data classification, and the principles for generative AI, deepfakes and the media. It is the second half of Domain 6.",
+    "This unit is different from the others: **the exam asks about the official names word for word**. [[ar:الخصوصية والأمن]] (“Privacy and Security”) is correct, and [[ar:الأمن والخصوصية]] (“Security and Privacy”) is wrong. So memorise the names as they are written in the tables, and do not rely on your own wording. The plain-language explanation here helps you **understand what they mean**, but it does not change their names.",
+    "You need these first: Unit 00 (Sections 5.6 and 5.7: personal data and SDAIA) and Unit 09 (Section 3.3: encryption does not cure a missing legal basis)."
+  ],
+  "sections": {
+    "1.1": {
+      "simple": [
+        "SDAIA (the Saudi Data and AI Authority) issued the **AI Ethics Principles**. They apply to anyone who develops, deploys or uses AI in the Kingdom: government, private and non-profit entities, and individuals. There are **seven principles**.",
+        "What they mean, in plain terms. **Integrity and Fairness**: the system does not wrong any group. **Privacy and Security**: it protects the data and the system itself. **Humanity**: it serves people and does not deceive or manipulate them. **Social and Environmental Benefits**: it benefits society and the environment. **Reliability and Safety**: it works as designed and poses no danger. **Transparency and Explainability**: people understand its decisions and know they are dealing with AI. **Accountability and Responsibility**: there are known people who are responsible."
+      ],
+      "example": "A way to memorise them: imagine a new employee in a government entity, and ask seven questions about him. Does he treat everyone fairly? (Integrity and Fairness). Does he keep visitors’ secrets? (Privacy and Security). Does he respect them and not deceive them? (Humanity). Is his work useful to society? (Social and Environmental Benefits). Does he do his job well, without dangerous mistakes? (Reliability and Safety). Does he explain his decisions? (Transparency and Explainability). Is there a manager responsible for him whom you can complain to? (Accountability and Responsibility).",
+      "terms": [
+        {
+          "ar": "مبادئ أخلاقيات الذكاء الاصطناعي",
+          "en": "AI Ethics Principles (SDAIA)",
+          "def": "SDAIA’s document that sets out the seven principles and their controls at each stage of the system lifecycle, together with the risk levels and the roles. Its current edition is 2025 according to the briefing note."
+        },
+        {
+          "ar": "التنميط",
+          "en": "Stereotyping / profiling",
+          "def": "Judging a person by the characteristics of their group rather than their own, or sorting individuals into moulds. Prohibited under the Integrity and Fairness principle."
+        },
+        {
+          "ar": "الأسماء الرسمية",
+          "en": "Official names",
+          "def": "The literal wording that appears in SDAIA’s documents. The exam treats any rewording as a wrong option, even if the meaning is close."
+        }
+      ]
+    },
+    "1.2": {
+      "simple": [
+        "Some principles are close, and the exam puts both in the options. There are three pairs, and each pair is settled by one question. **Transparency or Accountability?** If the problem is “the affected person does not understand, or does not know they are dealing with a machine”, it is Transparency. If it is “there is no responsible person, no logs, and no redress”, it is Accountability.",
+        "**Privacy and Security or Reliability and Safety?** Protecting the data, the model and lawful use → Privacy and Security. The system behaving correctly and safely, robustness and oversight → Reliability and Safety. **Integrity and Fairness or Humanity?** Unequal outcomes between groups → Integrity and Fairness. Manipulation, deception, or harm to dignity or culture → Humanity."
+      ],
+      "example": "Two cases that look alike. (1) “My application was rejected and no one told me why”: the affected person does not understand, so it is **Transparency and Explainability**. (2) “My application was rejected, and when I tried to object I found no body to object to and no one responsible”: no accountability and no redress, so it is **Accountability and Responsibility**. A third example: “a games app uses fake countdown timers to push children to buy”: this is not unfairness between groups but manipulation, so it is **Humanity**.",
+      "terms": [
+        {
+          "ar": "فخ الكلمة الواحدة",
+          "en": "One-word trap",
+          "def": "An exam option that differs from the correct one by a single word or by the order of two words, to test how precisely you memorised the official name."
+        },
+        {
+          "ar": "التعويض",
+          "en": "Redress",
+          "def": "Repairing the harm done to the affected person, such as correcting the decision or restoring the right. Part of the Accountability and Responsibility principle."
+        }
+      ]
+    },
+    "1.3": {
+      "simple": [
+        "**The four risk levels** in the Ethics Principles: **little or no risk** (such as a spam filter: compliance with the principles is recommended), **limited risk** (apply the principles), **high risk** (a risk to fundamental human rights: conformity assessment before and after deployment), and **unacceptable risk** (such as social scoring and exploiting children: not permitted at all).",
+        "**the lifecycle has four stages** under their official names: **Planning and Design**, then **Data Preparation**, then **Building and Performance Measurement**, then **Deployment and Monitoring**. The roles within the entity: the head of the entity or the Data Management Officer approves and oversees, the **Compliance Officer** is the strategic lead, the **AI Officer** is the operational lead, and the **AI System Assessor** audits. A warning: **registration with SDAIA is voluntary**, unlike the binding Personal Data Protection Law."
+      ],
+      "example": "The levels with examples. **Little or no**: a system that suggests a subject line for your email. **Limited**: a system that orders employees’ daily tasks. **High**: a system that decides who receives social support (it touches a fundamental right), so it needs a conformity assessment before and after deployment. **Unacceptable**: a system that gives every citizen a “social behaviour score” that affects their rights, which is entirely forbidden.",
+      "terms": [
+        {
+          "ar": "مستويات المخاطر",
+          "en": "Risk levels (Ethics Principles)",
+          "def": "The official classification in the Ethics Principles: little or no risk, limited risk, high risk, and unacceptable risk."
+        },
+        {
+          "ar": "تقييم المطابقة",
+          "en": "Conformity assessment",
+          "def": "Checking that the system conforms to the principles and controls. Required for high-risk systems before and after deployment."
+        },
+        {
+          "ar": "مسؤول الالتزام",
+          "en": "Compliance Officer",
+          "def": "The strategic lead for AI ethics in the entity; reports to the Data Management Officer."
+        },
+        {
+          "ar": "مسؤول الذكاء الاصطناعي",
+          "en": "AI Officer",
+          "def": "The operational lead for AI ethics in the entity; works with the data management team."
+        },
+        {
+          "ar": "مقيّم نظام الذكاء الاصطناعي",
+          "en": "AI System Assessor",
+          "def": "Audits AI systems, reviews feedback channels and indicators, and issues audit reports, including on third-party procurement."
+        },
+        {
+          "ar": "التسجيل الاختياري",
+          "en": "Voluntary registration",
+          "def": "The way SDAIA measures compliance with the principles. Voluntary, unlike the obligations of the Personal Data Protection Law, which carry penalties."
+        }
+      ]
+    },
+    "1.4": {
+      "simple": [
+        "The **National AI Risk Management Framework** (April 2026) is a **different** document from the Ethics Principles, and that is exactly what makes it a source of many traps. It is a tool for identifying, assessing and treating risks. It has **five stages**: Context and Scope Definition → Risk Identification → Risk Assessment → Risk Treatment → Monitoring and Review. **seven risk categories**.",
+        "The method of assessment: **likelihood** (1 to 4) × **impact** (1 to 4) = risk score. **1–2 low, 3–6 medium, 8–12 high, 16 catastrophic**. Four treatment options: **avoid**, **mitigate**, **transfer** (a contract or insurance, **which does not remove the entity’s responsibility**), and **accept** (residual risk within the limit, documented)."
+      ],
+      "example": "The calculation. A risk with likelihood “likely” (3) and impact “catastrophic” (4): 3 × 4 = 12, high. A risk with likelihood “almost certain” (4) and impact “low” (1): 4 × 1 = 4, only medium. Note that high likelihood alone does not make a risk high. Why do the ranges jump from 6 to 8? Because the product of two numbers from 1 to 4 can never be 5 or 7: the possible results are only 1, 2, 3, 4, 6, 8, 9, 12 and 16.",
+      "terms": [
+        {
+          "ar": "الإطار الوطني لإدارة مخاطر الذكاء الاصطناعي",
+          "en": "National AI Risk Management Framework",
+          "def": "An SDAIA framework (April 2026) for identifying, assessing, treating and monitoring AI risks, with five stages, seven risk categories, and scores from 1 to 16."
+        },
+        {
+          "ar": "الاحتمالية والأثر",
+          "en": "Likelihood × Impact",
+          "def": "Likelihood: rare, unlikely, likely, almost certain (1 to 4). Impact: low, medium, high, catastrophic (1 to 4). Their product is the risk score."
+        },
+        {
+          "ar": "خيارات المعالجة",
+          "en": "Treatment options",
+          "def": "Avoid (redesign or stop), mitigate (controls), transfer (contracts or insurance), and accept (documented, within the tolerance limit)."
+        },
+        {
+          "ar": "سجل المخاطر",
+          "en": "Risk register",
+          "def": "A register that documents every risk, its assessment, its treatment decision, the justification and the owner."
+        },
+        {
+          "ar": "الخطر المتبقي",
+          "en": "Residual risk",
+          "def": "What remains of the risk after the controls are applied; it must be formally accepted or escalated."
+        }
+      ]
+    },
+    "1.5": {
+      "simple": [
+        "A question may name international frameworks. **OECD principles**: general international principles for AI. **NIST AI RMF**: an American risk management framework with four functions (Govern, Map, Measure, Manage). **EU AI Act**: the European Union law with risk tiers. **ISO/IEC 42001**: a standard for an AI management system that can be certified. **ISO/IEC 23894**: risk management guidance.",
+        "But the decisive rule: **if the question asks about “SDAIA’s principles”, the Saudi names and levels are the ones that count**, not the OECD or European Union labels, even if they look alike."
+      ],
+      "example": "A question: “According to SDAIA’s principles, what is the risk level of a social scoring system?”. The option “Prohibited” uses the European law’s term. The correct option is “**Unacceptable Risk**”, which is the official Saudi term. The meanings are close, and the correct answer is the one with the Saudi name.",
+      "terms": [
+        {
+          "ar": "OECD",
+          "en": "Organisation for Economic Co-operation and Development",
+          "def": "The Organisation for Economic Co-operation and Development, which has international principles for AI."
+        },
+        {
+          "ar": "NIST AI RMF",
+          "en": "NIST AI Risk Management Framework",
+          "def": "A framework from the US National Institute of Standards and Technology for managing AI risk, with four functions: Govern, Map, Measure and Manage."
+        },
+        {
+          "ar": "EU AI Act",
+          "en": "European Union AI Act",
+          "def": "A European law that regulates AI with risk tiers: unacceptable, high, limited and minimal."
+        },
+        {
+          "ar": "ISO/IEC 42001",
+          "en": "AI management system standard",
+          "def": "An international standard for an AI management system in organisations, for which an accreditation certificate can be obtained."
+        }
+      ]
+    },
+    "1.6": {
+      "simple": [
+        "The **AI Market Governance Tools** document (SDAIA, 2025) describes three instruments. **AI Ethics incentive badges**: five levels showing the maturity of an entity’s or a product’s ethical practice. **AI service-provider accreditation certificates**: for private-sector entities that hold a badge, through the **National Data Governance Platform**. **AI Ethics Self-Assessment**: a tool with which you measure your product against the seven principles in order to learn and improve.",
+        "The three tools are **voluntary and incentive-based**. A badge does not replace any legal duty. Expected traps: **the badge is a prerequisite for the certificate**, not the certificate itself; the certificate is **not issued by the National Cybersecurity Authority**; and the self-assessment is **for learning, not for accreditation**."
+      ],
+      "example": "A restaurant analogy. **Self-assessment**: the owner fills in a questionnaire himself to see where he stands and improve. **The badge**: a star rating that reflects the restaurant’s level. **The certificate**: an official accreditation granted only to someone who has first obtained a rating. But all of this does not replace the mandatory **municipal licence** (which here is the Personal Data Protection Law). A five-star restaurant without a licence is still in violation.",
+      "terms": [
+        {
+          "ar": "الوسوم التحفيزية لأخلاقيات الذكاء الاصطناعي",
+          "en": "AI ethics incentive badges",
+          "def": "Five ascending levels reflecting the maturity of an entity’s or a product’s ethical practice. Voluntary."
+        },
+        {
+          "ar": "شهادات اعتماد مقدمي خدمات الذكاء الاصطناعي",
+          "en": "AI service-provider accreditation certificates",
+          "def": "Certificates for private-sector entities that hold a badge, obtained through the National Data Governance Platform."
+        },
+        {
+          "ar": "التقييم الذاتي لأخلاقيات الذكاء الاصطناعي",
+          "en": "AI ethics self-assessment",
+          "def": "A tool with which an entity or an individual measures the product against the seven principles in a cycle: know, learn, improve, and re-assess."
+        },
+        {
+          "ar": "منصة حوكمة البيانات الوطنية",
+          "en": "National Data Governance Platform",
+          "def": "The platform through which accreditation certificates are requested: register the entity, appoint an AI Officer, add the product, complete the questionnaire, and committee review."
+        }
+      ]
+    },
+    "1.7": {
+      "simple": [
+        "The **Framework for AI Adoption** (SDAIA, 2025) measures how far entities have adopted AI, along three dimensions. **Directions**: are there a clear vision, goals, governance policies and priorities? **Enablers**: are there infrastructure, data, human talent and partnerships? **Outputs**: have measurable results and benefits been achieved?",
+        "The framework stresses **graduated adoption**: start with priority use cases, then build the enablers, then measure the outputs, then scale. In the exam: a shortage of talent or infrastructure → a gap in **Enablers**. The absence of a vision or policies → a gap in **Directions**. No measured benefits → a gap in **Outputs**."
+      ],
+      "example": "A government entity has a splendid written AI strategy (Directions ✓) and successful pilot projects. But it has only two engineers, no suitable servers, and its data is scattered. Where is the gap? In **Enablers**. It does not help to write a second strategy (Directions) or to launch more projects. What it needs is talent, infrastructure and data.",
+      "terms": [
+        {
+          "ar": "إطار تبني الذكاء الاصطناعي",
+          "en": "AI Adoption Framework (SDAIA)",
+          "def": "An SDAIA framework (2025) that measures AI adoption along three dimensions: Directions, Enablers and Outputs."
+        },
+        {
+          "ar": "التوجهات",
+          "en": "Directions",
+          "def": "The strategic and institutional dimension: the vision, the goals, initiative design, national alignment, governance policies, and use-case priorities."
+        },
+        {
+          "ar": "الممكّنات",
+          "en": "Enablers",
+          "def": "Infrastructure, data, human capabilities (their number, specialisation, development and retention), and partnerships."
+        },
+        {
+          "ar": "المخرجات",
+          "en": "Outputs",
+          "def": "The results of actual adoption: efficiency of developing and operating models, intelligent applications, and measurable benefits."
+        }
+      ]
+    },
+    "2.1": {
+      "simple": [
+        "The Ethics Principles are not just general talk: each principle has **specific controls at each stage** of the four stages. That is a table of 7 principles × 4 stages. Knowing where each control sits answers questions such as “At which stage should the team have…?”.",
+        "**Integrity and Fairness** across the four stages, in brief. **In Planning and Design**: identify the affected groups, choose the fairness metric, and define the **threshold** at which the system is fair or unfair, with the participation of non-technical people. **In Data Preparation**: do not exclude the least represented groups, and **do not include sensitive data among the model’s features** without a justification. **In Building**: take fairness metrics into account when selecting the model. **In Deployment and Monitoring**: monitor the metric against the threshold you set."
+      ],
+      "example": "A question: “A team built a student admissions model, and after launch discovered a gap between regions, and then began to ask: what gap is acceptable?”. The mistake is that the question came too late. **The fairness metric alone** (“the gap in the acceptance rate must not exceed such-and-such”) should have been defined in the **Planning and Design** stage, before collecting the data and training.",
+      "terms": [
+        {
+          "ar": "مصفوفة الضوابط",
+          "en": "7 × 4 controls matrix",
+          "def": "The controls of each of the seven principles at each stage of the four-stage lifecycle."
+        },
+        {
+          "ar": "حد الإنصاف",
+          "en": "Fairness threshold",
+          "def": "The value at which a system’s assessment is considered fair or unfair; it is set in Planning and Design and monitored in Deployment and Monitoring."
+        },
+        {
+          "ar": "البيانات الحساسة المحددة في التصميم",
+          "en": "Sensitive attributes defined at design",
+          "def": "Attributes such as gender, race or religion, identified in the design and not included among the model’s features without a documented justification and alternative."
+        }
+      ]
+    },
+    "2.2": {
+      "simple": [
+        "**Privacy and Security** across the four stages. **In Planning and Design**: personal data at the minimum, systems that **profile individuals or groups** are developed only with the approval of the Chief Data Officer or under a sector code of conduct, a security design that protects the data and the model **and its weights**, and **an impact assessment before processing personal or sensitive data**. **In Data Preparation**: compliance at collection, authorised access only, classification, and backup and encryption.",
+        "**In Building**: protect the model’s components from corruption or modification, and test that it does not reveal personal data. **In Deployment and Monitoring**: continuous monitoring, and **the system owner is responsible for protecting personal data throughout the lifecycle**. A recurring signal: **protecting model weights falls under Privacy and Security**, not under Reliability and Safety."
+      ],
+      "example": "A question: “A model weights file was stolen from an unprotected server. Which principle was touched?”. You might think “Reliability and Safety” because it concerns the model. But the principle’s text is explicit: security design against attacks on “the data, the model or the model weights” falls under **Privacy and Security**.",
+      "terms": [
+        {
+          "ar": "تقويم الأثر",
+          "en": "Impact assessment (DPIA)",
+          "def": "A study carried out before processing personal or sensitive data to identify the risks to individuals and ways to mitigate them. Required in the Planning and Design stage."
+        },
+        {
+          "ar": "كبير مسؤولي البيانات",
+          "en": "Chief Data Officer",
+          "def": "The most senior person responsible for data in the entity, whose approval is required to develop systems that profile specific individuals or groups."
+        },
+        {
+          "ar": "مدونة السلوك القطاعية",
+          "en": "Sector code of conduct",
+          "def": "Rules set by a particular sector (such as banking or health) to regulate specific practices within it."
+        }
+      ]
+    },
+    "2.3": {
+      "simple": [
+        "**Humanity**: AI is built on human rights and cultural values, **does not deceive or manipulate**, does not impose behaviour that does not enhance human skills, and **leaves the choice and the decision to the human**. In planning: how does the system comply with Saudi human rights and social and cultural values? In building: priority to systems that facilitate human decision-making. In monitoring: periodic assessments and corrective actions.",
+        "**Social and Environmental Benefits**: it achieves a sustained positive impact and causes no harm. In Deployment and Monitoring: **continuous assessment of social, cultural, economic and environmental impact**. Its signal in a scenario is usually **waste**: a huge model where a small one would suffice, while ignoring energy."
+      ],
+      "example": "**Humanity**: an educational app for children uses “streaks” (“You will lose your stars if you do not log in today!”) and fake offers that expire after a minute to push them to buy. There is no unfairness between groups here, but **manipulation** of the child’s behaviour, so the principle is **Humanity**. **Social and Environmental Benefits**: an entity trained a giant model for weeks to classify requests into 5 categories, when a small model would suffice.",
+      "terms": [
+        {
+          "ar": "الأنماط المظلمة",
+          "en": "Dark patterns",
+          "def": "Designs that deceive the user or push them into a decision they do not want, such as fake countdown timers or hiding the cancel button. A violation of the Humanity principle."
+        },
+        {
+          "ar": "أهداف التنمية المستدامة",
+          "en": "Sustainable Development Goals",
+          "def": "Global goals for social, economic and environmental development, supported by the Social and Environmental Benefits principle."
+        }
+      ]
+    },
+    "2.4": {
+      "simple": [
+        "**Reliability and Safety**: the system works to its specification and as its designers intended. **Reliability** = does it keep working as it should? **safety** = is it free of danger to people? It must have mechanisms that prevent harm.",
+        "The most important controls. **In planning**: robustness against new situations, and **approval of important decision points by stakeholders**. **In Data Preparation**: **verifying that the system works in emergency events**. **In Building**: rigorous testing, **human oversight of irreversible decisions or decisions related to life**, and **it is not used for social scoring or mass surveillance**. **In monitoring**: periodic monitoring of risks, internal and external."
+      ],
+      "example": "A hospital system decides a medication dose and sends the order directly to the pharmacy without a physician reviewing it. This is a decision related to preserving life and cannot easily be reversed if it is wrong. The violated control: **human oversight** under **Reliability and Safety**. The official text’s example: a self-driving car not trained to recognise pedestrians in some conditions, which is a safety risk.",
+      "terms": [
+        {
+          "ar": "الموثوقية",
+          "en": "Reliability",
+          "def": "A measure of the system’s credibility and operational dependability: does it keep working as it should?"
+        },
+        {
+          "ar": "السلامة",
+          "en": "Safety",
+          "def": "A measure of how the system avoids posing a danger to society and individuals."
+        },
+        {
+          "ar": "القرار غير القابل للعكس",
+          "en": "Irreversible decision",
+          "def": "A decision whose effect cannot easily be undone once carried out, such as a medical treatment or a permanent deletion. It needs human oversight."
+        },
+        {
+          "ar": "المراقبة واسعة النطاق",
+          "en": "Mass surveillance",
+          "def": "Monitoring large numbers of people without a specific justified target. According to the principles, AI systems should not be used for it."
+        }
+      ]
+    },
+    "2.5": {
+      "simple": [
+        "**Transparency and Explainability**: decisions are clear and their steps can be traced, the data, algorithms and purpose are transparent to those affected, and developers can justify what they did. The degree of transparency depends on the context.",
+        "The most important controls. **In planning**: those affected understand how outputs are produced, and **a mechanism to record and handle complaints**. **In Data Preparation**: documenting the datasets. **In Building and Performance Measurement**: **informing those affected that the outcome was processed by AI** and enabling them to request an explanation, and **if a third party built it, make sure all the documentation is available and traceable before procurement or adoption**. **In monitoring**: documenting performance, recording failures and leaks, and notifying the competent authorities."
+      ],
+      "example": "An entity wants to buy a request-classification system from a company. The company says: “The system is excellent, but how it works and its training data are a trade secret.” The **Transparency and Explainability** control in the **Building and Performance Measurement** stage says: you must make sure that all the documentation is available and traceable **before** procurement. If it is not made available, that is a violation that must be resolved before contracting.",
+      "terms": [
+        {
+          "ar": "القابلية للتتبع",
+          "en": "Traceability",
+          "def": "The ability to trace how the system reached its decision: which data, which model, and which steps."
+        },
+        {
+          "ar": "آلية الشكاوى",
+          "en": "Complaints mechanism",
+          "def": "A channel where people record their problems and complaints about the system, which are handled transparently. A control under Transparency and Explainability in Planning and Design."
+        },
+        {
+          "ar": "الطرف الثالث",
+          "en": "Third party",
+          "def": "An outside party that builds or supplies the system, such as a vendor or a technology company."
+        }
+      ]
+    },
+    "2.6": {
+      "simple": [
+        "**Accountability and Responsibility**: designers, developers, officers and assessors **bear responsibility** for decisions and actions, they are **named and reachable**, and there are human oversight and governance throughout the lifecycle, and measures to assess and mitigate risks.",
+        "The most important controls. **In planning**: a governance structure that defines authorities and responsibilities, tools such as impact assessment, audit and recovery plans, and **decisions that are monitored and open to intervention by authorised users**. **In Data Preparation**: approval of datasets before development, and **no biometric attributes in the model’s data** without a documented justification. **In Building**: technical staff are accountable for feature selection, tuning and the model, and review and approval before deployment. **In monitoring**: clear responsibilities and continuous monitoring."
+      ],
+      "example": "A question: “A model in production gave wrong decisions, and when the team was asked, no one knew who had approved its launch, and there is no record.” The violated principle: **Accountability and Responsibility**. There is no named owner, no approval path and no audit trail. The engineering control: a model registry recording who approved each version and when.",
+      "terms": [
+        {
+          "ar": "السمات البيومترية",
+          "en": "Biometric attributes",
+          "def": "Physical or behavioural traits that identify a person, such as a fingerprint, face or voice. Not included in the model’s data without a documented justification."
+        },
+        {
+          "ar": "هيكل الحوكمة",
+          "en": "Governance structure",
+          "def": "Determining who holds the authority to decide, and who is responsible for what, within the entity and with external parties."
+        },
+        {
+          "ar": "قبول المستخدم",
+          "en": "User acceptance testing",
+          "def": "A test carried out by end users or their representatives to confirm that the system meets their need before launch."
+        }
+      ]
+    },
+    "2.7": {
+      "simple": [
+        "This table links each principle to three practical things: the **engineering control** (what you do in the system), the **tools** (what you do it with), and the **evidence for the auditor** (what you present to prove you did it). Useful for questions such as “What evidence does the team provide for such-and-such a principle?”.",
+        "Examples. **Integrity and Fairness** → a fairness report for each release. **Privacy and Security** → an impact assessment, a record of processing activities, and penetration-test reports. **Reliability and Safety** → test reports and incident logs. **Transparency and Explainability** → model cards, explanation samples and complaint logs. **Accountability and Responsibility** → approval records, audit logs and a RACI matrix."
+      ],
+      "example": "An SDAIA auditor visited the entity and asked: “How do you prove compliance with the Accountability and Responsibility principle?”. A weak answer: “Our team is very committed and responsible.” A strong answer: “This is the model registry: every version has the name of who approved it and the date. This is the RACI matrix that defines who is responsible for each stage. These are the audit logs for every change.” The auditor wants **evidence**, not promises.",
+      "terms": [
+        {
+          "ar": "الدليل للمدقق",
+          "en": "Audit evidence",
+          "def": "Documents and records that prove the control is actually applied, not just a description of what is supposed to happen."
+        },
+        {
+          "ar": "سجل أنشطة المعالجة",
+          "en": "Record of processing activities",
+          "def": "An up-to-date inventory of all personal data processing operations: what, why, where, and for whom. Required under the Personal Data Protection Law."
+        },
+        {
+          "ar": "مصفوفة RACI",
+          "en": "RACI matrix",
+          "def": "A table that defines, for each task, who is responsible for execution (R), who is ultimately accountable (A), who is consulted (C), and who is informed (I)."
+        },
+        {
+          "ar": "Fairlearn / AI Fairness 360",
+          "en": "Fairness toolkits",
+          "def": "Open-source software libraries for measuring fairness metrics and mitigating bias in models."
+        }
+      ]
+    },
+    "2.8": {
+      "simple": [
+        "**This is the heart of the unit.** A table that links real scenarios to the correct principle and the accompanying legal obligation. The exam rephrases these very scenarios, so memorise every line.",
+        "The method for any new scenario: **read the verb, not the topic**. “Pretends to be human” = disclosure, so it is Transparency. “Pushes minors with dark patterns” = manipulation, so it is Humanity. “No one knows who approved” = ownership, so it is Accountability. “Data was sent abroad” = data protection, so it is Privacy and Security. “A medical decision without review” = oversight, so it is Reliability and Safety."
+      ],
+      "example": "Practise with three. (1) “An assistant introduces itself as ‘Sara from the customer service team’ and does not mention that it is AI” → **Transparency and Explainability** (disclosure). (2) “Conversation logs containing ID numbers kept for five years for no reason” → **Privacy and Security** (retention and destruction). (3) “A leak was discovered and was reported only after a month” → **Privacy and Security** and **Accountability and Responsibility** (notification within 72 hours).",
+      "terms": [
+        {
+          "ar": "خريطة السيناريو إلى المبدأ",
+          "en": "Scenario → principle map",
+          "def": "A table that links common violation patterns to the official principle concerned and the accompanying legal obligation."
+        },
+        {
+          "ar": "الإفصاح",
+          "en": "Disclosure",
+          "def": "Telling a person that they are dealing with an AI system, or that the content is AI-generated."
+        }
+      ]
+    },
+    "3.1": {
+      "simple": [
+        "The **Personal Data Protection Law** is a Saudi law that is **binding, with penalties**, unlike the voluntary principles. It was issued by Royal Decree **M/19** (1443 AH, 2021) and amended by Royal Decree **M/148** (1444 AH, 2023). It has been in force since **14 September 2023**, with a grace period for entities until **14 September 2024**. It is supervised by **SDAIA**. It is detailed by the **Implementing Regulations** and the **Regulation on Personal Data Transfer outside the Kingdom**.",
+        "Its scope: all processing **inside the Kingdom**, and also processing of the data of residents of the Kingdom that takes place **from outside it**. That is, a company abroad that processes the data of residents of Saudi Arabia is subject to the Law."
+      ],
+      "example": "A start-up in Dubai offers a fitness app used by 50,000 people in Riyadh and Jeddah, and its servers are in Europe. Is it subject to the Saudi Personal Data Protection Law? Yes. Because the Law covers the processing of the data of residents of the Kingdom even if it takes place from outside.",
+      "terms": [
+        {
+          "ar": "نظام حماية البيانات الشخصية",
+          "en": "Personal Data Protection Law — PDPL",
+          "def": "The binding Saudi law that regulates the collection, processing, sharing and protection of personal data, gives data subjects rights, and is supervised by SDAIA."
+        },
+        {
+          "ar": "المرسوم الملكي",
+          "en": "Royal Decree",
+          "def": "The legal instrument through which laws are issued in the Kingdom. The PDPL was issued by Decree M/19 and amended by Decree M/148."
+        },
+        {
+          "ar": "اللائحة التنفيذية",
+          "en": "Implementing Regulations",
+          "def": "A document that details how the Law is applied, such as the breach-reporting deadline in its Article 24."
+        },
+        {
+          "ar": "لائحة نقل البيانات الشخصية خارج المملكة",
+          "en": "Transfer Regulations",
+          "def": "A regulation that sets out when and how personal data may be transferred outside the Kingdom."
+        }
+      ]
+    },
+    "3.2": {
+      "simple": [
+        "The Law’s core terms. **Personal data**: any data that identifies a person, directly or indirectly, **including pseudonymised data and vector representations** as long as linking is possible. **Sensitive data**: a precisely defined list (racial or tribal origin, belief, security and criminal data, biometric, genetic, health, and data indicating unknown parentage). Note: **credit data and location data were removed from the list by the 2023 amendment**.",
+        "The parties: the **data subject** (the person themselves), the **controller** (determines the purpose and the means, and is the responsible party), and the **processor** (processes on its behalf). The important difference: final, irreversible **anonymisation** takes data out of the Law, whereas reversible **pseudonymisation** leaves it personal data."
+      ],
+      "example": "**Controller and processor**: a bank (the controller) decided to use its customers’ data to detect fraud, and hired a cloud company (the processor) to run the system on its behalf. If a leak occurs at the cloud company, **the bank remains responsible** for compliance, and it must have verified the company’s compliance. An example on sensitivity: “loan and default history” is no longer sensitive data after 2023, but it is still personal data that needs protection.",
+      "terms": [
+        {
+          "ar": "البيانات الشخصية",
+          "en": "Personal data",
+          "def": "Any item of data that identifies a person directly or indirectly, including pseudonymised data and re-linkable vector representations."
+        },
+        {
+          "ar": "البيانات الحساسة",
+          "en": "Sensitive data",
+          "def": "A category defined by the Law: racial or tribal origin, religious, ideological or political belief, security and criminal data, biometric, genetic, health, and data indicating unknown parentage."
+        },
+        {
+          "ar": "صاحب البيانات الشخصية",
+          "en": "Data subject",
+          "def": "The individual to whom the data relates."
+        },
+        {
+          "ar": "جهة التحكم",
+          "en": "Controller",
+          "def": "The party that determines the purpose and means of processing, and is responsible for compliance."
+        },
+        {
+          "ar": "جهة المعالجة",
+          "en": "Processor",
+          "def": "A party that processes data on behalf of the controller and according to its instructions. The controller must verify its compliance."
+        },
+        {
+          "ar": "المعالجة",
+          "en": "Processing",
+          "def": "Any operation on data: collection, recording, storage, use, disclosure, transfer, or destruction."
+        },
+        {
+          "ar": "الإتلاف",
+          "en": "Destruction",
+          "def": "Removing data so that it can no longer be accessed or recovered."
+        }
+      ]
+    },
+    "3.3": {
+      "simple": [
+        "The Law’s obligations translated into engineering controls, with an example violation for each. The most important: the **legal basis** (why are you entitled to process? Consent or another basis. Legitimate interest was added in 2023 and **is not suitable for sensitive data**), **purpose limitation** (do not use data for a purpose other than the one it was collected for), **minimisation**, **accuracy**, **retention and destruction**, **security**, **data subject rights**, **impact assessment**, **the record of activities**, **breach reporting**, **transfer outside the Kingdom**, and **direct marketing with consent**.",
+        "The typical violations in the table are exactly what comes up in the exam: training on customer conversations without a basis, delivery data used for credit scoring, sending the full ID number to a language model for a question about a product, and the inability to delete a customer from a RAG index."
+      ],
+      "example": "**Purpose limitation**: a delivery company collected customers’ addresses and order times **to deliver food**. Then it decided to sell this data to a bank to use in **credit scoring** (“whoever orders a lot at the end of the month may be in financial difficulty”). This is a purpose entirely different from the one the data was collected for, so it is a violation. It is not cured by the data being encrypted or by the company informing customers afterwards.",
+      "terms": [
+        {
+          "ar": "الأساس النظامي",
+          "en": "Lawful basis",
+          "def": "The justification that permits processing: the data subject’s consent, or another basis recognised by the Law, such as legitimate interest, which is not suitable for sensitive data."
+        },
+        {
+          "ar": "المصلحة المشروعة",
+          "en": "Legitimate interest",
+          "def": "A legal basis added by the 2023 amendment that allows processing for a legitimate interest of the controller under conditions, and is not suitable for sensitive data."
+        },
+        {
+          "ar": "تحديد الغرض",
+          "en": "Purpose limitation",
+          "def": "Using data only for the specific purpose it was collected for, with no incompatible reuse."
+        },
+        {
+          "ar": "تقليل البيانات",
+          "en": "Data minimisation",
+          "def": "Collecting and processing the least amount of personal data that suffices for the purpose."
+        },
+        {
+          "ar": "مسؤول حماية البيانات",
+          "en": "Data Protection Officer — DPO",
+          "def": "A person appointed where the Law requires (such as large-scale processing of sensitive data) to oversee compliance. The conditions for appointment are marked “verify” in the source."
+        },
+        {
+          "ar": "البنود التعاقدية القياسية",
+          "en": "Standard contractual clauses",
+          "def": "Standard contractual terms used as appropriate safeguards for transferring personal data abroad."
+        }
+      ]
+    },
+    "3.4": {
+      "simple": [
+        "Figures to memorise precisely. **The rights in Article 4**: five rights, which are **to be informed, to access, to obtain a copy in a readable format, to request correction, and to request destruction**. **withdrawal of consent** is in **Article 5**. The **response deadline**: **30 days**, extendable by **30 days** in specified cases. **breach reporting**: notify SDAIA **within 72 hours of becoming aware** (Article 24 of the Implementing Regulations), with containment first and the investigation in parallel.",
+        "**Penalties after 2023**: the only criminal offence that remains is **disclosing or publishing sensitive data with intent to harm or for personal benefit**, and its penalty is **imprisonment of up to 2 years and/or a fine of up to 3 million riyals**. The prison sentence for unlawful transfer abroad was **abolished**. Other violations carry **a warning or a fine of up to 5 million riyals, doubled on repetition**. **retention**: only as long as the purpose requires, then destruction, and this includes **all copies**."
+      ],
+      "example": "Calculating the deadline: the team discovered the leak on Tuesday 3 March at 9:00 a.m. The last time to notify SDAIA = 3 March 9:00 + 72 hours = **Friday 6 March 9:00 a.m.** And the common mistake: “We wait until the investigation ends and then count 72 hours.” The deadline starts from **the moment of awareness**, not from the end of the investigation. The notification is sent with what is known so far, and then updated.",
+      "terms": [
+        {
+          "ar": "حق العلم",
+          "en": "Right to be informed",
+          "def": "The data subject’s right to know that their data is being collected, why, and on what basis."
+        },
+        {
+          "ar": "حق الوصول والنسخة",
+          "en": "Right of access / copy",
+          "def": "The data subject’s right to see their data and obtain a copy of it in a readable format."
+        },
+        {
+          "ar": "حق التصحيح والإتلاف",
+          "en": "Rights to rectification / destruction",
+          "def": "The data subject’s right to request correction of their wrong data, and to request its destruction when it is no longer needed."
+        },
+        {
+          "ar": "الرجوع عن الموافقة",
+          "en": "Withdrawal of consent",
+          "def": "The data subject’s right to withdraw their consent to processing at any time, in Article 5."
+        },
+        {
+          "ar": "مهلة 72 ساعة",
+          "en": "72-hour breach notification",
+          "def": "Notifying SDAIA within 72 hours of becoming aware of the leak if it may harm the data or its subjects, according to Article 24 of the Implementing Regulations."
+        }
+      ]
+    },
+    "3.5": {
+      "simple": [
+        "Before launching any AI system that processes personal data, here are **ten steps in order**. The order itself answers “What is the first step?” questions. (1) **Data map**: what data, from where, and where it is stored (including prompts, representations, logs and copies). (2) **Purpose and legal basis**. (3) **Minimisation**. (4) **Impact assessment**. (5) **Privacy notice**. (6) **Retention schedule**. (7) **Processor and transfer checks**. (8) **Security controls**. (9) **The ability to carry out rights** everywhere. (10) **Record of activities**.",
+        "Note that **the first step is always the data map**. You cannot protect what you do not know the location of, nor assess the impact of what you do not know the extent of."
+      ],
+      "example": "A hospital wants to launch an assistant that summarises patient files for doctors. The manager says: “Start with encryption and security.” But which data exactly? Does the assistant need the patient’s name, or is their number enough? Will it be sent to an external provider? Where are the summaries stored? For how long? Without the **data map** first, you will put controls in the wrong places, and forget important places such as logs and backups.",
+      "terms": [
+        {
+          "ar": "خريطة البيانات",
+          "en": "Data map",
+          "def": "A comprehensive description of all the personal data in the system: its type, its source, the systems it passes through, where it is stored, and who it is shared with."
+        },
+        {
+          "ar": "إشعار الخصوصية",
+          "en": "Privacy notice",
+          "def": "A text that informs data subjects of the purpose, the basis, the data collected, the retention period, the recipients, transfer abroad, and their rights."
+        },
+        {
+          "ar": "الضرورة والتناسب",
+          "en": "Necessity and proportionality",
+          "def": "Is the processing actually necessary for the purpose? Is its scale and intrusiveness proportionate to the benefit? Assessed in the impact assessment."
+        }
+      ]
+    },
+    "3.6": {
+      "simple": [
+        "**When a leak occurs**: six steps. (1) **Contain**: stop the bleeding (withdraw access, change keys, stop the feature). (2) **Assess**: which data, how many people, and which of it is sensitive. (3) **Notify the competent authority within 72 hours** with what is known so far. (4) **Inform individuals** without delay if harm is likely, with practical advice. (5) **Document**. (6) **Remediate and learn**.",
+        "The **data subject request path**: verify their identity → log the request → search for their data in **all** the systems → act → respond within 30 days → document. “all the systems” includes the vector index, logs, backups and training sets. The lesson for models: **prevention is easier than cure**. Do not put personal data into training, and keep it in RAG where deletion is straightforward."
+      ],
+      "example": "A customer asked for their data to be deleted. The team deleted it from the main database and said “done”. But: it is still in the **vector index** of a RAG assistant, in the **conversation logs**, in **last week’s backup**, and in the **dataset** on which the recommendation model was trained. The request was not actually fulfilled. If the model itself had been trained on the customer’s data, removing it from the model is nearly impossible, which is why prevention is better.",
+      "terms": [
+        {
+          "ar": "الاحتواء",
+          "en": "Containment",
+          "def": "Immediate actions that stop the leak from continuing or spreading, before the investigation is complete."
+        },
+        {
+          "ar": "طلب صاحب البيانات",
+          "en": "Data subject request",
+          "def": "A request made by a person to exercise one of their rights: access, a copy, correction, or destruction."
+        },
+        {
+          "ar": "التحقق من الهوية",
+          "en": "Identity verification",
+          "def": "Making sure that the person making the request really is the data subject, so that one person’s data is not revealed to another."
+        }
+      ]
+    },
+    "4.1": {
+      "simple": [
+        "The **National Data Management Office** sets **four levels** of data classification, and each level determines **where an AI system may be hosted**. **Top Secret**: exceptionally grave damage, so fully internal isolated environments only. **Secret**: serious damage, so inside the Kingdom with tight control and no external APIs. **Restricted**: limited damage, so an approved cloud inside the Kingdom with encryption and access control. **Public**: no damage, so greater flexibility.",
+        "Among the classification principles is one very important principle: **the highest level of protection**. Mixed data takes the highest classification among its parts. So if a RAG index combines “Public” and “Restricted” documents, **the whole index is Restricted** unless separated. The classification must be known **before** choosing the architecture."
+      ],
+      "example": "An entity built a RAG index with 9,000 “Public” documents (published service guides) and 50 “Restricted” documents (internal procedures). It said: “99% is public, so we will use an external model API.” The mistake: under the **highest level of protection** principle the whole index is “Restricted”, so no external API. The solutions: separate the restricted documents into a separate index hosted inside the Kingdom, or host everything inside the Kingdom.",
+      "terms": [
+        {
+          "ar": "مكتب إدارة البيانات الوطنية",
+          "en": "National Data Management Office — NDMO",
+          "def": "An SDAIA body that issues the standards for data management, classification, sharing and personal data protection for government entities."
+        },
+        {
+          "ar": "مستويات التصنيف",
+          "en": "Classification levels",
+          "def": "Top Secret, Secret, Restricted and Public, according to the impact of unauthorised disclosure."
+        },
+        {
+          "ar": "أعلى مستوى حماية",
+          "en": "Highest protection level",
+          "def": "A classification principle: mixed data takes the highest classification among its components unless separated."
+        },
+        {
+          "ar": "الحاجة إلى المعرفة",
+          "en": "Need to know",
+          "def": "A person reaches data only if they actually need it for their work."
+        },
+        {
+          "ar": "الانفتاح كأصل",
+          "en": "Openness by default",
+          "def": "A classification principle: the default is that data is public unless there is a reason that calls for restricting it."
+        }
+      ]
+    },
+    "4.2": {
+      "simple": [
+        "SDAIA, through the National Data Management Office, issued the **Data Management and Personal Data Protection Standards** for government entities, with national policies: data classification, data sharing, personal data protection, open data, and freedom of information. The standards cover many domains that describe a “mature data organisation”, and the table links each domain to AI.",
+        "Two rules. **Data sharing between entities**: it needs an agreement that specifies the purpose, the fields, the retention period and the controls, and **reusing it for a new AI purpose needs a new basis**. **open data**: robust anonymisation before publication, with a check for the possibility of re-identification."
+      ],
+      "example": "A ministry shared appointment data with another authority **for the purpose of coordinating services**, under a signed agreement. A year later the authority decided to use the same data **to train a model that predicts demand for services**. It is not enough that the data is “already with us”. The purpose is new, so it needs a new basis and an updated agreement. Purpose limitation applies between government entities too.",
+      "terms": [
+        {
+          "ar": "معايير إدارة البيانات وحماية البيانات الشخصية",
+          "en": "Data Management and Personal Data Protection Standards",
+          "def": "Standards issued by the National Data Management Office for government entities, covering governance, quality, classification, metadata, privacy and more. The list of its domains and their count is marked “verify” in the source."
+        },
+        {
+          "ar": "اتفاقية مشاركة البيانات",
+          "en": "Data-sharing agreement",
+          "def": "A documented agreement between two entities that sets out the purpose of sharing, the fields, the retention period, the security controls, and the limits on onward use."
+        },
+        {
+          "ar": "البيانات الرئيسية",
+          "en": "Master data",
+          "def": "The shared core data about important entities (citizens, establishments), which must be consistent across all systems."
+        },
+        {
+          "ar": "حرية المعلومات",
+          "en": "Freedom of information",
+          "def": "A policy that regulates the public’s right to request public information from government entities."
+        }
+      ]
+    },
+    "4.3": {
+      "simple": [
+        "Other Saudi frameworks that may be named. From the **National Data Management Office**: the data management standards. From **SDAIA**: the Generative AI Principles (for government entities and for the public), and the **Deepfake Principles**. From the **National Cybersecurity Authority** three: **ECC**, **CCC** and **DCC**.",
+        "The rule for choosing among the Authority’s three sets of controls: a question about **hosting in the cloud** → CCC. A question about **protecting data according to its classification** → DCC. A question about **baseline security for any platform** → ECC."
+      ],
+      "example": "Three questions. (1) “An entity wants to move its AI system to a cloud provider; what controls must the provider comply with?” → **CCC**. (2) “How is data classified ‘Secret’ protected throughout its lifecycle from collection to destruction?” → **DCC**. (3) “What are the mandatory baseline security controls for any system in the entity, including the AI platform?” → **ECC**.",
+      "terms": [
+        {
+          "ar": "مبادئ الذكاء الاصطناعي التوليدي",
+          "en": "Generative AI Principles (SDAIA)",
+          "def": "SDAIA’s guidance for using generative AI, in two versions: for government entities and for the public. First issued in 2024, and the current edition is 2025 according to the briefing note."
+        },
+        {
+          "ar": "مبادئ التزييف العميق",
+          "en": "Deepfake Principles (SDAIA, 2025)",
+          "def": "SDAIA’s document “Deepfake Principles: Mitigating Risks while Promoting Innovation”, with guidance for developers, content creators, regulators and consumers."
+        }
+      ]
+    },
+    "4.4": {
+      "simple": [
+        "The **Generative AI Principles for Government Entities** contain a strict rule that recurs in the exam: **the employee does not enter any data classified “Restricted” or above** (Restricted, Secret and Top Secret) into generative AI tools, and **use is limited to “Public” data**. Alongside it: apply the Personal Data Protection Law, check the privacy policy of each tool, take into account the risks of leakage and misinformation, and review the outputs critically.",
+        "The **Generative AI Principles for the Public** list **seven risks** with their mitigation: deepfakes and disinformation, safety threats, misinformation and hallucination, sensitive-data leakage, credential and assessment fraud, intellectual property infringement, and output variability."
+      ],
+      "example": "An employee in a government entity has a 40-page budget report classified “Restricted” and wants a quick summary for the meeting. They opened a public AI tool and pasted the report. This is a **direct violation** of the rule “nothing Restricted or above”. It does not matter that they deleted the first page, or that the tool is “famous and safe”. The public tool is for public data only.",
+      "terms": [
+        {
+          "ar": "أداة الذكاء الاصطناعي التوليدي",
+          "en": "Generative AI tool",
+          "def": "Any application that generates text, images, sounds or code, such as general-purpose chatbots."
+        },
+        {
+          "ar": "اعرف عميلك",
+          "en": "Know Your Customer — KYC",
+          "def": "Procedures to verify a user’s identity before granting them a service. One of the ways to mitigate the misuse of deepfakes."
+        },
+        {
+          "ar": "الملكية الفكرية",
+          "en": "Intellectual property",
+          "def": "The rights of the owners of creative works and inventions, some of which may be infringed when content resembling protected works is generated."
+        }
+      ]
+    },
+    "4.5": {
+      "simple": [
+        "The Generative AI Principles for government entities do not stop at rules, but give practical guidance. **Seven areas of benefit**: operational efficiency, decision support, citizen service, research and analysis, crisis response, content creation, and translation. **general challenges** (political, economic, social, technical, environmental and legal). **common risks for staff**: data leakage, misinformation, deepfakes, bias, and safety.",
+        "The table gives, for each task, a **best practice** and a **pattern of a bad prompt**. A general pattern: **do not put into the prompt details you do not need** (the project name, the entity, the budget, and unannounced internal plans)."
+      ],
+      "example": "The task “project planning”. **Bad prompt**: “Write a plan for the ‘Smart Nusuk Platform’ project at such-and-such ministry, with a budget of 45 million riyals, linking internal system X to system Y.” **Good prompt**: “Write a generic plan for a digital services platform project, lasting one year, with the phases: analysis, design, development, testing, and launch.” Then you complete the sensitive details yourself outside the tool.",
+      "terms": [
+        {
+          "ar": "الملحق الأول والثاني",
+          "en": "Annex I / Annex II",
+          "def": "Parts of the Generative AI Principles for government entities: the first describes the benefits, challenges, risks and example prompts, and the second is a checklist for users."
+        },
+        {
+          "ar": "الترجمة العكسية",
+          "en": "Back-translation",
+          "def": "Translating the translated text back into its original language to verify that the meaning has not changed."
+        }
+      ]
+    },
+    "4.6": {
+      "simple": [
+        "The **Deepfake Principles** (SDAIA, 2025) set what is expected of **four categories**. **Developers**: legal compliance, privacy by design, consent management and **the right of individuals to have their data removed from training data**, documentation, explainability, watermarks, transparency reports, and bias checks. **Content creators**: **consent of the people who appear**, disclosure and labelling of synthetic content, and respect for intellectual property. **Regulators**: rules, enforcement, detection and awareness. **Consumers**: verifying sources, detection tools, and reporting.",
+        "An important point: **non-malicious uses are recognised and encouraged with safeguards** (education, entertainment, accessibility and dubbing). So the option “a total ban on all synthetic content” is **wrong**. The decisive controls: **consent, disclosure and labelling, watermarks, and removal mechanisms**."
+      ],
+      "example": "An educational company wants to produce lessons with the voice and image of a famous teacher generated by AI, in multiple languages. Is this prohibited? No, it is a legitimate educational use. But with safeguards: **the teacher’s consent** to the use of their voice and image, **a clear label** “This video is AI-generated”, **a watermark** that can be detected, and a mechanism to **remove** the content if someone misuses it.",
+      "terms": [
+        {
+          "ar": "التزييف العميق",
+          "en": "Deepfake",
+          "def": "Highly realistic fake visual or audio content of real people, generated by AI."
+        },
+        {
+          "ar": "الخصوصية بالتصميم",
+          "en": "Privacy by design",
+          "def": "Building privacy protection into the system’s design from the start, not adding it later."
+        },
+        {
+          "ar": "الوسم",
+          "en": "Labelling",
+          "def": "A clear visible or audible indication that the content is generated or modified by AI."
+        },
+        {
+          "ar": "الدبلجة",
+          "en": "Dubbing",
+          "def": "Replacing the speaker’s voice in a video with a voice in another language. One of the legitimate uses of synthetic technologies with safeguards."
+        }
+      ]
+    },
+    "4.7": {
+      "simple": [
+        "The **AI Principles in Media** (SDAIA, June 2026) apply the ethics framework to newsrooms and content producers. The recurring themes are what you already know: disclosure of generated content, accuracy and verification before publication (**editorial responsibility remains human**), avoiding deepfakes without consent, intellectual property, fairness in representation, privacy of the people in the news, and accountability of the publishing organisation.",
+        "The decisive controls in media scenarios: **labelling, editorial review, and consent**. A caution from the source: these are summarised themes, **not official names**, so check them against the official document."
+      ],
+      "example": "An online newspaper uses AI to write league match reports automatically from the statistics. Three controls. **Labelling**: “This report was written with the assistance of AI.” **Editorial review**: an editor reviews every report before it is published, and the newspaper is responsible for any error, not the machine. **consent**: no image is generated of a player in a situation that did not happen.",
+      "terms": [
+        {
+          "ar": "مبادئ الذكاء الاصطناعي في الإعلام",
+          "en": "AI Principles for Media (SDAIA)",
+          "def": "An SDAIA document (June 2026) for applying AI ethics in newsrooms and content production. The exact names of its principles are marked “verify” in the source."
+        },
+        {
+          "ar": "المسؤولية التحريرية",
+          "en": "Editorial responsibility",
+          "def": "The responsibility of the media organisation and its editors for the correctness and accuracy of the published content, which remains human even when AI is used."
+        }
+      ]
+    }
+  }
+}

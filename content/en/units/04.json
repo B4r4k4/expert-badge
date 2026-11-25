@@ -1,0 +1,1186 @@
+{
+  "num": 4,
+  "title": "Deep Learning, Transformers & LLMs",
+  "english": "Deep Learning, Transformers & LLMs",
+  "subtitle": "From training mechanics to attention, quantisation and choosing the right technique",
+  "domain": "Domain 2 · 16.7%",
+  "deliverable": "Diagnose a training run, calculate model memory and KV cache memory, and choose between prompting, RAG and fine-tuning, together with suitable generation settings, for a given scenario.",
+  "intro": "The exam devotes roughly 25 of its 150 questions to this domain. It does not ask you to derive attention or write training code; instead it puts you in a situation and asks: which technique fits it? A prompt, retrieval-augmented generation (RAG) or fine-tuning? Which model size and which numerical precision? Which generation settings? Why does Arabic cost more tokens? How is hallucination reduced? This unit builds the mechanisms behind those decisions: how a network learns, how the transformer works, how large language models are built, and then how they are adapted, served and evaluated. The theory here is not an end in itself; it is the “why” that makes one answer correct and another a distractor.",
+  "outcomes": [
+    "Diagnose common training symptoms (NaN loss, flat loss, overfitting, out-of-memory) and link each symptom to its remedy.",
+    "Calculate weight memory by numerical precision, training memory with AdamW, and KV cache memory for a given number of users.",
+    "Explain the attention mechanism, the MHA, GQA and MQA variants, positional information and mixture of experts, and their effect on serving cost.",
+    "Distinguish the stages of building a language model: pre-training, supervised fine-tuning, preference alignment (RLHF and DPO), and reasoning models.",
+    "Choose between prompting, RAG, fine-tuning and distillation, and choose the tuning method (full, LoRA, QLoRA, DPO) to suit the situation.",
+    "Set generation parameters to suit the task, and identify the cause of hallucination and its appropriate remedy.",
+    "Design an evaluation for a generative system that covers faithfulness to sources, retrieval quality, Arabic, safety and cost."
+  ],
+  "method": "Read every table as “symptom → cause → action”, because this is how scenario questions are built. Memorise three calculations with numbers: weight memory (parameters × bytes per parameter), training memory (≈ 16 bytes per parameter with AdamW), and KV cache memory (the formula and the worked example at 128 KB per token). Then practise rejecting the classic distractors: “fine-tune the model on our documents so that it knows them”, “temperature zero removes hallucination”, and “a longer context removes the need for retrieval”. After each chapter, try to explain the decision to a colleague in two sentences: what is needed, what fits best, and why.",
+  "chapters": [
+    {
+      "title": "How Neural Networks Learn and How to Diagnose Them",
+      "sections": [
+        {
+          "title": "1.1 The Training Loop in Four Steps",
+          "blocks": [
+            {
+              "p": "A neural network is a sequence of layers, each of which computes a weighted sum of its inputs and then passes it through a non-linear activation function such as ReLU, GELU or SiLU. Without the non-linearity, all the layers would collapse into a single linear transformation."
+            },
+            {
+              "ol": [
+                "**Forward pass:** compute predictions from the inputs.",
+                "**Loss:** measure the error between the prediction and the correct value.",
+                "**Backpropagation:** apply the chain rule to compute the gradient of the loss with respect to every weight.",
+                "**Optimiser step:** move every weight a small amount in the direction opposite to its gradient."
+              ]
+            },
+            {
+              "p": "One pass over the whole training set is called an **epoch**, and each optimiser step uses a **mini-batch**. Understanding this mechanism is what lets you diagnose training scenarios: a loss that explodes, a loss that does not move, a model that memorises the data, and a run that runs out of memory."
+            }
+          ]
+        },
+        {
+          "title": "1.2 Loss Functions: Which for Which Task",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Task",
+                  "Loss",
+                  "Note"
+                ],
+                [
+                  "Regression",
+                  "Mean squared error (MSE) / mean absolute error (MAE) / Huber",
+                  "MSE penalises large errors heavily; MAE is robust to outliers; Huber combines the two"
+                ],
+                [
+                  "Binary classification",
+                  "Binary cross-entropy (log loss)",
+                  "Add class weights or focal loss when classes are imbalanced"
+                ],
+                [
+                  "Multi-class classification",
+                  "Categorical cross-entropy over softmax",
+                  "Label smoothing reduces over-confidence"
+                ],
+                [
+                  "Language modelling",
+                  "Next-token cross-entropy",
+                  "Perplexity = exp(loss); lower is better, but it does not equal real usefulness"
+                ],
+                [
+                  "Ranking and retrieval",
+                  "Contrastive (InfoNCE), triplet, pairwise ranking",
+                  "Train embedding models: pull matching pairs together and push non-matching ones apart"
+                ],
+                [
+                  "Imbalanced detection",
+                  "Focal loss",
+                  "Down-weights easy negatives"
+                ]
+              ]
+            },
+            {
+              "formula": "Perplexity = exp(cross-entropy loss)"
+            },
+            {
+              "quote": "Lower perplexity means a language model that is better at predicting the next token, not necessarily a model that is more useful to the user."
+            }
+          ]
+        },
+        {
+          "title": "1.3 Optimisers and the Learning Rate",
+          "blocks": [
+            {
+              "p": "**SGD with momentum** accumulates a “velocity” that keeps updates moving across flat or noisy regions, and it generalises well in vision models. **Adam** adapts the step size independently for each parameter from moving averages of the gradients and their squares, and **AdamW** decouples weight decay from the adaptive update; it is the default choice for transformers. Adam-family optimisers store two extra values per parameter, which is a major reason why training needs far more memory than inference."
+            },
+            {
+              "p": "The **learning rate** is the most important hyperparameter: too high makes the loss oscillate or become NaN, and too low makes training crawl or stall."
+            },
+            {
+              "ul": [
+                "**Warm-up:** increase the rate linearly over the first steps to avoid instability while the optimiser statistics settle, followed by cosine or linear decay.",
+                "**Batch size:** larger batches usually allow proportionally larger rates, up to a limit.",
+                "**Gradient clipping:** limits the gradient norm and stops a single bad batch from blowing up training.",
+                "**Gradient accumulation:** sums gradients over several mini-batches before the step, simulating a large batch when memory is limited."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.4 Normalisation, Regularisation and Initialisation",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Technique",
+                  "Purpose",
+                  "Where"
+                ],
+                [
+                  "Batch normalisation",
+                  "Normalises activations across the batch; faster and more stable training",
+                  "Convolutional networks; behaves differently between training and inference"
+                ],
+                [
+                  "Layer norm / RMSNorm",
+                  "Normalises across the features of each token; independent of batch size",
+                  "Transformers (RMSNorm in most modern models)"
+                ],
+                [
+                  "Residual connections",
+                  "Add the block's input to its output, so gradients can cross deep networks",
+                  "ResNet and every transformer block"
+                ],
+                [
+                  "Dropout",
+                  "Randomly zeroes activations during training",
+                  "Reduces co-adaptation and overfitting"
+                ],
+                [
+                  "Weight decay / L2",
+                  "Penalises large weights",
+                  "Almost always on (AdamW)"
+                ],
+                [
+                  "Data augmentation",
+                  "Generates label-preserving variants (cropping, flipping, noise; back-translation for text)",
+                  "Small data and robustness"
+                ],
+                [
+                  "Early stopping",
+                  "Stop at the best validation loss achieved",
+                  "Cheap and effective"
+                ],
+                [
+                  "He / Xavier initialisation",
+                  "Keep the variance of activations stable across layers",
+                  "Prevents signals from vanishing or exploding at the start"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.5 Numerical Precision and Training Memory",
+          "blocks": [
+            {
+              "p": "**FP32** is the reference. **FP16** halves memory and speeds up tensor cores, but its range is narrow, so training needs **loss scaling** so that small gradients do not underflow to zero. **BF16** keeps the same exponent range as FP32 with fewer mantissa bits, so it needs no scaling and is the default on modern GPUs. **FP8** (on the newest GPUs) speeds up training and inference further, with careful scaling. **Mixed precision** keeps a master copy of the weights in FP32 while the computations run in BF16/FP16."
+            },
+            {
+              "h": "Training memory per parameter (AdamW, mixed precision)"
+            },
+            {
+              "formula": "2 (BF16 weights) + 2 (gradients) + 4 (FP32 master weights) + 8 (two Adam moments) ≈ 16 bytes/parameter"
+            },
+            {
+              "formula": "7B × 16 bytes ≈ 112 GB  (model + optimiser states only, before activations)"
+            },
+            {
+              "p": "This is why **full fine-tuning** of a 7-billion-parameter model needs several GPUs or state sharding (ZeRO / FSDP), whereas **LoRA / QLoRA** fits on a single GPU. Note that this figure is before accounting for activations."
+            },
+            {
+              "quote": "Training ≈ 16 bytes per parameter; serving in FP16 ≈ 2 bytes per parameter. The difference is the optimiser, the gradients and the master copy."
+            }
+          ]
+        },
+        {
+          "title": "1.6 Diagnosing Training Runs",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Observation",
+                  "Likely cause",
+                  "Action"
+                ],
+                [
+                  "Loss becomes NaN after a number of steps",
+                  "High learning rate, FP16 overflow, a corrupt data row",
+                  "Lower the rate, warm-up, BF16 or loss scaling, gradient clipping, identify the offending batch"
+                ],
+                [
+                  "Loss is flat from the start",
+                  "Learning rate too low, frozen layers, a bug in the labels or data, dead activations",
+                  "Sanity test by overfitting a very small batch; check the labels and the data loader"
+                ],
+                [
+                  "Training loss ↓ and validation loss ↑",
+                  "Overfitting",
+                  "Regularisation, data augmentation, more data, early stopping"
+                ],
+                [
+                  "Both losses plateau at a high value",
+                  "Underfitting or a capacity limit",
+                  "A larger model, better features, longer training"
+                ],
+                [
+                  "Validation is noisy and jumpy",
+                  "Validation set too small, high learning rate",
+                  "A larger validation set, a lower rate"
+                ],
+                [
+                  "Out of memory",
+                  "Batch or sequence too large, optimiser states",
+                  "Smaller batch + accumulation, gradient checkpointing, BF16, LoRA, sharding"
+                ],
+                [
+                  "Low GPU utilisation",
+                  "Data-loading bottleneck",
+                  "More loader workers, prefetching, faster storage, pre-tokenised data"
+                ]
+              ]
+            },
+            {
+              "quote": "A loss that does not move? Start with the sanity test: if the model cannot memorise a very small batch, the fault is in the data or the setup, not in capacity."
+            }
+          ]
+        },
+        {
+          "title": "1.7 Scenario Map: From Symptom to Answer",
+          "blocks": [
+            {
+              "p": "This table is the condensed form in which deep-learning fundamentals appear in exam questions."
+            },
+            {
+              "table": [
+                [
+                  "Symptom or need",
+                  "Concept",
+                  "Usual answer"
+                ],
+                [
+                  "Loss is NaN or explodes",
+                  "Exploding gradients, learning rate far too high",
+                  "Lower the learning rate, gradient clipping, warm-up, loss scaling in mixed precision"
+                ],
+                [
+                  "Loss plateaus early in a deep network",
+                  "Vanishing gradients",
+                  "Residual connections, normalisation, ReLU/GELU, better initialisation"
+                ],
+                [
+                  "Few labelled images or texts",
+                  "Transfer learning",
+                  "Start from a pre-trained model; freeze the backbone and tune the head; then unfreeze"
+                ],
+                [
+                  "GPU runs out of memory during training",
+                  "Memory pressure",
+                  "Smaller batch + gradient accumulation, mixed precision (BF16), gradient checkpointing, LoRA/QLoRA"
+                ],
+                [
+                  "A fast small model that behaves like the large one",
+                  "Knowledge distillation",
+                  "Train a “student” on the outputs of the “teacher”"
+                ],
+                [
+                  "Running the model on a phone or edge device",
+                  "Compression",
+                  "Quantisation (INT8/INT4), pruning, distillation, on-device runtimes"
+                ],
+                [
+                  "Sequential data and long context",
+                  "Transformers (attention) replaced RNN/LSTM",
+                  "Attention parallelises training; cost grows with sequence length"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Architectures: From Convolution to the Transformer",
+      "sections": [
+        {
+          "title": "2.1 Convolutional Networks and Vision Transformers",
+          "blocks": [
+            {
+              "p": "**Convolutional neural networks (CNNs)** slide small learned filters over the image, sharing weights across positions. Early layers detect edges and textures, deeper ones detect parts and objects, and pooling or strides reduce spatial resolution. This built-in locality and translation invariance make them data-efficient."
+            },
+            {
+              "ul": [
+                "**ResNet:** residual connections make very deep networks possible.",
+                "**EfficientNet:** balanced scaling of depth, width and resolution.",
+                "**MobileNet:** depthwise-separable convolutions for phones."
+              ]
+            },
+            {
+              "p": "**Vision transformers (ViT)** split the image into patches, embed each patch as a token, and then apply transformer attention. With large pre-training data they match or outperform CNNs, and they unify vision with language models: **CLIP** aligns image and text embeddings, and vision-language models pass image tokens to a language model."
+            },
+            {
+              "h": "Transfer learning is the default"
+            },
+            {
+              "p": "Start from a pre-trained backbone, replace the head, tune the head first, and then optionally unfreeze the deeper layers with a smaller learning rate."
+            },
+            {
+              "quote": "The scenario “we have only 2,000 labelled images” points to transfer learning with data augmentation, not to training from scratch."
+            }
+          ]
+        },
+        {
+          "title": "2.2 Sequence Models Before and After Transformers",
+          "blocks": [
+            {
+              "p": "**Recurrent networks (RNN, LSTM, GRU)** read the sequence step by step, carrying a hidden state. LSTM and GRU add gates that control what is remembered and what is forgotten, easing the vanishing-gradient problem. Their weaknesses: no parallelism across time steps during training (slow on GPUs), and difficulty with very long dependencies. They remain useful, however, for small streaming problems on constrained devices."
+            },
+            {
+              "p": "**Transformers** replaced them in language because attention links any two positions directly and processes all positions in parallel during training. The price: the cost of attention grows with sequence length, which is why long-context models need efficient attention kernels, and also why the KV cache dominates serving."
+            },
+            {
+              "p": "**State-space models** such as Mamba, and hybrid models, are a newer family that processes sequences in linear time and appears in some long-context and efficient models. For the exam it is enough to know that they trade some in-context accuracy (such as exact recall) for efficiency on very long inputs."
+            }
+          ]
+        },
+        {
+          "title": "2.3 Scaled Dot-Product Attention and the Transformer Block",
+          "blocks": [
+            {
+              "formula": "Attention(Q, K, V) = softmax( Q·Kᵀ / √d_k ) · V"
+            },
+            {
+              "p": "Each token is projected into three vectors: a **query** representing what it is looking for, a **key** representing what it offers, and a **value** representing the information it carries. Scores are computed between the query and every key and then divided by √d_k; without this scaling, dot-product outputs grow with the dimension, so softmax saturates towards a one-hot value and gradients vanish. The softmax weights then mix the values."
+            },
+            {
+              "p": "In GPT-style decoder models, the **causal mask** prevents every position from attending to later positions, so the model trains on predicting the next token for all positions at once."
+            },
+            {
+              "p": "**Multi-head attention** runs several attention operations in parallel on lower-dimensional projections, so the heads specialise (syntax, coreference, position), and then the outputs are concatenated and projected again."
+            },
+            {
+              "formula": "Block: attention → residual + norm → feed-forward (2 linear layers, ~4× wider; SwiGLU in modern LLMs) → residual + norm"
+            },
+            {
+              "h": "The three transformer families"
+            },
+            {
+              "table": [
+                [
+                  "Family",
+                  "Example",
+                  "Best suited to"
+                ],
+                [
+                  "Encoder",
+                  "BERT-type",
+                  "Classification and embeddings"
+                ],
+                [
+                  "Decoder",
+                  "GPT-type",
+                  "Generation"
+                ],
+                [
+                  "Encoder–decoder",
+                  "T5-type",
+                  "Translation and summarisation"
+                ]
+              ]
+            },
+            {
+              "quote": "Self-attention makes every token look at every other token; therefore compute and memory grow roughly quadratically with context length in standard attention."
+            }
+          ]
+        },
+        {
+          "title": "2.4 MHA, GQA, MQA and the KV Cache",
+          "blocks": [
+            {
+              "p": "The **KV cache** stores the previous keys and values so they are not recomputed when each new token is generated. It grows linearly with context length × batch size, and it is often what limits the number of concurrent users a GPU can serve. The number of key and value heads determines its size."
+            },
+            {
+              "table": [
+                [
+                  "Type",
+                  "Key and value heads",
+                  "KV cache size",
+                  "Quality",
+                  "Examples"
+                ],
+                [
+                  "Multi-head (MHA)",
+                  "A K/V pair for every query head",
+                  "Largest",
+                  "The reference",
+                  "GPT-2, BERT, the original transformer"
+                ],
+                [
+                  "Grouped-query (GQA)",
+                  "Query heads share K/V in groups (for example 32 query heads and 8 KV heads)",
+                  "4 times smaller in this example",
+                  "Close to MHA",
+                  "Llama-3, Mistral, Qwen2, Falcon-40B"
+                ],
+                [
+                  "Multi-query (MQA)",
+                  "All query heads share a single K/V pair",
+                  "Smallest",
+                  "Some loss",
+                  "PaLM, Falcon-7B"
+                ]
+              ]
+            },
+            {
+              "formula": "KV cache (bytes) = 2 × L × n_kv × d_head × seq_len × batch × bytes_per_value"
+            },
+            {
+              "p": "where L is the number of layers, n_kv is the number of KV heads, d_head is the head dimension, and the factor 2 is because we store keys and values together."
+            },
+            {
+              "h": "Worked example (Llama-3-8B class)"
+            },
+            {
+              "formula": "per token = 2 × 32 layers × 8 KV heads × 128 d_head × 2 bytes (FP16) = 131,072 bytes = 128 KB"
+            },
+            {
+              "formula": "8,192-token conversation × 128 KB ≈ 1 GB ;  30 concurrent users × 1 GB = 30 GB"
+            },
+            {
+              "p": "That is, 30 concurrent users with conversations of 8,192 tokens need about 30 GB of KV cache, which is **more than the model weights themselves** (about 16 GB in FP16). This is why GQA, KV cache quantisation, paged attention (PagedAttention) and context limits are what determine how many users a GPU serves."
+            },
+            {
+              "quote": "GPU sizing is not computed from the weights alone: weights + KV cache (context × users) + activations and runtime overhead."
+            }
+          ]
+        },
+        {
+          "title": "2.5 Positional Information and Context Extension",
+          "blocks": [
+            {
+              "p": "Attention by itself does not know the order of tokens, so positional information must be introduced."
+            },
+            {
+              "table": [
+                [
+                  "Method",
+                  "Idea",
+                  "Behaviour with long context"
+                ],
+                [
+                  "Sinusoidal (the original)",
+                  "Fixed sine and cosine patterns added to the embeddings",
+                  "Poor extrapolation"
+                ],
+                [
+                  "Learned absolute",
+                  "A trained vector for each position",
+                  "Cannot go beyond the length it was trained on"
+                ],
+                [
+                  "Rotary (RoPE)",
+                  "Rotate the query and key vectors by position-dependent angles, so attention depends on relative distance",
+                  "The standard in modern models; extended with position interpolation, NTK-aware scaling and YaRN"
+                ],
+                [
+                  "ALiBi",
+                  "Subtract a bias proportional to distance from the attention scores",
+                  "Good length extrapolation"
+                ]
+              ]
+            },
+            {
+              "p": "**Context extension:** models trained on 4,000 to 8,000 tokens are extended to 32 or 128,000 and more by rescaling the RoPE frequencies (position interpolation, YaRN) with a short fine-tune on long documents."
+            },
+            {
+              "p": "Even so, models use information located in the middle of very long contexts less reliably, a phenomenon called **“Lost in the middle”**. This is why well-ranked retrieval often beats stuffing the whole repository into a long context, and it is far cheaper per request."
+            }
+          ]
+        },
+        {
+          "title": "2.6 Efficient Attention and Mixture of Experts",
+          "blocks": [
+            {
+              "p": "**FlashAttention** computes the **exact same** attention in tiles that stay in the fast on-chip SRAM, avoiding writing the full n × n score matrix to the slower GPU memory (HBM). It does not change the result; it reduces memory traffic and speeds up training and long-context inference considerably. **Sparse attention and sliding-window attention** (used by Mistral), by contrast, trade full accuracy for linear cost."
+            },
+            {
+              "p": "**Mixture of Experts (MoE):** the feed-forward layer is replaced by several “experts” and a router that sends each token to a small number of them (for example 2 of 8). The total parameters are large, but the **active** parameters per token, and therefore the compute, are far fewer."
+            },
+            {
+              "quote": "MoE is cheap in compute but heavy in memory when serving: memory must hold all the experts, not just the active ones."
+            }
+          ]
+        },
+        {
+          "title": "2.7 Rules of Thumb for Compute",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Quantity",
+                  "Approximation",
+                  "Use"
+                ],
+                [
+                  "Training compute",
+                  "≈ 6 × N (parameters) × D (training tokens) FLOPs",
+                  "Estimating the budget for pre-training or large fine-tuning"
+                ],
+                [
+                  "Inference compute",
+                  "≈ 2 × N FLOPs per generated token",
+                  "Comparing model sizes in terms of throughput"
+                ],
+                [
+                  "Compute-optimal data (Chinchilla)",
+                  "≈ 20 training tokens per parameter",
+                  "Many modern models train far beyond that to make inference cheaper"
+                ],
+                [
+                  "Generation speed limit",
+                  "tokens/second per stream ≲ memory bandwidth ÷ model bytes",
+                  "Explains why quantisation speeds up generation"
+                ],
+                [
+                  "Prefill vs decode",
+                  "Prefill is compute-bound (the whole prompt in one batch); decode is memory-bound (one token at a time)",
+                  "Long prompts raise time to first token (TTFT); long answers raise total latency"
+                ]
+              ]
+            },
+            {
+              "formula": "C_train ≈ 6 · N · D      C_infer ≈ 2 · N per token      D_opt ≈ 20 · N"
+            },
+            {
+              "formula": "tokens/s per stream ≲ memory bandwidth ÷ model bytes"
+            },
+            {
+              "quote": "Quantisation reduces the model's bytes, and generation is bound by memory bandwidth; therefore quantisation speeds up generation, not just memory."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "How Language Models Are Built and How They Represent Text",
+      "sections": [
+        {
+          "title": "3.1 The Stages of Building a Large Language Model",
+          "blocks": [
+            {
+              "ol": [
+                "**Pre-training:** the model learns to predict the next token over trillions of tokens of web text, books, code and curated sources. Data work dominates: deduplication, quality filtering, removing personal data and abusive content, and balancing languages. Arabic is a small share of web data, which is why Arabic models curate their data and up-weight Arabic. The output is a **base model**: broad in knowledge, but it continues text rather than following instructions.",
+                "**Supervised fine-tuning (SFT / instruction tuning):** training on curated pairs (instruction → good answer) teaches the format of useful dialogue, tool calling and refusal. Thousands to hundreds of thousands of high-quality examples matter more than millions of noisy ones.",
+                "**Preference alignment:** humans (or a strong model) compare two answers.",
+                "**Safety tuning and red-teaming:** adversarial testing for harmful content, jailbreak attempts and bias, with targeted data to fix the failures.",
+                "**Reasoning models:** models trained (often with reinforcement learning on verifiable tasks) to produce longer internal reasoning before answering."
+              ]
+            },
+            {
+              "h": "Preference alignment methods"
+            },
+            {
+              "table": [
+                [
+                  "Method",
+                  "How it works",
+                  "Characteristic"
+                ],
+                [
+                  "RLHF",
+                  "Train a reward model on the preferences, then optimise the policy with reinforcement learning (PPO) to maximise the reward, with a KL penalty that keeps it close to the SFT model",
+                  "Powerful but complex and unstable"
+                ],
+                [
+                  "DPO (Direct Preference Optimisation)",
+                  "Direct optimisation on preference pairs with a classification-like loss function",
+                  "No reward model and no reinforcement-learning loop; simpler and widely used"
+                ],
+                [
+                  "RLAIF / constitutional approach",
+                  "Preferences produced by a model guided by written principles",
+                  "Reduces human labelling"
+                ],
+                [
+                  "GRPO and similar",
+                  "Reinforcement-learning formulations that compare groups of generated answers",
+                  "Common for training reasoning with verifiable rewards (mathematics, code)"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.2 Reasoning Models and What Building Means for the Engineer",
+          "blocks": [
+            {
+              "p": "Reasoning models improve accuracy on multi-step problems, but at the cost of far more output tokens, that is, higher latency and cost per request. The rule: **route only the hard queries to them**."
+            },
+            {
+              "p": "You rarely train a model from scratch. You choose a base model or an instruction-tuned model, and then adapt it in ascending order of cost and risk:"
+            },
+            {
+              "formula": "prompting  →  RAG  →  SFT via LoRA  →  preference tuning"
+            },
+            {
+              "p": "Licence terms (open weights or API only, restrictions on commercial use) and hosting location are part of model selection, as is its coverage of Arabic and its dialects."
+            },
+            {
+              "quote": "A base model completes text; an instruction-tuned model follows commands. Do not build an assistant on a base checkpoint."
+            }
+          ]
+        },
+        {
+          "title": "3.3 Tokenizers",
+          "blocks": [
+            {
+              "p": "The **tokenizer** splits text into sub-word units (BPE, WordPiece, SentencePiece/Unigram) and then converts them to numbers. Everything a language model is billed, limited and measured by is **tokens**, not words and not characters."
+            },
+            {
+              "ol": [
+                "**Fertility = tokens per word**, and it differs between languages. Tokenizers trained mainly on English usually split an Arabic word into more pieces, made worse by morphology (prefixes and suffixes such as [[ar:و]] “and”, [[ar:ال]] “the”, [[ar:ها]] “her/its” and the plural [[ar:ون]]) and diacritics. Higher fertility means higher API cost, higher latency, and a smaller effective context window for the same Arabic text. Arabic or multilingual tokenizers (as in Arabic-focused models such as ALLaM and Jais) reduce this.",
+                "**The tokenizer is part of the model:** you must use the same tokenizer the model was trained with. Swapping it breaks the model, and extending the vocabulary requires training new embedding rows.",
+                "**Context limits in tokens:** the prompt + retrieved passages + conversation history + output must all fit together.",
+                "**Document chunking in RAG** is measured in tokens and must match the embedding model's limit.",
+                "**Normalisation matters for Arabic:** the forms of alef ([[ar:أ إ آ ا]]: with hamza above, with hamza below, with madda, and bare), teh marbuta versus heh ([[ar:ة]]/[[ar:ه]]), alef maqsura versus yeh ([[ar:ى]]/[[ar:ي]]), tatweel ([[ar:ـ]], the elongation character) and diacritics. Inconsistent normalisation between indexing and querying harms retrieval.",
+                "**Tokenisation quirks explain strange behaviour:** counting letters, spelling, and arithmetic on long numbers."
+              ]
+            },
+            {
+              "quote": "Choose the Arabic model by the actual token cost on your texts, not by the advertised price per token alone."
+            }
+          ]
+        },
+        {
+          "title": "3.4 Embedding Models in Detail",
+          "blocks": [
+            {
+              "p": "**Embedding models** convert text (or images) into fixed-length vectors so that semantically similar inputs lie close to each other. They are usually encoder transformers trained with **contrastive learning**: related pairs (question–answer, query–relevant passage, translation pairs) are pulled together and in-batch negatives are pushed apart."
+            },
+            {
+              "table": [
+                [
+                  "Type",
+                  "How it works",
+                  "Characteristic",
+                  "Use"
+                ],
+                [
+                  "Bi-encoder",
+                  "Embeds the query and the document separately",
+                  "Fast; documents are embedded once",
+                  "First-stage retrieval"
+                ],
+                [
+                  "Cross-encoder",
+                  "Reads the query and the document together",
+                  "Accurate and slow",
+                  "Reranker"
+                ]
+              ]
+            },
+            {
+              "h": "Criteria for choosing an embedding model"
+            },
+            {
+              "ul": [
+                "**Language coverage:** multilingual or Arabic-trained models; test on your own Arabic queries and dialects rather than English leaderboards (MTEB has multilingual tracks, but testing your own domain matters more).",
+                "**Dimension:** from 384 to 1,536 and more; higher dimensions cost more memory and search time. Matryoshka models allow vectors to be truncated to shorter prefixes with a graceful loss of quality.",
+                "**Maximum input length:** passages longer than the limit are **silently truncated**.",
+                "**Asymmetric instructions:** some models expect prefixes such as “query:” and “passage:”, and omitting them weakens retrieval.",
+                "**Licence, hosting and cost:** external API embeddings send text outside your boundary (the Personal Data Protection Law and data classification), and self-hosted ones need compute capacity."
+              ]
+            },
+            {
+              "h": "Similarity metrics"
+            },
+            {
+              "formula": "cos(a, b) = (a · b) / (||a|| · ||b||)   →   on L2-normalised vectors: cos(a, b) = a · b"
+            },
+            {
+              "p": "Cosine similarity compares direction, and on normalised vectors it equals the dot product. Some indexes use Euclidean distance. The rule: use the metric the model was trained with."
+            },
+            {
+              "h": "Operational rules"
+            },
+            {
+              "ul": [
+                "Do not mix the vectors of two embedding models in one index.",
+                "Record the embedding model version with every vector.",
+                "When changing the model, re-embed the entire repository and switch indexes atomically.",
+                "Cache embeddings by content hash.",
+                "Treat embeddings of personal data as personal data, since they can be partly reversed."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.5 Quick Map: Embeddings, Agents, Modalities and Arabic Models",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Topic",
+                  "What you need for scenarios"
+                ],
+                [
+                  "Embeddings",
+                  "Dense vectors for semantic similarity. Choose a model that supports Arabic well; use the same model for documents and queries; changing the embedding model requires re-embedding the entire repository. Embeddings of personal data remain personal data."
+                ],
+                [
+                  "Cosine similarity",
+                  "The standard metric; normalise the vectors."
+                ],
+                [
+                  "Agents and tool use",
+                  "The model decides which tool or API to call. Risks: excessive agency, and prompt injection through tool outputs. Controls: least privilege, allow-listed tools, human confirmation for irreversible actions, step limits, audit logs."
+                ],
+                [
+                  "Model Context Protocol (MCP)",
+                  "An open standard for connecting LLM applications to tools and data sources through a unified interface."
+                ],
+                [
+                  "Multimodal",
+                  "Vision-language models for documents and images; OCR + a language model for scanned Arabic forms; speech-to-text followed by a language model."
+                ],
+                [
+                  "Diffusion models",
+                  "Image generation; deepfake risk → disclosure and watermarks."
+                ],
+                [
+                  "Arabic models",
+                  "ALLaM (SDAIA), Jais, AceGPT, Fanar and others. SDAIA's 2025 study of 27 Arabic models: only 26% are Arabic-only and 59% are Arabic–English; most cover only 4–5 dialects out of more than 30; the main gaps are data scarcity, dialects, and weak Arabic metrics (word-matching metrics mark correct paraphrases as wrong). Choose by dialect coverage, tokenizer efficiency, licence and in-Kingdom hosting."
+                ],
+                [
+                  "Small vs large models (SDAIA guide)",
+                  "Small language models (SLMs): fewer than 5 billion parameters, little data, days to weeks to train, fast response, low cost, run on phones, edge devices and IoT with better privacy. Large language models (LLMs): more than 50 billion parameters, months to train, best at complex and general tasks, high resource requirements. Small models are built through distillation, pruning and quantisation."
+                ]
+              ]
+            },
+            {
+              "quote": "Choose the small model when the task is narrow, when latency, privacy or cost dominates, or when it must run on the device."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Adaptation, Serving and Evaluation: The Engineer's Decisions",
+      "sections": [
+        {
+          "title": "4.1 Prompt, RAG or Fine-Tuning: The Pivotal Decision",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Need in the scenario",
+                  "Best fit",
+                  "Reason"
+                ],
+                [
+                  "Answers that reflect documents that change weekly or daily",
+                  "RAG",
+                  "Update the index, not the weights; immediate freshness"
+                ],
+                [
+                  "Answers that must cite sources or be auditable",
+                  "RAG",
+                  "Retrieval supplies the evidence"
+                ],
+                [
+                  "Knowledge specific to a user or tied to permissions",
+                  "RAG with access filters",
+                  "Fine-tuned weights cannot enforce per-user permissions"
+                ],
+                [
+                  "Ability to delete a person's data (the right to request destruction under the Personal Data Protection Law)",
+                  "RAG",
+                  "Deletion from the index is possible; removal from the weights is impractical"
+                ],
+                [
+                  "A fixed format, style or tone, domain terminology, a narrow task done the same way every time",
+                  "Fine-tuning (PEFT/LoRA)",
+                  "Changes behaviour, not knowledge"
+                ],
+                [
+                  "Shorter prompts at very high usage volume (moving the few-shot examples into the weights)",
+                  "Fine-tuning",
+                  "Saves tokens on every call"
+                ],
+                [
+                  "A small model that must match a large model on one task",
+                  "Fine-tuning / distillation",
+                  "Cheaper, faster serving"
+                ],
+                [
+                  "A quick prototype, little data, a simple task",
+                  "Prompt engineering (+ few-shot examples)",
+                  "Cheapest and fastest to iterate"
+                ],
+                [
+                  "Both up-to-date knowledge and specialised behaviour",
+                  "RAG + a fine-tuned model",
+                  "Combining the two"
+                ]
+              ]
+            },
+            {
+              "quote": "“Fine-tune the model on our documents so that it knows them” is the classic wrong answer when documents change periodically: it is expensive, slow to update, does not cite, may hallucinate, and makes deletion and access control hard."
+            }
+          ]
+        },
+        {
+          "title": "4.2 Fine-Tuning Options",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Method",
+                  "What is trained",
+                  "Memory and cost",
+                  "When"
+                ],
+                [
+                  "Full fine-tuning",
+                  "All the weights",
+                  "Highest; a full copy for every task",
+                  "Large data, maximum quality, large budget"
+                ],
+                [
+                  "LoRA",
+                  "Small low-rank adapter matrices; the base is frozen",
+                  "Low; adapters are megabytes; many adapters share one base",
+                  "The default choice for task or style adaptation"
+                ],
+                [
+                  "QLoRA",
+                  "LoRA on a 4-bit quantised base",
+                  "Lowest; a large model on a single GPU",
+                  "A limited GPU budget"
+                ],
+                [
+                  "Prompt/prefix tuning",
+                  "Soft prompt vectors",
+                  "Tiny",
+                  "Many tasks and light adaptation"
+                ],
+                [
+                  "Supervised fine-tuning (SFT)",
+                  "Instruction → answer pairs",
+                  "—",
+                  "Teaching a format or behaviour"
+                ],
+                [
+                  "RLHF / DPO (preference alignment)",
+                  "Human preference pairs",
+                  "Higher complexity (DPO is simpler than RLHF: no reward model)",
+                  "Aligning helpfulness, safety and tone"
+                ]
+              ]
+            },
+            {
+              "h": "Catastrophic forgetting"
+            },
+            {
+              "p": "Intensive fine-tuning on a narrow task can weaken the model's general capabilities. Mitigation:"
+            },
+            {
+              "ul": [
+                "Use PEFT (base frozen).",
+                "Mix general data with task data.",
+                "Lower learning rates.",
+                "Regression evaluation on general benchmarks."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.3 Quantisation and Model Size",
+          "blocks": [
+            {
+              "formula": "Weight memory ≈ parameters × bytes per parameter"
+            },
+            {
+              "table": [
+                [
+                  "Numerical precision",
+                  "Bytes/parameter",
+                  "7–8B model",
+                  "70B model",
+                  "Quality impact"
+                ],
+                [
+                  "FP32",
+                  "4",
+                  "~28–32 GB",
+                  "~280 GB",
+                  "The reference (training)"
+                ],
+                [
+                  "FP16 / BF16",
+                  "2",
+                  "~14–16 GB",
+                  "~140 GB",
+                  "The standard for serving"
+                ],
+                [
+                  "INT8 / FP8",
+                  "1",
+                  "~7–8 GB",
+                  "~70 GB",
+                  "Usually negligible loss"
+                ],
+                [
+                  "INT4 (GPTQ / AWQ / GGUF)",
+                  "0.5",
+                  "~3.5–4 GB",
+                  "~35 GB",
+                  "Small loss; test it on your task, especially in Arabic"
+                ]
+              ]
+            },
+            {
+              "formula": "70B × 2 bytes = 140 GB (FP16)   |   70B × 1 = 70 GB (INT8)   |   70B × 0.5 = 35 GB (INT4)"
+            },
+            {
+              "p": "Add KV cache, activations and runtime overhead to the weights: often 20–40% extra, and far more with long contexts and many users. Quantisation reduces memory and often raises throughput, enabling a smaller, cheaper GPU or more concurrent users."
+            },
+            {
+              "quote": "Always re-run the evaluation on your own (Arabic) evaluation set after quantisation; degradation may be uneven across languages and tasks."
+            }
+          ]
+        },
+        {
+          "title": "4.4 Generation Parameters",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Parameter",
+                  "Effect",
+                  "Use"
+                ],
+                [
+                  "Low temperature (0–0.3)",
+                  "More deterministic and focused",
+                  "Extraction, classification, factual questions, code, RAG answers"
+                ],
+                [
+                  "High temperature (0.7–1.0)",
+                  "More varied and creative",
+                  "Brainstorming, marketing copy"
+                ],
+                [
+                  "Top-p (nucleus)",
+                  "Sample from the smallest set whose cumulative probability is ≥ p",
+                  "Tune temperature or top-p, not both aggressively"
+                ],
+                [
+                  "Top-k",
+                  "Sample from the k most probable tokens",
+                  "Limits tail randomness"
+                ],
+                [
+                  "Max tokens",
+                  "Truncates output length",
+                  "Controlling cost and latency"
+                ],
+                [
+                  "Stop sequences",
+                  "End generation",
+                  "Structured outputs"
+                ],
+                [
+                  "Repetition/frequency penalty",
+                  "Reduce loops",
+                  "Long generation"
+                ],
+                [
+                  "Structured outputs / JSON mode / constrained generation",
+                  "Guarantee a parseable format",
+                  "Integration with systems"
+                ]
+              ]
+            },
+            {
+              "quote": "Low temperature does not eliminate hallucination; it makes the model consistently confident. Grounding in sources (RAG), verification and abstention instructions are what address hallucination."
+            }
+          ]
+        },
+        {
+          "title": "4.5 Hallucination: Causes and Remedies",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Cause",
+                  "Remedy"
+                ],
+                [
+                  "Knowledge absent from the model or out of date",
+                  "RAG with up-to-date sources"
+                ],
+                [
+                  "Retrieval returned wrong or irrelevant passages",
+                  "Fix retrieval (see the RAG diagnosis table)"
+                ],
+                [
+                  "The model was not told to abstain",
+                  "Instruction: “Answer from the context only; otherwise say you do not know”"
+                ],
+                [
+                  "No verification",
+                  "Citations, faithfulness checks (judge model or NLI), human review of high-impact outputs"
+                ],
+                [
+                  "Ambiguous question",
+                  "Clarifying questions, query rewriting"
+                ],
+                [
+                  "Very long context with the important fact buried in the middle",
+                  "Fewer, better-ranked passages; put the important information at the start or the end"
+                ]
+              ]
+            },
+            {
+              "p": "The pattern behind the correct answer: identify the **cause** first, then choose its remedy. A larger model or a lower temperature is not a remedy for faulty retrieval."
+            }
+          ]
+        },
+        {
+          "title": "4.6 Evaluating Generative Systems",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "What is measured",
+                  "How"
+                ],
+                [
+                  "Faithfulness / grounding: is the answer supported by the retrieved context?",
+                  "Judge model (LLM-as-judge) or NLI on (answer, context); random human checks"
+                ],
+                [
+                  "Answer relevance",
+                  "Judge model / human evaluation"
+                ],
+                [
+                  "Context precision and recall (retriever quality)",
+                  "Labelled sets of query → relevant document; Recall@k and MRR"
+                ],
+                [
+                  "Task accuracy",
+                  "Exact match / F1 for extraction; unit tests for code"
+                ],
+                [
+                  "Safety and policy",
+                  "Red-team prompts, toxicity and personal-data detectors"
+                ],
+                [
+                  "Arabic quality",
+                  "Review by native speakers; dialect coverage; Arabic metrics"
+                ],
+                [
+                  "Cost and latency per answer",
+                  "Tokens, time to first token (TTFT), the p95 percentile"
+                ]
+              ]
+            },
+            {
+              "h": "Caveats on the judge model"
+            },
+            {
+              "ul": [
+                "**Position bias:** favours the first or second answer depending on presentation order.",
+                "**Length bias:** favours longer answers.",
+                "**Self-preference:** favours the outputs of its own model or family."
+              ]
+            },
+            {
+              "p": "Calibrate the judge on a human-rated sample before relying on it. Remember that automatic n-gram overlap metrics (BLEU / ROUGE) are weak indicators of open-ended quality."
+            },
+            {
+              "quote": "Separate evaluating the retriever from evaluating the generator: a wrong answer may be caused by poor retrieval rather than a poor model."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Apply all of the unit's decisions to a single scenario: choosing the technique, calculating memory, setting generation, and designing the evaluation.",
+    "scenario": [
+      "A government entity in Riyadh wants an Arabic assistant that answers employees' questions about internal regulations and rules. The regulations are updated monthly, some documents are restricted to specific departments, and the legal department requires every answer to be supported by a reference.",
+      "A vendor has proposed “fully fine-tuning a 70B model on all the documents so that it memorises them”, with temperature 0 “to prevent hallucination”. The team has a single GPU with 80 GB of memory, and about 30 concurrent users are expected, with conversations of up to 8,000 tokens. Management also wants answers in a fixed formal tone and a uniform format."
+    ],
+    "steps": [
+      "Classify the needs: changing knowledge + citation + permissions → RAG with access filters; fixed tone and format → prompt engineering first, then LoRA tuning if that is not enough. Full fine-tuning on the documents is rejected: it cannot easily be updated monthly, it does not cite, it does not enforce permissions, and it makes destruction of data harder.",
+      "Calculate the weights: 70B in FP16 = 140 GB (does not fit), in INT8 = 70 GB (barely fits, leaving no room for KV), and in INT4 = about 35 GB.",
+      "Calculate KV cache memory using the worked example for an 8B-class model: 128 KB per token × 8,192 ≈ 1 GB per conversation × 30 users = 30 GB, which is more than the weights of an 8B model in FP16 (≈ 16 GB). Conclude that KV cache and context are a core part of sizing, and that GQA, KV quantisation, PagedAttention and context limits are the decision tools.",
+      "Compare a smaller alternative: an Arabic model in the 7–8B class with RAG may be sufficient for a grounded enterprise-answering task and leaves room for the KV cache; decide only after evaluating on your own Arabic set, and re-run the evaluation after any quantisation.",
+      "Set generation: low temperature (0–0.3) for RAG answers, an output limit, and structured outputs for citations. Explain to the vendor that temperature 0 does not prevent hallucination; what prevents it is grounding, the “answer from the context only, otherwise say I do not know” instruction, and verification.",
+      "Design the evaluation: faithfulness to sources with a human-calibrated judge model, Recall@k and MRR for the retriever, review by native Arabic speakers, safety and personal-data checks, and TTFT, p95 and cost per answer."
+    ],
+    "traps": [
+      "“Fine-tune the model on our documents so that it knows them” when the documents change or need citation or permissions.",
+      "“Temperature zero removes hallucination”: it makes outputs deterministic, not correct.",
+      "Sizing the GPU from the weights alone while ignoring the KV cache and runtime overhead (20–40% or more).",
+      "Confusing serving memory (2 bytes/parameter in FP16) with full training memory (≈ 16 bytes/parameter with AdamW).",
+      "Believing that FlashAttention approximates attention or changes its result, or that MoE is cheap in memory because it is cheap in compute.",
+      "Relying on a judge model or the BLEU/ROUGE metric without human calibration, especially with Arabic paraphrases."
+    ],
+    "deliverable": "A written decision that specifies the technique (RAG ± LoRA), the model size and numerical precision from the weight and KV cache calculations, the generation settings, and an evaluation plan with defined metrics."
+  },
+  "review": [
+    {
+      "q": "Why are attention scores divided by √d_k?",
+      "a": "Because the dot product grows with the dimension, so softmax saturates towards a one-hot value and gradients vanish; the scaling keeps the scores in a range that preserves gradients."
+    },
+    {
+      "q": "How much memory does full training of a 7B model with AdamW in mixed precision need?",
+      "a": "About 16 bytes per parameter (2 weights + 2 gradients + 4 FP32 master copy + 8 Adam moments), that is ≈ 112 GB before activations; so it needs several GPUs or ZeRO/FSDP, whereas LoRA/QLoRA fits on a single GPU."
+    },
+    {
+      "q": "Calculate the KV cache per token for a model with 32 layers, 8 KV heads and a head dimension of 128 in FP16.",
+      "a": "2 × 32 × 8 × 128 × 2 = 131,072 bytes = 128 KB per token; a conversation of 8,192 tokens ≈ 1 GB, and 30 users ≈ 30 GB."
+    },
+    {
+      "q": "The loss is flat from the very first step; what is the first action?",
+      "a": "A sanity test by trying to overfit a very small batch, and checking the labels and the data loader; the likely causes are a learning rate that is too low, frozen layers, a bug in the data, or dead activations."
+    },
+    {
+      "q": "What is the difference between RLHF and DPO?",
+      "a": "RLHF trains a reward model and then optimises the policy with PPO and a KL penalty; it is powerful but complex and unstable. DPO optimises directly on preference pairs with a classification-like loss, with no reward model and no reinforcement-learning loop."
+    },
+    {
+      "q": "Why does Arabic text cost more in some models?",
+      "a": "Because of tokenizer fertility: tokenizers trained on English split an Arabic word into more tokens because of morphology and diacritics, so cost and latency rise and the effective context window shrinks."
+    },
+    {
+      "q": "The team changed the embedding model; what must it do with the index?",
+      "a": "Re-embed the entire repository with the new model and switch the indexes atomically, not mix the vectors of two models in one index, and record the model version with every vector."
+    },
+    {
+      "q": "A 70B model is required on a single GPU; which numerical precision brings the weights to ≈ 35 GB?",
+      "a": "INT4 (0.5 bytes per parameter) via GPTQ, AWQ or GGUF, re-running the evaluation on an Arabic set because degradation may be uneven across languages."
+    },
+    {
+      "q": "Why are MoE models described as “cheap in compute, heavy in memory”?",
+      "a": "Because the router sends each token to a few experts, so the active parameters and the compute are fewer, but memory must hold all the experts."
+    },
+    {
+      "q": "What are the caveats of using a language model as a judge?",
+      "a": "Position bias, length bias and self-preference; therefore it must be calibrated on a human-rated sample before relying on it."
+    }
+  ],
+  "summary": "You have mastered this unit when, faced with any scenario, you can identify the cause before the remedy: read a training symptom and know its action; calculate weight memory, training memory and KV cache memory with numbers; explain why attention and the KV cache limit the number of users; choose between prompting, RAG, fine-tuning and distillation with one clear argument; set generation to suit the task without confusing determinism with correctness; and evaluate the system with metrics that separate the retriever from the generator and respect the specifics of Arabic.",
+  "coverage": [
+    "3.1",
+    "3.2",
+    "3.3",
+    "3.4",
+    "3.5",
+    "3.6",
+    "3.7",
+    "3.8",
+    "3.9",
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13",
+    "3.14",
+    "3.15"
+  ]
+}

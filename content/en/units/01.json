@@ -1,0 +1,1047 @@
+{
+  "num": 1,
+  "title": "Exam Method & Decision Arithmetic",
+  "english": "Exam Method & Decision Arithmetic",
+  "subtitle": "From reading the question to the option that survives elimination",
+  "domain": "Serves all domains",
+  "deliverable": "Solve any scenario question with a fixed procedure: extract the requirements, eliminate with a ✓/✗ grid, then do the quick arithmetic for latency, capacity and cost.",
+  "intro": "This unit is the engine that the rest of the units run on. It does not teach one particular technical topic; it gives you five small, reusable tools: a requirements extractor, a spec-matching grid, latency arithmetic, capacity and replica arithmetic, and expected-cost arithmetic. None of them needs more than a phone calculator — according to test-takers' reports, the exam contains no complex calculations — but each one turns the question from “which option looks right?” into “which option survives elimination?”. Because the exam tests the trade-off between two plausible solutions across cost, latency, accuracy and compliance together, mastering these tools raises your score in all seven domains.",
+  "outcomes": [
+    "Apply the six-step answering procedure to any scenario question, starting by reading the last line.",
+    "Extract a scenario's requirements into an eight-field card and classify each requirement as hard or soft.",
+    "Eliminate options with a ✓/✗ grid in spec-matching questions, then choose the cheapest or most suitable of the survivors.",
+    "Calculate a latency budget along the request path, and distinguish percentiles (p95/p99) from the mean, and time to first token from total time.",
+    "Calculate per-replica throughput and the number of replicas using Little's Law, with a utilisation target and N+1 redundancy.",
+    "Compare models by the expected cost of errors, calculate the break-even threshold, and respect capacity constraints before optimising.",
+    "Calculate the cost of instances and LLM APIs, and use prompt length as a cost lever."
+  ],
+  "method": "Study this unit with pencil and paper, not by reading alone. Redo every worked calculation yourself before looking at the result, and draw the ✓/✗ grid for each matching example before reading the verdict. Memorise the six-step procedure until you apply it automatically, then return to this unit whenever you study another one: every decision table on the platform is solved with the same tools. Start with it and finish with it; it is the first thing you read and the last thing you review before the exam.",
+  "chapters": [
+    {
+      "title": "The Answering Procedure and Reading the Requirements",
+      "sections": [
+        {
+          "title": "1.1 The Answering Procedure in Six Steps",
+          "blocks": [
+            {
+              "p": "Most exam questions are long business scenarios ending in four options, at least two of which are plausible. The difference between guessing and deciding is a **fixed procedure** applied to every question in the same order:"
+            },
+            {
+              "ol": [
+                "**Read the last line first.** “Most appropriate”, “most cost-effective”, “first step”, “which principle” and “root cause” are different questions, and each has a different answer for the same scenario.",
+                "**Extract the requirements before looking at the options** (using the card in Section 1.2). If you read the options first, they bias your reading of the scenario.",
+                "**Classify every requirement as hard or soft.** A hard requirement eliminates; a soft one ranks.",
+                "**Eliminate every option that breaks any hard requirement** — including options that meet two out of three.",
+                "**From the survivors, choose the cheapest / simplest / lowest-risk.** The exam rewards the sufficient solution, and over-engineering is a classic distractor.",
+                "**Check your choice against the priority words in the scenario:** regulated, real-time, limited budget, small team, quickly, at scale."
+              ]
+            },
+            {
+              "quote": "Requirements before options, elimination before cost, sufficient before perfect."
+            }
+          ]
+        },
+        {
+          "title": "1.2 The Requirements Extractor",
+          "blocks": [
+            {
+              "p": "Fill in this card from the scenario text. Empty fields are acceptable — in fact useful, because they tell you what **cannot** decide the answer, so you need not spend time on it."
+            },
+            {
+              "table": [
+                [
+                  "Field",
+                  "Look for",
+                  "Example"
+                ],
+                [
+                  "Speed",
+                  "ms, p95/p99, time to first token (TTFT), “real-time”, “interactive”, “within N seconds”",
+                  "p95 ≤ 300 ms"
+                ],
+                [
+                  "Volume",
+                  "Queries per second (QPS), requests per day, peak hours, concurrent users, batch size",
+                  "2M requests/day, peak 9–11 a.m."
+                ],
+                [
+                  "Quality",
+                  "Overall accuracy, precision, recall, F1, faithfulness, “must not miss anything”",
+                  "recall ≥ 0.95"
+                ],
+                [
+                  "Data",
+                  "Personal? Sensitive? Its classification? Its residency? Its retention period?",
+                  "Health records, inside the Kingdom"
+                ],
+                [
+                  "Cost",
+                  "Budget ceiling, “minimise”, “start-up”, “cut the bill by X%”",
+                  "≤ 40K SAR per month"
+                ],
+                [
+                  "Change",
+                  "How often the data or knowledge changes; drift",
+                  "Policies updated weekly"
+                ],
+                [
+                  "People",
+                  "Team size and skills, who consumes the outputs, the need for explanation",
+                  "3 engineers, auditors need reasons"
+                ],
+                [
+                  "Ask",
+                  "Best / first / cheapest / root cause / which principle",
+                  "“Most cost-effective”"
+                ]
+              ]
+            },
+            {
+              "p": "Note that the **Ask** field is the first step of the procedure: if the question is about the “first step”, the answer is usually a diagnosis or a measurement, not a final solution."
+            }
+          ]
+        },
+        {
+          "title": "1.3 Hard versus Soft",
+          "blocks": [
+            {
+              "p": "The wording of a requirement tells you its weight. Learn to catch these words on the first read:"
+            },
+            {
+              "table": [
+                [
+                  "Type",
+                  "Signal words",
+                  "Role in the solution"
+                ],
+                [
+                  "Hard",
+                  "must, required, no more than, the system requires, service level agreement (SLA)",
+                  "Eliminates every option that breaks it"
+                ],
+                [
+                  "Soft",
+                  "preferably, ideally, we would like, if possible",
+                  "Ranks the surviving options only"
+                ]
+              ]
+            },
+            {
+              "quote": "A soft requirement never beats a hard one. A cheaper option that breaks a hard requirement is wrong, not a “trade-off”."
+            },
+            {
+              "p": "This is the most frequent trap: a much cheaper or much faster option that violates a single hard constraint (such as keeping data inside the Kingdom). Its appeal in the other numbers is exactly what makes it a successful distractor."
+            }
+          ]
+        },
+        {
+          "title": "1.4 The Patterns Behind Correct Answers",
+          "blocks": [
+            {
+              "p": "Across all domains, nine patterns recur in the correct answer, and each has a usual wrong alternative that appears among the options. When you hesitate between two options, ask: which one matches the pattern?"
+            },
+            {
+              "table": [
+                [
+                  "Pattern",
+                  "Description",
+                  "Usual wrong alternative"
+                ],
+                [
+                  "Measure before you change",
+                  "Diagnose with data (traces, slices, drift checks) before acting",
+                  "Retraining or buying hardware immediately"
+                ],
+                [
+                  "Fix at the source",
+                  "A data contract, a pipeline fix, access control lists (ACLs) inside retrieval",
+                  "Patching symptoms downstream (post-generation filters)"
+                ],
+                [
+                  "The smallest sufficient change",
+                  "A threshold, a prompt, a configuration, a cache",
+                  "A new architecture or a new model"
+                ],
+                [
+                  "Cascade / Route",
+                  "A cheap path for the easy cases, an expensive one for the hard cases",
+                  "One expensive path for everything"
+                ],
+                [
+                  "Decouple with queues",
+                  "Asynchronous processing for long or bursty work",
+                  "Longer timeouts and bigger servers"
+                ],
+                [
+                  "Redundancy across failure domains",
+                  "Replicas in multiple regions, and fallback providers",
+                  "One bigger instance"
+                ],
+                [
+                  "A human where there is no way back",
+                  "Approval gates for high-impact actions",
+                  "Full autonomy"
+                ],
+                [
+                  "Compliance first",
+                  "Classification and the Personal Data Protection Law (PDPL) determine what is permitted",
+                  "The cheapest technically correct option"
+                ],
+                [
+                  "Release like software",
+                  "Gates, shadow deployment, canary release, rollback, version management",
+                  "A direct push to 100%"
+                ]
+              ]
+            },
+            {
+              "quote": "If one of two options is “bigger” and the other is “more precisely diagnostic or closer to the source”, the second is usually the answer."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Spec-Matching Grid",
+      "sections": [
+        {
+          "title": "2.1 The Grid and the Arabic Customer-Service Assistant Example",
+          "blocks": [
+            {
+              "p": "The hardest pattern according to test-takers' reports: scenario → three core requirements → a specification table → options A/B/C/D. The winning option meets **all** three requirements, and is then the cheapest or most suitable among those that do. The tool: a ✓/✗ grid."
+            },
+            {
+              "h": "The scenario"
+            },
+            {
+              "p": "A telecom company wants an Arabic chat assistant. Requirements: (1) p95 latency to first token ≤ 1.5 seconds; (2) answer quality ≥ 85% on the internal Arabic evaluation set; (3) customer data stays inside the Kingdom. Expected load is 40 requests per second at peak. Required: the most cost-effective option."
+            },
+            {
+              "table": [
+                [
+                  "Option",
+                  "Model / hosting",
+                  "p95 TTFT",
+                  "Arabic evaluation",
+                  "Data location",
+                  "Monthly cost"
+                ],
+                [
+                  "A",
+                  "Large 70B model, external API",
+                  "0.9 s",
+                  "91%",
+                  "Outside the Kingdom",
+                  "38K SAR"
+                ],
+                [
+                  "B",
+                  "70B model, GPUs inside the Kingdom, FP16",
+                  "2.4 s",
+                  "90%",
+                  "Inside the Kingdom",
+                  "95K SAR"
+                ],
+                [
+                  "C",
+                  "8B model fine-tuned for Arabic, inside the Kingdom, INT8 + continuous batching",
+                  "0.7 s",
+                  "87%",
+                  "Inside the Kingdom",
+                  "22K SAR"
+                ],
+                [
+                  "D",
+                  "1B model, inside the Kingdom on a CPU",
+                  "1.1 s",
+                  "71%",
+                  "Inside the Kingdom",
+                  "6K SAR"
+                ]
+              ]
+            },
+            {
+              "h": "The elimination grid"
+            },
+            {
+              "table": [
+                [
+                  "Option",
+                  "Speed ≤ 1.5 s",
+                  "Quality ≥ 85%",
+                  "Inside the Kingdom",
+                  "Verdict"
+                ],
+                [
+                  "A",
+                  "✓",
+                  "✓",
+                  "✗",
+                  "Eliminated — breaks data residency (hard)"
+                ],
+                [
+                  "B",
+                  "✗",
+                  "✓",
+                  "✓",
+                  "Eliminated — too slow"
+                ],
+                [
+                  "C",
+                  "✓",
+                  "✓",
+                  "✓",
+                  "Survives"
+                ],
+                [
+                  "D",
+                  "✓",
+                  "✗",
+                  "✓",
+                  "Eliminated — low quality even though it is the cheapest"
+                ]
+              ]
+            },
+            {
+              "p": "**Answer: C.** Note the traps: A has the highest quality and is the fastest but violates a hard compliance constraint; D is the cheapest but fails on quality; and B is the large model that is “apparently safe” but exceeds the latency requirement. Do not bring cost in until after elimination — and here only one option survived anyway."
+            },
+            {
+              "quote": "If two options survive, choose the cheaper one, unless the scenario gives another reason: headroom for growth, team skills, vendor lock-in."
+            }
+          ]
+        },
+        {
+          "title": "2.2 Example (A): Choosing an Embedding Model for Arabic Retrieval",
+          "blocks": [
+            {
+              "p": "The four examples that follow show the elimination method on the kind of tables that test-takers described: a scenario, three core requirements, a specification table and four options. Each example ends with the general lesson that its table teaches."
+            },
+            {
+              "p": "**Requirements:** (1) Recall@5 ≥ 0.85 on an internal Arabic query set (Modern Standard Arabic + Saudi dialect); (2) embedding time ≤ 20 ms per query on the available hardware; (3) can be self-hosted inside the Kingdom."
+            },
+            {
+              "table": [
+                [
+                  "Model",
+                  "Recall@5 (Arabic set)",
+                  "Recall@5 (English benchmark)",
+                  "Latency",
+                  "Hosting",
+                  "Dimensions",
+                  "Cost"
+                ],
+                [
+                  "E1 · Embedding via an API",
+                  "0.88",
+                  "0.93",
+                  "35 ms (network)",
+                  "Provider abroad",
+                  "3,072",
+                  "Per token"
+                ],
+                [
+                  "E2 · Large multilingual model",
+                  "0.89",
+                  "0.90",
+                  "28 ms",
+                  "Self-hosted",
+                  "1,024",
+                  "One GPU"
+                ],
+                [
+                  "E3 · Base model fine-tuned for Arabic",
+                  "0.87",
+                  "0.81",
+                  "9 ms",
+                  "Self-hosted",
+                  "768",
+                  "CPU or small GPU"
+                ],
+                [
+                  "E4 · Small English model",
+                  "0.62",
+                  "0.88",
+                  "4 ms",
+                  "Self-hosted",
+                  "384",
+                  "CPU"
+                ]
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Option",
+                  "Recall ≥ 0.85",
+                  "≤ 20 ms",
+                  "Inside the Kingdom",
+                  "Verdict"
+                ],
+                [
+                  "E1",
+                  "✓",
+                  "✗",
+                  "✗",
+                  "Eliminated"
+                ],
+                [
+                  "E2",
+                  "✓",
+                  "✗",
+                  "✓",
+                  "Eliminated — slow"
+                ],
+                [
+                  "E3",
+                  "✓",
+                  "✓",
+                  "✓",
+                  "Survives"
+                ],
+                [
+                  "E4",
+                  "✗",
+                  "✓",
+                  "✓",
+                  "Eliminated — fails on Arabic"
+                ]
+              ]
+            },
+            {
+              "p": "**Lesson:** the English benchmark column is a distractor — the requirement is defined on the Arabic set. E3 is weaker in English but is the most suitable for this problem, and its smaller dimensionality (768 versus 1,024) cuts vector-store memory by 25% compared with E2."
+            },
+            {
+              "quote": "Always evaluate on the data the system will actually see."
+            }
+          ]
+        },
+        {
+          "title": "2.3 Example (B): A Vector Store for a Growing Knowledge Base",
+          "blocks": [
+            {
+              "p": "**Requirements:** (1) support 20 million vectors within 18 months; (2) search p95 ≤ 50 ms with filtering on access-control (ACL) metadata; (3) delete a document within 24 hours (data-subject requests under the Personal Data Protection Law (PDPL)); with the lowest operational burden for a team of three people."
+            },
+            {
+              "table": [
+                [
+                  "Option",
+                  "Maximum practical size",
+                  "Filtered-search p95",
+                  "Deletion",
+                  "Operational burden",
+                  "Monthly"
+                ],
+                [
+                  "V1 · A vector extension in the existing Postgres",
+                  "~5M",
+                  "40 ms (≤ 2M), 120 ms (> 10M)",
+                  "✓ Immediate",
+                  "Low (already operated)",
+                  "$600"
+                ],
+                [
+                  "V2 · A managed vector database (in-Kingdom region)",
+                  "100M+",
+                  "25 ms",
+                  "✓ Immediate",
+                  "Low",
+                  "$2,400"
+                ],
+                [
+                  "V3 · A self-managed open-source cluster",
+                  "100M+",
+                  "20 ms",
+                  "✓",
+                  "High (3 nodes, upgrades, backups)",
+                  "$1,500 + staff time"
+                ],
+                [
+                  "V4 · An in-memory library inside the application",
+                  "~10M per node",
+                  "5 ms",
+                  "✗ Requires a rebuild",
+                  "Medium",
+                  "$400"
+                ]
+              ]
+            },
+            {
+              "p": "**Elimination:** V1 fails on size and latency at 20 million; V4 fails on deletion (a rebuild) and on size; and V3 meets the technical requirements but violates the soft constraint “lowest operational burden for three people” — and team time is a real cost. V2 meets every hard requirement with a low burden."
+            },
+            {
+              "quote": "The “cheapest line item” (V4/V1) loses to the requirements; and among technically equal options, the team constraint decides."
+            }
+          ]
+        },
+        {
+          "title": "2.4 Example (C): A Deployment Option under a Service Level Agreement",
+          "blocks": [
+            {
+              "p": "**Requirements:** (1) 99.9% monthly availability for a citizen-facing service; (2) p95 ≤ 800 ms; (3) predictable cost with peaks of 4 times the average in the Hajj and Ramadan seasons."
+            },
+            {
+              "table": [
+                [
+                  "Option",
+                  "Availability design",
+                  "p95 at a 4× peak",
+                  "Cost behaviour"
+                ],
+                [
+                  "D1 · One large GPU server in one region",
+                  "~99.5% (single point of failure)",
+                  "600 ms",
+                  "Fixed"
+                ],
+                [
+                  "D2 · Two replicas in one region, manual scaling",
+                  "~99.8% (a regional outage takes everything down)",
+                  "1,900 ms at peak",
+                  "Fixed, and short of capacity at peaks"
+                ],
+                [
+                  "D3 · Replicas across two regions, autoscaling + pre-scheduled seasonal scaling, and a reserved minimum",
+                  "≥ 99.9%",
+                  "650 ms",
+                  "Reserved minimum + elastic peaks"
+                ],
+                [
+                  "D4 · Serverless GPU, scale to zero",
+                  "Depends on cold starts",
+                  "5–60 s on a cold start",
+                  "Pay per use, unpredictable at peak"
+                ]
+              ]
+            },
+            {
+              "p": "**Elimination:** D1 and D2 fail on availability; D2 also fails on peak latency; and D4 fails on latency (cold starts) for a citizen-facing service. D3 is the only design that meets all three."
+            },
+            {
+              "ul": [
+                "Availability targets mean redundancy across multiple zones.",
+                "Seasonal peaks mean scheduled scaling in addition to metric-based scaling.",
+                "Predictable cost comes from a reserved minimum, not from a fixed fleet sized for the peak."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.5 Example (D): OCR and Extraction for Invoices",
+          "blocks": [
+            {
+              "p": "**Requirements:** (1) field-level accuracy ≥ 97% on Arabic/English invoices; (2) process 50,000 invoices overnight within 6 hours; (3) cost ≤ $0.01 per invoice."
+            },
+            {
+              "table": [
+                [
+                  "Option",
+                  "Field accuracy",
+                  "Throughput",
+                  "Cost / invoice"
+                ],
+                [
+                  "O1 · A large vision-language model (VLM) on every page",
+                  "98.5%",
+                  "4,000/hour",
+                  "$0.030"
+                ],
+                [
+                  "O2 · Optical character recognition (OCR) + a layout model + rules; a VLM for low-confidence pages only (~10%)",
+                  "97.6%",
+                  "12,000/hour",
+                  "$0.006"
+                ],
+                [
+                  "O3 · OCR + regular-expression (Regex) templates",
+                  "91%",
+                  "30,000/hour",
+                  "$0.001"
+                ],
+                [
+                  "O4 · Manual entry",
+                  "99%",
+                  "600/hour",
+                  "$0.40"
+                ]
+              ]
+            },
+            {
+              "formula": "O1: 50,000 ÷ 4,000 = 12.5 h > 6 h   ✗"
+            },
+            {
+              "p": "**Elimination:** O3 fails on accuracy; O4 fails on throughput and cost; and O1 fails on cost (and on throughput too, as the calculation shows). O2 meets all three."
+            },
+            {
+              "quote": "A cascade — a cheap method for the easy majority and an expensive model only where confidence is low — is a frequently winning pattern for cost-constrained quality requirements, and it is also used to route LLMs."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Latency and Capacity Arithmetic",
+      "sections": [
+        {
+          "title": "3.1 Percentiles, Not Means",
+          "blocks": [
+            {
+              "p": "p50 is the typical user; p95/p99 is the affected user, and service level agreements are written on them. A system whose mean latency is 120 ms may have a p99 of 2 seconds."
+            },
+            {
+              "quote": "If the scenario says “users complain of intermittent slowness”, the metric required is tail latency (p95/p99), not the mean."
+            }
+          ]
+        },
+        {
+          "title": "3.2 The Latency Budget along the Request Path",
+          "blocks": [
+            {
+              "p": "Latency budgets accumulate along the request path. In a retrieval-augmented generation (RAG) assistant the stages look like this, and each has a lever if it is slow:"
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Typical value",
+                  "Lever if slow"
+                ],
+                [
+                  "Network and authentication",
+                  "10–50 ms",
+                  "Same region, keep-alive, regional deployment"
+                ],
+                [
+                  "Query embedding",
+                  "5–30 ms",
+                  "A small embedding model, GPU or batching, caching"
+                ],
+                [
+                  "Vector search",
+                  "5–50 ms",
+                  "An approximate index (ANN: HNSW/IVF), filtering inside the index, more replicas"
+                ],
+                [
+                  "Reranking",
+                  "30–200 ms",
+                  "Rerank the top 20, not the top 100; a smaller cross-encoder"
+                ],
+                [
+                  "Model time to first token (TTFT)",
+                  "150 ms – 2 s",
+                  "A smaller or quantised model, a shorter prompt, prompt caching, less queue waiting"
+                ],
+                [
+                  "Generation",
+                  "Number of output tokens × time per token",
+                  "Fewer output tokens, a faster model, speculative decoding"
+                ]
+              ]
+            },
+            {
+              "formula": "LLM latency ≈ TTFT + N_out × TPOT"
+            },
+            {
+              "p": "where TPOT is the time for each output token (Time Per Output Token). When a question asks you to reduce latency, first identify which stage is consuming the budget, then pick its lever — do not scale up all the hardware."
+            }
+          ]
+        },
+        {
+          "title": "3.3 Time to First Token, Total Time and Streaming",
+          "blocks": [
+            {
+              "h": "Worked example"
+            },
+            {
+              "formula": "TTFT 400 ms + 250 tokens × 25 ms = 0.4 + 6.25 ≈ 6.7 s"
+            },
+            {
+              "p": "Streaming lets the user see text after 0.4 seconds, but it does **not** reduce the total time or the cost."
+            },
+            {
+              "table": [
+                [
+                  "Wording of the requirement",
+                  "Is streaming the fix?"
+                ],
+                [
+                  "“The time until the user sees something”",
+                  "Yes"
+                ],
+                [
+                  "“Total completion time for an API consumer”",
+                  "No — reduce output tokens or use a faster model"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.4 Queues Blow Up the Tail",
+          "blocks": [
+            {
+              "p": "As utilisation approaches 100%, waiting time grows non-linearly. A service at 90% utilisation may have a p99 several times its value for the same service at 60%."
+            },
+            {
+              "quote": "This is why autoscaling targets are usually set at 60–75% utilisation, not 100%."
+            }
+          ]
+        },
+        {
+          "title": "3.5 Little's Law and the Number of Replicas",
+          "blocks": [
+            {
+              "p": "Little's Law: the number of concurrent requests in flight = arrival rate × time in the system. From it we calculate per-replica throughput and the number of replicas:"
+            },
+            {
+              "formula": "L = λ × W"
+            },
+            {
+              "formula": "throughput per replica = concurrent slots per replica ÷ latency per request"
+            },
+            {
+              "formula": "replicas = ⌈ peak QPS ÷ (throughput per replica × target utilisation) ⌉  (+1 for HA)"
+            },
+            {
+              "h": "Worked example (a high-load scenario)"
+            },
+            {
+              "ol": [
+                "Peak is 600 requests/second. One replica handles 8 concurrent requests, each taking 200 ms.",
+                "Replica throughput: 8 ÷ 0.2 = 40 requests/second.",
+                "At 100% utilisation: 600 ÷ 40 = 15 replicas.",
+                "At a 70% utilisation target: effective capacity 40 × 0.7 = 28, so you need ⌈600 ÷ 28⌉ = 22 replicas.",
+                "Plus one replica for redundancy (N+1) = 23 replicas.",
+                "Off-peak at 60 requests/second: ⌈60 ÷ 28⌉ + 1 = 4 replicas → autoscaling saves about 80% of replica-hours off-peak."
+              ]
+            },
+            {
+              "p": "Questions about “hours under high load” (sizing by the daily peak) are solved in Unit 08."
+            }
+          ]
+        },
+        {
+          "title": "3.6 From Symptom to Cause to First Fix",
+          "blocks": [
+            {
+              "p": "“Problem → most appropriate fix” questions give you a symptom in an existing system. This table links common symptoms to their most likely cause and to the most appropriate first fix:"
+            },
+            {
+              "table": [
+                [
+                  "Symptom",
+                  "Most likely cause",
+                  "Most appropriate first fix"
+                ],
+                [
+                  "p99 rises at peak time only",
+                  "Saturation and queues",
+                  "Automatic horizontal scaling, more replicas"
+                ],
+                [
+                  "Slow even under low load",
+                  "A large model, long prompts, cold starts, cross-region calls",
+                  "A smaller or quantised model, prompt trimming, a pre-warmed pool, co-locating the components"
+                ],
+                [
+                  "GPU utilisation at 15% and latency is good",
+                  "Over-provisioned",
+                  "Fewer or smaller instances, batching, GPU partitioning (MIG) or sharing"
+                ],
+                [
+                  "GPU at 100% and the queue is growing",
+                  "Insufficient capacity or no batching",
+                  "Continuous batching, horizontal scaling"
+                ],
+                [
+                  "Errors when one region goes down",
+                  "Deployment in a single availability zone (Single-AZ)",
+                  "Spread replicas across zones + health checks"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Expected-Cost and Running-Cost Arithmetic",
+      "sections": [
+        {
+          "title": "4.1 The Expected Cost of Errors",
+          "blocks": [
+            {
+              "p": "When the prices of errors differ, the best model is the one with the **lowest expected cost** — not the highest overall accuracy and not the highest F1."
+            },
+            {
+              "formula": "Expected cost = FP × C_FP + FN × C_FN"
+            },
+            {
+              "p": "where FP is the number of false positives and C_FP the cost of each one, and FN is the number of false negatives and C_FN the cost of each one."
+            }
+          ]
+        },
+        {
+          "title": "4.2 Worked Example: Bank Fraud (an Exam Question)",
+          "blocks": [
+            {
+              "p": "The cost of a false positive (a legitimate transaction flagged as fraud → an analyst's review and customer annoyance) = $10. The cost of a false negative (missing real fraud) = $7,000. One million transactions a month, and a fraud rate of 0.2% (2,000 cases)."
+            },
+            {
+              "table": [
+                [
+                  "Model",
+                  "Precision",
+                  "Recall",
+                  "TP",
+                  "FN",
+                  "FP",
+                  "FN cost",
+                  "FP cost",
+                  "Total"
+                ],
+                [
+                  "X",
+                  "0.90",
+                  "0.70",
+                  "1,400",
+                  "600",
+                  "156",
+                  "$4.20M",
+                  "$1.6k",
+                  "$4.20M"
+                ],
+                [
+                  "Y",
+                  "0.50",
+                  "0.90",
+                  "1,800",
+                  "200",
+                  "1,800",
+                  "$1.40M",
+                  "$18k",
+                  "$1.42M"
+                ],
+                [
+                  "Z",
+                  "0.20",
+                  "0.97",
+                  "1,940",
+                  "60",
+                  "7,760",
+                  "$0.42M",
+                  "$78k",
+                  "$0.50M"
+                ]
+              ]
+            },
+            {
+              "p": "How the table is built: TP = Recall × 2,000; FN = 2,000 − TP; FP = TP ÷ Precision − TP. For model Z, for example: TP = 0.97 × 2,000 = 1,940, and FP = 1,940 ÷ 0.20 − 1,940 = 7,760."
+            },
+            {
+              "p": "**Answer: Z**, the one with the highest recall, even though its precision is only 0.20 — because missing one fraud costs as much as 700 false alarms (7,000 ÷ 10). The rule relayed by one test-taker — “choose the model with the highest recall, because missing real fraud is far more expensive than reviewing a wrong alert” — is exactly this calculation."
+            },
+            {
+              "quote": "Errors are not equally priced → compare by expected cost, not by overall accuracy or by F1."
+            }
+          ]
+        },
+        {
+          "title": "4.3 The Twist: Capacity Constraint First, Then Optimisation",
+          "blocks": [
+            {
+              "p": "Watch for a modified version of the same question: if the scenario adds a capacity constraint such as “the review team can handle at most 3,000 alerts per month”, calculate the number of alerts for each model (TP + FP):"
+            },
+            {
+              "table": [
+                [
+                  "Model",
+                  "Monthly alerts",
+                  "≤ 3,000?"
+                ],
+                [
+                  "X",
+                  "1,400 + 156 = 1,556",
+                  "✓"
+                ],
+                [
+                  "Y",
+                  "1,800 + 1,800 = 3,600",
+                  "✗"
+                ],
+                [
+                  "Z",
+                  "1,940 + 7,760 = 9,700",
+                  "✗"
+                ]
+              ]
+            },
+            {
+              "p": "Z and Y become infeasible, and only X fits the constraint as it stands — or, better still, re-tune Y's threshold to produce 3,000 alerts or fewer while keeping the highest recall possible."
+            },
+            {
+              "quote": "Constraints first, then optimisation."
+            }
+          ]
+        },
+        {
+          "title": "4.4 The Break-Even Ratio and Where to Put the Threshold",
+          "blocks": [
+            {
+              "p": "If the review cost is paid only on wrongly flagged cases (as in the table), flag the transaction when:"
+            },
+            {
+              "formula": "P × C_FN > (1 − P) × C_FP   ⇒   P > C_FP / (C_FP + C_FN) = 10 / 7,010 ≈ 0.14%"
+            },
+            {
+              "p": "If the review cost is paid on **every** flag (fraud or not), the rule is:"
+            },
+            {
+              "formula": "P > C_FP / C_FN"
+            },
+            {
+              "p": "When C_FN is much larger than C_FP, the two formulas become practically equal. In both cases the optimal threshold lies far below 0.5. (Charging $10 on the 1,940 true positives of model Z as well adds about $19,000 and changes no ranking.)"
+            },
+            {
+              "quote": "The default threshold of 0.5 is not sacred: when a miss is hundreds of times more expensive, the optimal threshold falls to about a hundredth."
+            }
+          ]
+        },
+        {
+          "title": "4.5 Cost Arithmetic on One Page",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Formula",
+                  "Use"
+                ],
+                [
+                  "Monthly instance cost = hourly price × running hours × count",
+                  "Comparing always-on versus autoscaling versus scheduling"
+                ],
+                [
+                  "LLM API cost = requests × (input tokens × input price + output tokens × output price)",
+                  "Output tokens usually cost 3–5 times more than input tokens"
+                ],
+                [
+                  "Tokens per word (tokenizer fertility)",
+                  "Arabic often needs more tokens per word than English in English-centric tokenizers → higher cost and latency"
+                ],
+                [
+                  "Reservation discounts and spot / reserved instances",
+                  "See Unit 08"
+                ]
+              ]
+            },
+            {
+              "formula": "Monthly instance cost = hourly rate × hours running × count"
+            },
+            {
+              "formula": "LLM API cost = requests × (in_tokens × price_in + out_tokens × price_out)"
+            }
+          ]
+        },
+        {
+          "title": "4.6 Worked Example: Prompt Length Is a Cost Lever",
+          "blocks": [
+            {
+              "p": "One million requests a month, each request 1,500 input tokens + 300 output tokens, and prices of $0.50 / $1.50 per million tokens:"
+            },
+            {
+              "formula": "input: 1M × 1,500 = 1,500M tokens × $0.50/M = $750"
+            },
+            {
+              "formula": "output: 1M × 300 = 300M tokens × $1.50/M = $450   →   total $1,200 / month"
+            },
+            {
+              "p": "Shortening the system prompt from 1,000 to 500 tokens saves 500 million input tokens = $250 per month (−21%) without touching the model."
+            },
+            {
+              "quote": "Prompt length is a cost lever — and the system prompt is paid for with every request unless prompt caching is used."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Apply the whole procedure — extracting the requirements, elimination, then capacity and cost arithmetic — to a single scenario that brings together the unit's tools.",
+    "scenario": [
+      "A government entity in Riyadh launches an Arabic assistant to answer citizens' enquiries about its services, built on retrieval-augmented generation (RAG) over procedural manuals that are updated weekly. The data includes ID numbers and personal enquiries, and “must” stay inside the Kingdom. The contract requires a p95 time to first token ≤ 1.5 seconds and quality ≥ 85% on an internal Arabic evaluation set, and the solution is “preferably” easy to operate for a team of four engineers.",
+      "The expected peak is 600 requests/second on results-announcement days, and 60 requests/second on ordinary days. One replica of the candidate option handles 8 concurrent requests at 200 ms per request. The average request is 1,500 input tokens, of which 1,000 are system-prompt tokens, and 300 output tokens. The manager asks you: which option is the most suitable, how many replicas do we need at peak and off-peak, and what is the fastest way to cut the token bill?"
+    ],
+    "steps": [
+      "Read the last line: three things are asked — the most suitable option, the number of replicas, and the first cost lever.",
+      "Fill in the requirements card: Speed p95 TTFT ≤ 1.5 s; Volume 600/60 requests per second; Quality ≥ 85%; Data personal and inside the Kingdom; Change weekly; People a team of four.",
+      "Classify: latency, quality and data residency are hard (“requires”, “must”); ease of operation is soft (“preferably”) — it ranks and does not eliminate.",
+      "Apply the ✓/✗ grid to the options: eliminate any external API however good its quality, any model that exceeds 1.5 s, and any model below 85%; then choose the cheapest of the survivors, and break ties with the soft constraint.",
+      "Calculate capacity: replica throughput = 8 ÷ 0.2 = 40 requests/second; at a 70% target = 28; peak ⌈600 ÷ 28⌉ + 1 = 23 replicas; ordinary days ⌈60 ÷ 28⌉ + 1 = 4 replicas.",
+      "Propose autoscaling with scheduled scaling ahead of the known results-announcement days, and replicas spread across two regions.",
+      "The first cost lever: shorten the system prompt or enable prompt caching, because the 1,000 tokens are paid for with every request — the smallest sufficient change before changing the model.",
+      "Check against the priority words: “regulated” and “personal data” confirm that compliance comes before price."
+    ],
+    "traps": [
+      "Choosing the external API because it has the highest quality and is the cheapest — it breaks a hard requirement, so it is wrong, not a “trade-off”.",
+      "Sizing the fleet at 100% utilisation (15 replicas) — it blows up tail latency at peak.",
+      "Forgetting the N+1 replica or putting all replicas in one region.",
+      "Proposing streaming to cut total time or cost — streaming reduces only perceived time.",
+      "Judging latency by the mean instead of the p95 stipulated in the contract.",
+      "Jumping to a bigger model or more GPUs before measuring which stage is consuming the latency budget."
+    ],
+    "deliverable": "A written decision of three lines: the surviving option with the reason each competitor was eliminated, the number of replicas at peak and off-peak with the calculation, and the first lever for cutting cost."
+  },
+  "review": [
+    {
+      "q": "Why do you read the last line of the question before the scenario?",
+      "a": "Because “most appropriate”, “most cost-effective”, “first step” and “root cause” are different questions about the same scenario; knowing what is asked first determines what you look for in the text."
+    },
+    {
+      "q": "An option meets two of three hard requirements and is by far the cheapest. What is the verdict?",
+      "a": "Eliminated. A hard requirement eliminates every option that breaks it, and a cheaper option that breaks a hard requirement is wrong, not a trade-off; cost enters only among the survivors."
+    },
+    {
+      "q": "In the customer-service assistant example, why did option B fall even though it is a 70B model inside the Kingdom with 90% quality?",
+      "a": "Because its p95 time to first token is 2.4 seconds, which exceeds the hard requirement of 1.5 seconds; it is the “apparently safe” option that fails on latency."
+    },
+    {
+      "q": "An embedding model beats an English benchmark but is weak on the internal Arabic query set. Is it chosen?",
+      "a": "No, if the requirement is defined on the Arabic set; the English benchmark column is a distractor. Always evaluate on the data the system will actually see."
+    },
+    {
+      "q": "TTFT = 400 ms, and 250 output tokens at 25 ms per token. What is the total time, and what does streaming change?",
+      "a": "0.4 + 6.25 ≈ 6.7 seconds. Streaming lets the user see text after 0.4 seconds, but it does not reduce the total time or the cost; it is the fix only if the requirement is the time until the first content appears."
+    },
+    {
+      "q": "Why are autoscaling targets usually set at 60–75% rather than 100%?",
+      "a": "Because queue waiting time grows non-linearly as utilisation approaches 100%, so p99 multiplies at 90% compared with 60%."
+    },
+    {
+      "q": "A peak of 600 requests/second, and a replica handles 8 concurrent requests at 200 ms. How many replicas do you need at a 70% target with N+1?",
+      "a": "Throughput is 8 ÷ 0.2 = 40 and effective throughput 40 × 0.7 = 28; ⌈600 ÷ 28⌉ = 22, plus one for redundancy = 23 replicas."
+    },
+    {
+      "q": "In the bank-fraud example, why is Z chosen even though its precision is 0.20?",
+      "a": "Because its total expected cost is about 0.50 million dollars versus 1.42 for Y and 4.20 for X; missing one fraud ($7,000) is equivalent to 700 false alarms ($10)."
+    },
+    {
+      "q": "A constraint is added: the review team can handle at most 3,000 alerts per month. What changes?",
+      "a": "Z (9,700 alerts) and Y (3,600) become infeasible, and only X (1,556) fits the constraint; the better course is to re-tune Y's threshold to produce ≤ 3,000 alerts with the highest recall possible. Constraints first, then optimisation."
+    },
+    {
+      "q": "One million requests a month at 1,500 input and 300 output tokens, priced at $0.50 / $1.50 per million tokens. What is the bill, and how much does shortening the system prompt from 1,000 to 500 tokens save?",
+      "a": "750 + 450 = $1,200 per month; and the shortening saves 500 million input tokens = $250 (−21%) without changing the model."
+    }
+  ],
+  "summary": "You have mastered this unit when, faced with any scenario question, you can read the ask first, fill in the requirements card before looking at the options, separate hard from soft, and eliminate with a ✓/✗ grid before you look at the price — and then settle the numbers yourself: the latency budget with percentiles, the number of replicas with Little's Law plus a utilisation target and N+1, the best model by expected cost after respecting capacity constraints, and the token bill by prompt length. The final standard: that you can explain why every distractor lost, not merely know the answer.",
+  "coverage": [
+    "1.0",
+    "1.1",
+    "1.2",
+    "1.3",
+    "1.4",
+    "1.5",
+    "1.6",
+    "1.7",
+    "1.8"
+  ]
+}

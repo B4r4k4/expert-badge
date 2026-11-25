@@ -1,0 +1,890 @@
+{
+  "before": [
+    "The previous units were about the models themselves. This unit is about the **software around the model**: how to build a complete RAG system that stays up to date, how to serve the model through an interface that others depend on, how to make the system withstand failures, how to connect it to enterprise systems, and how to test and monitor it. It is Domain 3 (about 21 questions out of 150).",
+    "You will meet many software-engineering terms here: HTTP status codes, retries, the circuit breaker, queues and gateways. We explain each one with an everyday analogy, and you need no programming background.",
+    "Before this you need from Unit 00: Sections 4.5 and 4.6 (vector representations and RAG) and Sections 5.1 and 5.3 (the server, the interface and caching). From Unit 03: Section 3.5 (ranking metrics)."
+  ],
+  "sections": {
+    "1.1": {
+      "simple": [
+        "A RAG system has **two separate pipelines** that run at different times. The **ingestion pipeline** runs in advance (or whenever a document changes): it reads the documents, cuts them into chunks, adds information about each chunk, converts the chunks into vectors, and saves them in the index. The **query pipeline** runs with every question: it understands the question, searches the index, ranks the results, sends the best of them to the model together with the question, and then returns the answer with its sources.",
+        "Understanding the two pipelines is the key to diagnosis. If the answer is out of date, the problem is usually in the ingestion pipeline. If it is unrelated to the question, the problem is in the query pipeline."
+      ],
+      "example": "A research library. **Ingestion**: a clerk receives the new books, divides each book into chapters, writes an index card for each chapter (the title, the author, the year, and who is entitled to consult it), and sorts the cards. **Query**: a researcher comes with a question, the librarian searches the cards, picks the 5 most suitable chapters and hands them to the researcher to write the answer from them.",
+      "terms": [
+        {
+          "ar": "خط الاستيعاب",
+          "en": "Ingestion pipeline",
+          "def": "The chain of steps that prepares documents for search: extraction, cleaning, chunking, adding metadata, embedding and saving to the index."
+        },
+        {
+          "ar": "خط الاستعلام",
+          "en": "Query pipeline",
+          "def": "The steps carried out with every question: understanding it, searching, reranking, prompt assembly, generation and verification."
+        },
+        {
+          "ar": "التقطيع",
+          "en": "Chunking",
+          "def": "Splitting a document into small, searchable chunks (typically 200 to 800 tokens), with a small overlap between them so that no idea is cut off."
+        },
+        {
+          "ar": "الإدراج أو التحديث",
+          "en": "Upsert",
+          "def": "A single operation: if the item exists you update it, and if it does not you add it. Short for Update + Insert."
+        },
+        {
+          "ar": "المقاطع القديمة",
+          "en": "Stale chunks",
+          "def": "Chunks from an old version of a document that remained in the index after it was updated, so they appear in search with information that is no longer correct."
+        },
+        {
+          "ar": "تجميع الموجّه",
+          "en": "Prompt assembly",
+          "def": "Building the final text sent to the model: the instructions, the best chunks with their identifiers, and the question."
+        },
+        {
+          "ar": "الاستشهاد",
+          "en": "Citation",
+          "def": "Naming the source the information in the answer came from (document name, version and link), so that it can be verified."
+        }
+      ]
+    },
+    "1.2": {
+      "simple": [
+        "This is one of the most frequently recurring scenarios in the exam: **documents change, and the assistant gives out-of-date information**. The table gives each symptom its cause and its fix.",
+        "The golden rule: the solution lies in the **ingestion pipeline, the index and the cache**, not in retraining the model. The freshness checklist has five items: (1) **incremental** indexing that processes only what changed, triggered by change events, (2) a **version number** and a “current” flag for every document, (3) **deleting the old chunks**, (4) **cache invalidation** for answers tied to the changed document, and (5) **monitoring index freshness**."
+      ],
+      "example": "The leave regulation was updated from “21 days” to “30 days”. The new version was added to the index, but the old one was not deleted. So the assistant sometimes finds the “21” chunk and sometimes the “30” chunk, and gives contradictory answers. Even after the old one is deleted, if the question “How much leave do I get?” is cached with the answer “21”, the assistant will keep giving that answer until the cache entry expires.",
+      "terms": [
+        {
+          "ar": "الفهرسة التزايدية",
+          "en": "Incremental / delta indexing",
+          "def": "Updating the index with only the documents that changed, instead of rebuilding the whole index from scratch."
+        },
+        {
+          "ar": "كشف التغيير",
+          "en": "Change detection (CDC, webhooks, checksums)",
+          "def": "Ways to know that a document has changed: a notification from the source system (webhook), monitoring database changes (CDC), or comparing the hash."
+        },
+        {
+          "ar": "البصمة",
+          "en": "Hash / checksum",
+          "def": "A short number computed from the content of a file. If a single character changes, the hash changes, so we know the file has changed without reading all of it."
+        },
+        {
+          "ar": "مدة الصلاحية",
+          "en": "Time-To-Live — TTL",
+          "def": "How long a cached copy stays valid before it is deleted and recomputed."
+        },
+        {
+          "ar": "إبطال التخزين المؤقت",
+          "en": "Cache invalidation",
+          "def": "Deleting cached answers because the information they were built on has changed."
+        },
+        {
+          "ar": "التبديل الأزرق-الأخضر",
+          "en": "Blue-green switch",
+          "def": "Building a complete new version (an index or a system) alongside the old one, then switching all requests to it at once, with the ability to go back instantly."
+        },
+        {
+          "ar": "التصفية المسبقة",
+          "en": "Pre-filtering",
+          "def": "Applying the permission conditions inside the search itself, so that documents the user is not entitled to see are never retrieved in the first place."
+        }
+      ]
+    },
+    "1.3": {
+      "simple": [
+        "When a RAG system answers wrongly, **identify the responsible stage first**. Memorise three main cases: the correct document **never appears** in the results → the problem is in **retrieval**. It appears but **at a low rank** → the problem is in **ranking**. It appears at the top but **the answer is wrong** → the problem is in **generation**.",
+        "Two special cases: search misses **exact terms** (an article number, or a product code) → add keyword search (BM25). Answers about **tables** are poor → the problem is in how tables are read and chunked."
+      ],
+      "example": "You asked your assistant to bring the file “Al-Noor Company contract 2025”. (1) It did not find it in the archive at all: a search problem. (2) It found it but put it under 15 other files, so you did not see it: a ranking problem. (3) It brought it to the top of the pile, but summarised it wrongly for you: an understanding and writing problem. Each case has a different remedy, and fixing the wrong stage wastes effort.",
+      "terms": [
+        {
+          "ar": "أعلى k",
+          "en": "Top-k",
+          "def": "The best k results from the search, such as the top 5 or 20 chunks."
+        },
+        {
+          "ar": "التأسيس على السياق",
+          "en": "Grounding instructions",
+          "def": "Instructions that tell the model to answer only from the given chunks, to cite them, and to say “I don't know” if it cannot find the answer."
+        },
+        {
+          "ar": "BM25 / البحث بالكلمات",
+          "en": "Keyword / lexical search",
+          "def": "Search based on literal word matching. Strong on numbers, names and codes, where semantic search is weak."
+        }
+      ]
+    },
+    "1.4": {
+      "simple": [
+        "**Search can find only what ingestion has prepared.** Organisations' documents are a mixture: scanned PDFs, Word files, spreadsheets, presentations and emails, in Arabic and English. Good ingestion has six steps: extract the text with its structure → clean headers and repetition → normalise Arabic → chunk and add information → embed and index → record lineage.",
+        "There are many chunking methods, and the table compares them. The three most important are: **document-aware** (each article of a regulation is a chunk, and each question and answer is a chunk), **parent–child** (we search in small, precise chunks and send the model the larger section they belong to), and **contextual chunks** (we add the document name and section heading to each chunk, so that “Article 12” is not ambiguous as to which law it belongs to)."
+      ],
+      "example": "A chunk reads: “An employee is granted 30 days of leave.” On its own we do not know: which law? which category of employees? which year? With **contextual chunks** it becomes: “[HR Regulation 2026 › Chapter 4: Leave › Article 12] An employee is granted 30 days of leave.” Now search can find it when an employee asks, “How much leave do I get under the 2026 regulation?”",
+      "terms": [
+        {
+          "ar": "المحلّل",
+          "en": "Parser",
+          "def": "A program that reads a file in a particular format (PDF, Word, HTML) and extracts its text and structure: headings, tables and lists."
+        },
+        {
+          "ar": "التقطيع التكراري",
+          "en": "Recursive chunking",
+          "def": "Splitting by headings first, then, if a section is large, by paragraphs, then by sentences, until every chunk is within the limit."
+        },
+        {
+          "ar": "التقطيع الدلالي",
+          "en": "Semantic chunking",
+          "def": "Splitting the text where the topic changes, by measuring the similarity between consecutive sentences."
+        },
+        {
+          "ar": "الأب والابن",
+          "en": "Parent–child chunking",
+          "def": "Searching in small, precise chunks, then sending the larger section that contains them (the parent) to the model so that it gets sufficient context."
+        },
+        {
+          "ar": "المقاطع السياقية",
+          "en": "Contextual chunks",
+          "def": "Prepending the document title or section summary to each chunk before embedding it, so that the chunk is understandable on its own."
+        }
+      ]
+    },
+    "1.5": {
+      "simple": [
+        "Techniques for improving the search itself. **Query rewriting**: the follow-up question “And for contract employees?” is turned into the full question “How much annual leave do contract employees get?”. **Multi-query**: we generate several phrasings of the question and search with all of them. **Decomposition**: we split the complex question into sub-questions. **Routing**: we send the question to the appropriate source.",
+        "**hybrid search**: we search by meaning (vectors) and by words (BM25) together, then merge the two lists with a method called **RRF**. Its idea is simple: do not care about each system's scores, but about the document's **rank** in each list. A document that comes high in both lists moves up. Then **reranking** with a more precise model, which is often the single biggest improvement in quality."
+      ],
+      "example": "RRF calculated step by step. We use k = 60. Document (A) came first in the semantic search and third in the keyword search: 1 ÷ (60 + 1) + 1 ÷ (60 + 3) = 0.0164 + 0.0159 = 0.0323. Document (B) came second in the semantic search only: 1 ÷ (60 + 2) = 0.0161. So (A) moves ahead, because the two systems agreed on it.",
+      "terms": [
+        {
+          "ar": "إعادة صياغة الاستعلام",
+          "en": "Query rewriting",
+          "def": "Turning the user's question (especially short follow-up questions) into a clear standalone question before searching."
+        },
+        {
+          "ar": "الأسئلة متعددة القفزات",
+          "en": "Multi-hop questions",
+          "def": "Questions that require gathering information from more than one document in sequence, such as “Who is the director of the department that issued the leave regulation?”."
+        },
+        {
+          "ar": "المستند الافتراضي",
+          "en": "HyDE — Hypothetical Document Embeddings",
+          "def": "The model writes an imaginary answer to the question, then we search with that answer instead of the question, because its phrasing is closer to the phrasing of the documents."
+        },
+        {
+          "ar": "البحث الكثيف والمتناثر",
+          "en": "Dense / sparse retrieval",
+          "def": "Dense: search by vectors (meaning). Sparse: search by words (BM25). They are combined in hybrid search."
+        },
+        {
+          "ar": "دمج الرتب التبادلي",
+          "en": "Reciprocal Rank Fusion — RRF",
+          "def": "A way of merging the results of several search systems by summing 1 ÷ (k + rank) for each document in each list. It needs no score calibration between the systems."
+        },
+        {
+          "ar": "MMR",
+          "en": "Maximal Marginal Relevance",
+          "def": "A selection method that prefers chunks that are relevant and different from one another, so that we do not send five near-identical chunks."
+        },
+        {
+          "ar": "ضغط السياق",
+          "en": "Context compression",
+          "def": "Shrinking the retrieved chunks to the important sentences only before sending them, to save tokens and reduce distraction."
+        }
+      ]
+    },
+    "1.6": {
+      "simple": [
+        "Ordinary RAG searches texts and sends chunks. But some questions need something different. This table lists five advanced patterns, each with a signal in the question.",
+        "The two most important signals: an **aggregate numerical question** (“What is the total of claims in the last quarter?”) → do not search texts, but turn the question into a **database query (SQL)**. A **question about relationships across many documents** (“Which suppliers are linked to delayed projects?”) → **GraphRAG**, that is, a network of entities and relationships."
+      ],
+      "example": "A question: “How many sick leaves were taken in the Finance department this year?” Text search will perhaps find documents about the sick-leave policy, but it will not count anything. **Text-to-SQL**, however, writes a query that counts the leaves in the database table and gives an exact number. It must be restricted: read-only, and specified tables only.",
+      "terms": [
+        {
+          "ar": "GraphRAG",
+          "en": "Knowledge-graph RAG",
+          "def": "Extracting entities (people, companies, projects) and the relationships between them into a network, then searching it to answer relationship questions."
+        },
+        {
+          "ar": "المخطط المعرفي",
+          "en": "Knowledge graph",
+          "def": "A network of entities and the relationships between them, such as “Company A — supplies — Project B”."
+        },
+        {
+          "ar": "RAG الوكيلي",
+          "en": "Agentic RAG",
+          "def": "The model decides for itself when to search and what to search for, and repeats the search until it finds enough. Stronger for complex questions, and slower and more expensive."
+        },
+        {
+          "ar": "من النص إلى SQL",
+          "en": "Text-to-SQL",
+          "def": "Turning a question in words into a database query. Suitable for numerical and aggregate questions."
+        },
+        {
+          "ar": "SQL",
+          "en": "Structured Query Language",
+          "def": "The standard query language for tabular databases, for example: “count the rows where department = Finance”."
+        },
+        {
+          "ar": "RAG التصحيحي",
+          "en": "Corrective RAG",
+          "def": "Evaluating the retrieved documents before using them; if they are weak, the search is redone or an alternative source is used."
+        }
+      ]
+    },
+    "1.7": {
+      "simple": [
+        "RAG evaluation must separate two parts: the **retriever** (did it find the right chunks?) and the **generator** (did it write a correct answer from them?). Each part has its own metrics. For the retriever: **context recall** (did we find everything needed?) and **context precision** (is what we found relevant?). For the generator: **faithfulness** (is everything it said in the chunks?) and **relevance** (did it answer the question?).",
+        "A good test set contains real questions from users, in their dialects, follow-up questions, and **questions with no answer in the documents**, to test that the system says “I don't know” instead of inventing an answer."
+      ],
+      "example": "An assistant was asked, “How much is the end-of-service award for an employee who served 7 years?” **Context recall**: did it retrieve the award article? No → the problem is in search. Or it retrieved it, so we move on to the next: **faithfulness**: is the number in the answer the number in the article? No, it invented a number → the problem is in generation. Without this separation you will only know that “the answer is wrong”.",
+      "terms": [
+        {
+          "ar": "استدعاء السياق",
+          "en": "Context recall",
+          "def": "Did the system retrieve all the chunks needed for the correct answer?"
+        },
+        {
+          "ar": "دقة السياق",
+          "en": "Context precision",
+          "def": "How many of the retrieved chunks are really relevant, and are they ranked at the top?"
+        },
+        {
+          "ar": "صحة الإجابة",
+          "en": "Answer correctness",
+          "def": "Does the final answer match a known reference answer? An end-to-end metric."
+        },
+        {
+          "ar": "دقة الاستشهاد",
+          "en": "Citation accuracy",
+          "def": "Does the source the system cited actually contain the information attributed to it?"
+        },
+        {
+          "ar": "RAGAS",
+          "en": "RAGAS framework",
+          "def": "An open framework that computes RAG evaluation metrics automatically using LLM judges."
+        },
+        {
+          "ar": "الامتناع",
+          "en": "Abstention",
+          "def": "The system saying “I cannot find the answer in the documents” instead of inventing an answer."
+        }
+      ]
+    },
+    "2.1": {
+      "simple": [
+        "How does the application communicate with the model? It depends on **how long the task takes**. **Synchronous request** (REST): the application asks and waits for the answer, and suits short tasks under a second or two. **gRPC**: like it but faster, for internal communication between services. **Streaming** (SSE or WebSocket): the answer arrives word by word, for chat. **Asynchronous job**: for long tasks (minutes), the application submits the request, is given a job number, and is then notified when it finishes.",
+        "The classic exam trap: a task that takes 5 minutes fails because the gateway cuts the connection after 60 seconds. The distractor option: “Raise the timeout to 10 minutes”. The correct answer: **convert it to an asynchronous pattern with a queue**."
+      ],
+      "example": "**Synchronous**: you order a coffee at the cashier and wait in front of them. **Asynchronous**: you hand your clothes to the laundry, they give you a numbered receipt, you go to work, and they call you when it is ready. If the laundry insisted that you wait at the counter for 3 hours, the solution is not “a bigger waiting chair”, but the receipt system.",
+      "terms": [
+        {
+          "ar": "متزامن",
+          "en": "Synchronous",
+          "def": "The caller sends the request and stays waiting until the answer arrives."
+        },
+        {
+          "ar": "REST",
+          "en": "Representational State Transfer",
+          "def": "A common style for designing web interfaces: resources with addresses, HTTP requests on them, and data usually in JSON format."
+        },
+        {
+          "ar": "gRPC",
+          "en": "gRPC",
+          "def": "A fast way for internal services to communicate, using compact binary data and strongly typed contracts."
+        },
+        {
+          "ar": "SSE / WebSocket",
+          "en": "Server-Sent Events / WebSocket",
+          "def": "Ways to keep a connection open. SSE: the server sends to the client in one direction (such as streaming the words of the answer). WebSocket: two directions (such as instant voice chat)."
+        },
+        {
+          "ar": "Webhook",
+          "en": "Webhook",
+          "def": "An address the client gives the server, so that the server calls it automatically when something happens, such as a job finishing."
+        },
+        {
+          "ar": "الاستطلاع",
+          "en": "Polling",
+          "def": "The client asking the server periodically, “Has the job finished?”, until the answer is yes."
+        },
+        {
+          "ar": "مهلة البوابة",
+          "en": "Gateway timeout",
+          "def": "The maximum time the gateway waits before it cuts off the request and returns an error, often 30 to 60 seconds."
+        },
+        {
+          "ar": "عاصفة إعادة المحاولة",
+          "en": "Retry storm",
+          "def": "Many clients retrying their failed requests at the same moment, which increases the pressure on a server that is already struggling, so the situation gets worse."
+        }
+      ]
+    },
+    "2.2": {
+      "simple": [
+        "When the server replies to a request, it attaches a three-digit **status code** that tells you what happened. Codes that start with **2** mean success, those that start with **4** mean that **the error is yours** (the requester's), and those that start with **5** mean that **the error is the server's**.",
+        "Four codes that people confuse, and the exam asks about them: **401** = “I don't know who you are” (you have not logged in). **403** = “I know you, but you are not allowed”. **400** = “Your request is written in a broken way”. **422** = “Your request is written correctly, but the values are not acceptable”."
+      ],
+      "example": "A government building. **401**: the guard will not let you in because you did not show your ID. **403**: you showed your ID and he recognised you, but this floor is for employees only. **400**: you submitted a torn request form that cannot be read. **422**: the form is written in clear handwriting, but you wrote your date of birth as 2090. **429**: you submitted 100 requests in a minute, so you were told “Wait a little”. **503**: the specialist employee is on a break, so come back shortly. **504**: the employee went to search the archive and has taken far too long.",
+      "terms": [
+        {
+          "ar": "رمز حالة HTTP",
+          "en": "HTTP status code",
+          "def": "A three-digit number in the server's reply that shows the result of the request. 2xx is success, 4xx is a client error, and 5xx is a server error."
+        },
+        {
+          "ar": "202 Accepted",
+          "en": "202 Accepted",
+          "def": "“I have received your request and will process it later.” Used in asynchronous jobs, together with the job number."
+        },
+        {
+          "ar": "429 Too Many Requests",
+          "en": "429",
+          "def": "You have exceeded the permitted number of requests. The server often attaches a Retry-After header that says when to try again."
+        },
+        {
+          "ar": "تتبع المكدس",
+          "en": "Stack trace",
+          "def": "Internal technical details about where in the code the error occurred. It must not be shown to the user because it reveals information that helps attackers."
+        },
+        {
+          "ar": "مفتاح عدم التكرار",
+          "en": "Idempotency key",
+          "def": "A unique number the client sends with the request. If the same request arrives twice with the same key, the server executes it only once."
+        },
+        {
+          "ar": "المخطط",
+          "en": "Schema",
+          "def": "A precise description of the shape of the expected data: which fields exist, their types, and which are mandatory."
+        }
+      ]
+    },
+    "2.3": {
+      "simple": [
+        "Each need has a suitable communication method, and this table summarises them. The short rule at the end of the section is enough for you: **one-way streaming to the browser** (the words of the answer) → SSE. **Instant two-way** (voice, collaboration) → WebSocket. **Heavy internal communication** → gRPC. **A public interface for partners** → REST with OpenAPI documentation.",
+        "For events that many consumers need → a **message broker** such as Kafka: the producer sends the event once, and everyone interested receives it."
+      ],
+      "example": "A **message broker** is like a notice board in the company. Instead of the HR department calling every department to tell it “A new employee has joined”, it posts the notice on the board, and every department concerned (IT to create an account, security to issue an access card, finance for the salary) reads it and acts. If a department is absent for a day, it reads the notices it missed when it returns.",
+      "terms": [
+        {
+          "ar": "OpenAPI",
+          "en": "OpenAPI specification",
+          "def": "A standard format for documenting REST interfaces: every address, what it accepts, and what it returns. Documentation and tests are generated from it automatically."
+        },
+        {
+          "ar": "Protocol Buffers",
+          "en": "Protobuf",
+          "def": "A compact binary format for exchanging data, used by gRPC. Faster and smaller than JSON."
+        },
+        {
+          "ar": "وسيط الرسائل",
+          "en": "Message broker (Kafka, RabbitMQ)",
+          "def": "A system that receives messages from producers and delivers them to consumers, so it separates them: neither needs to know the other or wait for it."
+        },
+        {
+          "ar": "الضغط العكسي",
+          "en": "Back-pressure",
+          "def": "A mechanism that lets a slow consumer slow the producer down, so that it is not swamped with more requests than it can handle."
+        },
+        {
+          "ar": "إعادة التشغيل",
+          "en": "Replay",
+          "def": "Re-reading old events from the broker, for example to rebuild an index from the beginning."
+        }
+      ]
+    },
+    "2.4": {
+      "simple": [
+        "Four security questions for every interface. **Who are you?** (authentication): users log in through OAuth and receive a temporary “ticket” (JWT), and services prove their identity to each other with certificates (mTLS). **What are you allowed to do?** (authorisation): decided inside the service, **before searching the data, not after generating the answer**. **How many requests are you allowed?** (rate limiting): in requests, and for LLMs in tokens as well. **Which version?** (versioning): /v1/ and /v2/, and the meaning of a field never changes.",
+        "Why authorise before the search? Because if the model sees a secret document it may mention something from it indirectly, and filtering the answer after it is written will not always catch that."
+      ],
+      "example": "A **JWT** is like a temporary entry pass for an event: sealed (it cannot be forged), with your name and the halls you may enter on it (the scopes), and it expires at 6 p.m. Every guard checks the seal and the date. The **token bucket** for rate limiting: a bucket that fills with one coin every second up to 10 coins. Each request takes a coin. If the bucket is empty, you wait. So you can send 10 requests at once, and then one request every second.",
+      "terms": [
+        {
+          "ar": "المصادقة والتفويض",
+          "en": "Authentication / authorisation",
+          "def": "Authentication: verifying your identity (who are you?). Authorisation: determining what you are allowed to do (what can you do?)."
+        },
+        {
+          "ar": "OAuth 2.0 / OpenID Connect",
+          "en": "OAuth / OIDC",
+          "def": "Standards for logging in and granting permissions, which let an application verify the user through a trusted identity provider."
+        },
+        {
+          "ar": "JWT",
+          "en": "JSON Web Token",
+          "def": "A digitally signed access token that carries the user's identity, permissions and expiry date. It is verified on every request."
+        },
+        {
+          "ar": "mTLS",
+          "en": "Mutual TLS",
+          "def": "An encrypted connection in which both parties prove their identity with digital certificates, not just the server. For secure communication between services."
+        },
+        {
+          "ar": "RBAC / ABAC",
+          "en": "Role- / Attribute-Based Access Control",
+          "def": "Ways of defining permissions: by role (manager or employee) or by attributes (department, classification, region)."
+        },
+        {
+          "ar": "دلو الرموز",
+          "en": "Token bucket",
+          "def": "A rate-limiting algorithm that allows short bursts within a defined average rate."
+        },
+        {
+          "ar": "الإيقاف",
+          "en": "Deprecation",
+          "def": "An announcement that an old version of the interface will stop working on a specific date, so that users can move before it."
+        }
+      ]
+    },
+    "2.5": {
+      "simple": [
+        "Systems break down, and the question is: how does your application withstand it? This table gives each problem a pattern. Four matter most. **Retry with exponential backoff**: if the request fails, wait a second and then retry, then two seconds, then four, with a small amount of randomness so that everyone does not retry at the same moment. The **idempotency key**: so that retrying does not create two requests. The **circuit breaker**: if the provider is completely down, stop contacting it temporarily and use an alternative. The **timeout**: never wait for any request forever.",
+        "The rule: **retrying is safe only with an idempotency key**, and **retrying during a complete outage makes it worse**, which is where the circuit breaker comes in."
+      ],
+      "example": "The **circuit breaker** is like the circuit breaker in your house. If a major fault occurs, the current is cut at once instead of the house burning. In software: after 5 consecutive failures from the provider, the application stops contacting it for 30 seconds and shows an alternative (a backup model or a polite message), then tries a single request, and if it succeeds it resumes work. **bulkheads**: like a ship's separate compartments; if one compartment floods, the rest do not.",
+      "terms": [
+        {
+          "ar": "التراجع الأسّي مع التذبذب",
+          "en": "Exponential backoff with jitter",
+          "def": "Doubling the waiting time between one attempt and the next (1, then 2, then 4, then 8 seconds) with a small amount of randomness added, so that clients' attempts do not coincide."
+        },
+        {
+          "ar": "قاطع الدائرة",
+          "en": "Circuit breaker",
+          "def": "A pattern that stops requests to a failing service temporarily after consecutive failures, uses an alternative, and then tests whether it has recovered."
+        },
+        {
+          "ar": "حواجز العزل",
+          "en": "Bulkheads",
+          "def": "Separating the resources of each dependency (such as the number of threads), so that one slow service does not consume all the application's resources."
+        },
+        {
+          "ar": "الخزنة / مدير الأسرار",
+          "en": "Secrets manager / Vault",
+          "def": "A secure system for storing passwords and API keys, which gives them to the application only when needed and supports rotating them."
+        },
+        {
+          "ar": "جدار حماية تطبيقات الويب",
+          "en": "Web Application Firewall — WAF",
+          "def": "A protection layer in front of interfaces that blocks known malicious requests."
+        },
+        {
+          "ar": "شبكة خاصة افتراضية",
+          "en": "Virtual Private Cloud — VPC",
+          "def": "An isolated network inside the cloud, which cannot be reached from the public internet except through specified ports."
+        },
+        {
+          "ar": "عزل المستأجرين",
+          "en": "Tenant isolation",
+          "def": "Guaranteeing that the data of each customer in a shared system is never seen by another customer."
+        }
+      ]
+    },
+    "2.6": {
+      "simple": [
+        "When another program (not a human) reads the model's outputs, they must be in a fixed format it can understand. The method has four steps: define the required shape precisely (a JSON schema) → use the provider's “structured outputs” feature → **validate** the output → if validation fails, retry with the error message, or use a fallback.",
+        "The security rule: **treat model outputs as untrusted input**. Do not execute them as commands, and do not put them directly into a database query or a web page without cleaning. Because whoever controls the model's inputs may control its outputs."
+      ],
+      "example": "You ask the model to extract invoice data in the form: {“amount”: number, “date”: date, “supplier”: text}. It replies once with {“amount”: “five hundred riyals”}. Text instead of a number, so validation fails, and we resend the request with the message “The amount must be a number”. A security example: if we put the supplier name that the model extracted directly into a database query, and the name written on the invoice was malicious text, it could delete a whole table.",
+      "terms": [
+        {
+          "ar": "مخطط JSON",
+          "en": "JSON Schema",
+          "def": "A formal description of the shape of a JSON object: the fields, their types, and which of them are mandatory. Used for automatic validation."
+        },
+        {
+          "ar": "التوليد المقيَّد",
+          "en": "Constrained decoding",
+          "def": "Forcing the model, during generation, to produce only tokens that conform to a specified format, so that the output always has the correct shape."
+        },
+        {
+          "ar": "Pydantic",
+          "en": "Pydantic",
+          "def": "A common Python library for verifying that data matches a specified shape."
+        },
+        {
+          "ar": "التعقيم",
+          "en": "Sanitisation",
+          "def": "Cleaning data of any content that might be interpreted as commands before it is used in a query, a page or a system command."
+        },
+        {
+          "ar": "المعالجة غير الآمنة للمخرجات",
+          "en": "Improper output handling",
+          "def": "One of the OWASP risks for LLMs: using the model's outputs directly in other systems without validation, so that they become a vulnerability."
+        }
+      ]
+    },
+    "2.7": {
+      "simple": [
+        "**Caching** saves previous results to return them quickly without running the model. Its types: **exact match** (the very same question word for word), **semantic** (a question similar in meaning), **prefix caching** (the static part of the prompt), and the **embedding cache** (we do not re-embed a chunk that has not changed).",
+        "Three rules the exam asks about: (1) **Invalidate it when the document changes**. (2) **Do not share it between users with different permissions**. (3) **Put the static part of the prompt first** so that prefix caching works."
+      ],
+      "example": "The **semantic cache** and its risk: an employee asked, “What is the project manager's salary?” and had permission, so the answer was cached. Then another employee without permission asked, “What is our project manager's pay?” The question is semantically similar, so the cache returned the saved answer. Now the employee has seen information he is not entitled to see. That is why the cache is not shared across different permissions.",
+      "terms": [
+        {
+          "ar": "الإصابة في المخزن",
+          "en": "Cache hit",
+          "def": "The existence of a saved answer for the request, so it is returned immediately without computation. Its opposite is a miss."
+        },
+        {
+          "ar": "المخزن الدلالي",
+          "en": "Semantic cache",
+          "def": "A cache that returns a saved answer for a question similar in meaning (vector similarity above a threshold), not an exact literal match."
+        },
+        {
+          "ar": "vLLM",
+          "en": "vLLM",
+          "def": "A popular open-source program for running LLMs efficiently on GPU servers."
+        }
+      ]
+    },
+    "3.1": {
+      "simple": [
+        "How do systems connect to each other? This table lists eight patterns. The simplest is **request–response**: I ask and wait. Then the **queue with workers**: I put the job in a queue and a worker takes it when free. Then **events**: I announce “such-and-such happened”, and whoever is interested acts. Then **CDC**: every change in the database is broadcast as an event. Then **Saga**: a transaction of several steps, where each step has an “undo” in case what follows it fails.",
+        "A recurring question: do I put the model **inside the application itself** or in a **separate service**? Inside is simpler if one team owns both. Separate if the model needs a GPU, or scales differently, or is released at a different cadence, or is used by several applications."
+      ],
+      "example": "**Saga**, with the example of booking a trip: (1) book the flight, (2) book the hotel, (3) book the car. If the car fails, we do not leave the flight and hotel booked to no purpose. Each step has a “compensation”: cancel the hotel, then cancel the flight. That is why the compensation is designed in advance for each step. This matters with agents that carry out real transactions.",
+      "terms": [
+        {
+          "ar": "العامل",
+          "en": "Worker",
+          "def": "A program that takes jobs from the queue and executes them one after another. More workers can be run as jobs increase."
+        },
+        {
+          "ar": "النشر والاشتراك",
+          "en": "Publish–subscribe (pub-sub)",
+          "def": "A pattern in which the producer publishes messages to a “topic”, and all subscribers to that topic receive them."
+        },
+        {
+          "ar": "تطور المخطط",
+          "en": "Schema evolution",
+          "def": "The shape of the data changing over time (adding a column or changing its type) while keeping the systems that depend on it working."
+        },
+        {
+          "ar": "Saga والإجراءات التعويضية",
+          "en": "Saga / compensating actions",
+          "def": "A chain of steps, each with a compensating action that undoes its effect if a later step fails."
+        },
+        {
+          "ar": "شبكة الخدمات",
+          "en": "Service mesh",
+          "def": "An infrastructure layer that manages the communication between services (encryption, retries, measurement) without changing their code, through a helper container beside each service."
+        },
+        {
+          "ar": "نمط الإحلال التدريجي",
+          "en": "Strangler pattern",
+          "def": "Replacing an old system gradually by adding the new one beside it and moving an increasing share of requests to it."
+        },
+        {
+          "ar": "الخدمات المصغّرة",
+          "en": "Microservices",
+          "def": "Dividing the application into small independent services, each with a single responsibility, that communicate through interfaces."
+        }
+      ]
+    },
+    "3.2": {
+      "simple": [
+        "When several teams in an organisation use LLMs, each team calls the provider with its own keys: nobody knows the total spend, or what data is being sent, and each team rebuilds the same thing. The solution is the **LLM gateway**: a single central point through which all requests pass.",
+        "The gateway takes on eight responsibilities: who may do what (and the budget), which model for each request, data protection (restricted data leaves only to approved models inside the Kingdom), resilience, caching, monitoring and cost, guardrails, and audit. An important warning: the backup alternative when a provider fails **must also respect the data classification**."
+      ],
+      "example": "A company with 10 departments, and each department orders taxis on its own account. At the end of the month nobody knows how much was spent, or where the employees went. The solution: a single central transport office: it orders the cars for everyone, applies a policy (no trips outside the city without approval), chooses the cheapest option for short trips, and gives each department a report of its spending.",
+      "terms": [
+        {
+          "ar": "بوابة النماذج اللغوية",
+          "en": "LLM gateway",
+          "def": "A central layer between the organisation's applications and the model providers, which handles authentication, quotas, routing, data protection, resilience, caching, monitoring, guardrails and audit."
+        },
+        {
+          "ar": "منع فقدان البيانات",
+          "en": "Data Loss Prevention — DLP",
+          "def": "Controls that detect sensitive data (ID numbers, health data) and mask it or prevent it from leaving the organisation."
+        },
+        {
+          "ar": "التحويل الاحتياطي",
+          "en": "Failover",
+          "def": "Automatic switching to an alternative provider or version when the primary one fails."
+        }
+      ]
+    },
+    "3.3": {
+      "simple": [
+        "After the model is trained it must be “packaged” so that it runs anywhere in the same way. A **container (Docker)** is a box that holds the code and everything it needs, so it runs on any server in the same way. **ONNX** is a unified model format that runs in many environments. **vLLM** and its like are specialised programs for running LLMs efficiently. The **model registry** is an official archive of every model version with its information.",
+        "**artefact hygiene** matters for security: store the weights in the **safetensors format, not pickle**, because pickle files may contain code that is executed when they are opened. Pin the library versions, scan the containers, and sign the files."
+      ],
+      "example": "A **container** is like a shipping container: the goods inside are arranged, and it is moved on any ship, truck or train in the same way, and what is inside does not matter. **pickle** is like a postal parcel that may contain a device that explodes when it is opened, whereas safetensors is a transparent box that carries only numbers.",
+      "terms": [
+        {
+          "ar": "الحاوية",
+          "en": "Container (Docker)",
+          "def": "A package containing the application and all the libraries and settings it needs, so that it runs in the same way on any server."
+        },
+        {
+          "ar": "ONNX",
+          "en": "Open Neural Network Exchange",
+          "def": "An open format for storing models, which can be run with different, optimised runtimes."
+        },
+        {
+          "ar": "التجميع الديناميكي",
+          "en": "Dynamic batching",
+          "def": "Collecting requests that arrive at close times and processing them together in one batch to increase efficiency."
+        },
+        {
+          "ar": "سجل النماذج",
+          "en": "Model registry",
+          "def": "A central store of model versions with their metadata, evaluations and status (experimental, production or retired)."
+        },
+        {
+          "ar": "بطاقة النموذج",
+          "en": "Model card",
+          "def": "A short document that describes the model: the purpose, the training data, the performance, the limits, and the unsuitable uses."
+        },
+        {
+          "ar": "safetensors مقابل pickle",
+          "en": "Safe weight formats",
+          "def": "pickle is a Python format that may execute code when it is loaded, so it is dangerous. Safetensors is a format that stores only numbers, so it is safe."
+        },
+        {
+          "ar": "Kubernetes",
+          "en": "Kubernetes",
+          "def": "A system that manages running containers across a group of servers: it distributes them, restarts any that fail, and adds copies when needed. You will see it in Unit 08."
+        }
+      ]
+    },
+    "3.4": {
+      "simple": [
+        "AI in an organisation does not work alone. It connects to the identity system, finance, customer management, documents and email. Each connection has its own warning, and the table summarises them.",
+        "The most important principle: **AI proposes; the system of record decides and records**. The finance system remains the official reference, and AI prepares a “proposed entry”, not a “final accounting entry”. Other principles: pass the real user's identity to the end of the chain, make every change traceable to the model version and to whoever approved it, and design for the case where AI fails, so that work must continue even if slowly."
+      ],
+      "example": "A finance assistant reads an invoice and proposes: “Record an expense of 5,000 riyals to the maintenance account”. It does not write it directly into the books, but it appears as a proposal to the accountant, who reviews and approves it, and the finance system records “approved by so-and-so, on the model's proposal, version 3.2”. If the assistant fails for a day, the accountant goes back to manual entry and finance does not stop.",
+      "terms": [
+        {
+          "ar": "الدخول الموحد",
+          "en": "Single Sign-On — SSO",
+          "def": "A single login that gives access to several systems in the organisation without retyping the password."
+        },
+        {
+          "ar": "تخطيط موارد المؤسسة",
+          "en": "Enterprise Resource Planning — ERP",
+          "def": "An integrated organisational system for finance, procurement, inventory and human resources."
+        },
+        {
+          "ar": "إدارة علاقات العملاء",
+          "en": "Customer Relationship Management — CRM",
+          "def": "A system that stores customers' data and their transactions, requests and communication with the organisation."
+        },
+        {
+          "ar": "فصل المهام",
+          "en": "Segregation of duties",
+          "def": "That no single person or system can complete a sensitive transaction entirely alone, such as requesting, approving and paying."
+        },
+        {
+          "ar": "أتمتة العمليات الروبوتية",
+          "en": "Robotic Process Automation — RPA",
+          "def": "Programs that imitate a human's clicks and typing on the screens of old systems that have no programming interfaces. Fragile because they break if the screen changes."
+        },
+        {
+          "ar": "نظام السجل",
+          "en": "System of record",
+          "def": "The official system that is regarded as the source of truth for a given type of data, such as the finance system for accounting entries."
+        },
+        {
+          "ar": "التدهور اللطيف",
+          "en": "Graceful degradation",
+          "def": "The system continuing with fewer functions when part of it fails, instead of stopping completely."
+        }
+      ]
+    },
+    "4.1": {
+      "simple": [
+        "AI features need the same good programming practices, and more. The most important: **prompts as code** (kept with versions, reviewed and tested). **Eval tests in continuous integration** (with every change, the golden set is run, and if the results regress the change is not merged). **Feature flags** (turn the new thing on for a share of users, with instant shut-off). **separation of concerns** (the model sits behind an interface, so the provider can be swapped without changing the applications).",
+        "To reproduce any answer exactly you must pin **four things**: the model version, the prompt version, the index version, and the settings."
+      ],
+      "example": "A customer complained about a strange answer the assistant gave a week ago. To know the cause you must recreate the same situation: which model was running that day? Which version of the instructions? Which version of the index? At what temperature? If these four are not recorded, you will not be able to reproduce the same answer, and you will not know whether you have fixed the problem.",
+      "terms": [
+        {
+          "ar": "الموجّهات كشيفرة",
+          "en": "Prompts as code",
+          "def": "Treating prompts as code files: in a version-control system, with review, with testing, and with a version number logged with every answer."
+        },
+        {
+          "ar": "المحاكاة",
+          "en": "Mock",
+          "def": "A fake stand-in for a real component (such as the LLM) that gives a known fixed reply, so that the rest of the system is tested with stability."
+        },
+        {
+          "ar": "اختبار العقد",
+          "en": "Contract test",
+          "def": "A test that makes sure a service interface still accepts and returns data in the form its users expect."
+        },
+        {
+          "ar": "معرّف الارتباط",
+          "en": "Correlation ID",
+          "def": "A unique number given to a request when it enters, which accompanies it across all services and logs, so that its whole journey can be traced."
+        },
+        {
+          "ar": "مفتاح الميزة",
+          "en": "Feature flag",
+          "def": "A setting that turns a feature on or off for a group of users without deploying new code."
+        }
+      ]
+    },
+    "4.2": {
+      "simple": [
+        "Testing is layers, each testing something: unit, contract, data, model quality, behaviour, safety, full integration, performance and fairness. What is new with LLMs is **behavioural testing**: does changing the phrasing of the question change the classification? It should not. Does it work with different dialects?",
+        "The biggest challenge is **non-determinism**: the model may answer with different wording each time. So **do not test the literal text**, but the **properties**: is the output valid JSON? Does it have the required fields? Did it cite a source? Did it refuse the forbidden request? Run the important case several times and measure the **pass rate**."
+      ],
+      "example": "A bad test: “The answer must literally equal: Annual leave is 30 days”. It will fail if the model writes “The annual leave period is thirty days”, even though that is correct. A good test: “The answer contains the number 30 or thirty, cites Article 12, and does not exceed 100 words”. We run it 10 times: if it passes 10 out of 10, excellent, and if it passes 7 there is instability that must be understood.",
+      "terms": [
+        {
+          "ar": "عدم الحتمية",
+          "en": "Non-determinism",
+          "def": "The system giving different results for the same input in different runs."
+        },
+        {
+          "ar": "الاختبار السلوكي",
+          "en": "Behavioural testing (CheckList)",
+          "def": "A test of expected properties: the result staying stable under rephrasing, changing in the expected direction, and meeting minimum-functionality performance."
+        },
+        {
+          "ar": "بيئة التجهيز",
+          "en": "Staging",
+          "def": "An environment identical to production, in which changes are tested before being deployed to real users."
+        },
+        {
+          "ar": "اختبار التحمل",
+          "en": "Soak test",
+          "def": "Running the system under normal load for a long period (hours or days) to discover problems that appear over time, such as memory leaks."
+        },
+        {
+          "ar": "معاملات اصطناعية",
+          "en": "Synthetic transactions",
+          "def": "Fake requests, designed and sent to the system periodically to test that it is working, without real user data."
+        }
+      ]
+    },
+    "4.3": {
+      "simple": [
+        "**Observability** is being able to know what is going on inside your system. It has three pillars: **metrics** (aggregated numbers: latency, error rate, cost), **logs** (discrete events: “Request such-and-such was rejected for such-and-such a reason”), and **tracing** (the journey of a single request through all the steps).",
+        "In LLM applications the trace must show **every step**: the guardrail check, rewriting the question, the search (and which documents it found and with what score), reranking, the model call (which model, which version, how many tokens, how many seconds), and the tools. Even so, **respect privacy in the logs**: mask personal data, restrict who sees the logs, and delete them after a period."
+      ],
+      "example": "A user complains: “The assistant is very slow”. The **metrics** tell you: p95 rose from 2 to 8 seconds today. The **trace** of a slow request shows: guardrails 50 ms, search 100 ms, reranking **6 seconds**, the model 1 second. Now you know exactly where the problem is: the reranking model. Without tracing you would have been guessing.",
+      "terms": [
+        {
+          "ar": "قابلية الرصد",
+          "en": "Observability",
+          "def": "Your ability to understand the system's internal state from its external data: metrics, logs and traces."
+        },
+        {
+          "ar": "التتبع",
+          "en": "Tracing",
+          "def": "Recording the journey of a single request through all the services and steps, with the time of each step, tied together by one identifier."
+        },
+        {
+          "ar": "OpenTelemetry",
+          "en": "OpenTelemetry",
+          "def": "A common open standard for collecting metrics, logs and traces from applications and sending them to monitoring tools."
+        },
+        {
+          "ar": "الحجب",
+          "en": "Redaction",
+          "def": "Hiding sensitive data or deleting it from text before it is saved, such as replacing an ID number with [masked]."
+        }
+      ]
+    },
+    "4.4": {
+      "simple": [
+        "A good conversational assistant is not “an LLM behind a chat box”. It is a system that understands what the user wants and decides the appropriate route. **Intent routing first**: the question “What is my balance?” is answered from the system directly without an LLM (faster, cheaper and more accurate). A question about policies goes to RAG. A request “Change my plan” goes to a transaction path. Sensitive matters go to a human.",
+        "For transactions: **collect the required slots** (account, date, amount), **validate** them, **confirm** with the user, then execute with an idempotency key. Do not let the model carry out a transaction from free text. **handover to a human** has triggers: the user's request, low confidence, repeated failure, a sensitive subject, or a high value. Pass on the conversation summary so that the user does not repeat themselves."
+      ],
+      "example": "A user writes: “I want to cancel the internet plan.” The assistant: “Which number?” → “0501234567”. The assistant verifies that the number belongs to the user and has an internet plan on it. Then it says: “You want to cancel the monthly internet plan on number 0501234567 effective 1 Muharram. Do you confirm?” → “Yes”. Then it executes. This is **slot filling** and then **confirmation**. If the user wrote, “I'm very upset and this is the third time I've called”, that is a sign of distress that calls for handover to an agent.",
+      "terms": [
+        {
+          "ar": "توجيه المقاصد",
+          "en": "Intent routing",
+          "def": "Determining what the user wants first, then sending them to the appropriate route: a fixed answer, RAG, a transaction, or a human."
+        },
+        {
+          "ar": "الذيل الطويل",
+          "en": "Long tail",
+          "def": "The many varied and rare cases that fixed routes do not cover. This is where the LLM helps."
+        },
+        {
+          "ar": "ملء الخانات",
+          "en": "Slot filling",
+          "def": "Collecting the information required to complete a transaction (account, date, amount) one item at a time, and validating it."
+        },
+        {
+          "ar": "التحويل للبشر",
+          "en": "Human handover",
+          "def": "Transferring the conversation from the automated assistant to a human employee, together with a summary of what was said."
+        },
+        {
+          "ar": "إتاحة الوصول",
+          "en": "Accessibility",
+          "def": "Designing the service to be usable by everyone, including people with visual, hearing or motor disabilities."
+        }
+      ]
+    },
+    "4.5": {
+      "simple": [
+        "You saw the controls for agents in Unit 05. Here are the engineering practices for making them **reliable**. The most important: an **explicit workflow** (a state machine) instead of a free loop, **typed tools** that catch the wrong call before it is executed, **reversible tools**, **read/write separation**, **budgets** for steps, time and cost, **checkpoints** for resuming after failure, and **full tracing**.",
+        "Agents fail in ways different from ordinary programs: they misunderstand the goal, call the wrong tool, go round in loops, or stop early. The most important rule: **known sequence → fixed workflow with LLM steps**, not an open-ended agent."
+      ],
+      "example": "The **state machine** for a refund request: [receive the request] → [check eligibility] → [calculate the amount] → [wait for approval] → [execute] → [notify]. The model fills in specific steps (extracts the reason for the refund, writes the notification message), but it does not decide the order of the steps and does not jump from “receive” to “execute”. If the system fails at “wait for approval”, it resumes from there, not from the beginning.",
+      "terms": [
+        {
+          "ar": "آلة الحالات",
+          "en": "State machine",
+          "def": "A design that defines the possible states (such as: new, pending, approved, executed) and only the allowed transitions between them."
+        },
+        {
+          "ar": "الأدوات محددة الأنواع",
+          "en": "Typed tools",
+          "def": "Tools with a precise schema for their parameters (a number, a date, or a value from a list), so that any call that does not match it is rejected before execution."
+        },
+        {
+          "ar": "متساوي الأثر",
+          "en": "Idempotent",
+          "def": "An operation where executing it twice gives the same result as executing it once, so retrying is safe."
+        },
+        {
+          "ar": "نقطة الحفظ",
+          "en": "Checkpoint",
+          "def": "Saving the state of the task at a particular moment, so that it can be resumed from it after a failure instead of starting again."
+        }
+      ]
+    },
+    "4.6": {
+      "simple": [
+        "Security is part of every stage in building an AI feature, not a step at the end. **In design**: think about the specific threats (prompt injection, data leakage, excessive agency, model theft). **In dependencies**: pin the libraries and verify the model files. **In coding**: treat model outputs as untrusted. **In review**: review prompts and tool definitions like code. **In testing**: injection attacks and leakage tests. **In deployment**: private endpoints, a gateway and minimum permissions. **In operations**: abuse monitoring and cost alerts.",
+        "You will learn security in depth in Unit 09. The idea here: each stage has its own activity."
+      ],
+      "example": "**Threat modelling** is a simple exercise before building: draw how data flows through your system, and at every arrow ask: “What if this were malicious?”. An assistant that reads customers' email: what if the email contains instructions? (injection). What if it asks for another customer's data? (leakage). What if the assistant sends an email outside? (excessive agency). Each answer becomes a control in the design.",
+      "terms": [
+        {
+          "ar": "نمذجة التهديدات",
+          "en": "Threat modelling",
+          "def": "A structured analysis before building to determine what attackers might attack in the system, how, and which controls are required."
+        },
+        {
+          "ar": "مخطط تدفق البيانات",
+          "en": "Data-flow diagram",
+          "def": "A diagram showing where data comes from, where it goes, which components it passes through, and its classification."
+        },
+        {
+          "ar": "الاستعلامات المعلَّمة",
+          "en": "Parameterised queries",
+          "def": "A way of writing database queries so that values are passed separately from the query text, so they cannot be interpreted as commands."
+        },
+        {
+          "ar": "سرقة النموذج",
+          "en": "Model theft",
+          "def": "Copying the model's weights or imitating its behaviour by sending thousands of questions to it, which wastes the investment and exposes what it has learned."
+        }
+      ]
+    }
+  }
+}

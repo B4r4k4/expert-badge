@@ -1,0 +1,879 @@
+{
+  "before": [
+    "This unit opens the “box” from the inside: how neural networks learn, what the transformer is that language models are built on, how these models are made, and how we choose between the ways of adapting them. It is the first of the two units of Domain 2 (about 25 questions out of 150).",
+    "It has more mathematics than the others, but the exam does not ask for derivations. It asks you to understand **why** and to calculate **how much**: how much memory does a model need? Why does it slow down with long context? Why does quantisation speed up generation? All the calculations are simple multiplication, and we will walk through them step by step.",
+    "Before it, you need from Unit 00: Sections 2.4 and 2.5 (how a model learns, and neural networks), and Chapter 4 (language models, tokens, prompts, hallucination, vector representations and RAG)."
+  ],
+  "sections": {
+    "1.1": {
+      "simple": [
+        "In Unit 00 you saw that learning is “guess, then measure the error, then adjust”. Here are the formal names of the four steps: the **forward pass** (the model guesses), the **loss** (we measure the error), **backpropagation** (we work out each weight's responsibility for the error), and the **optimiser step** (we adjust the weights a little).",
+        "Why do we need a non-linear **activation function**? Because multiplying and adding numbers again and again is still, in the end, simple multiplication and addition, that is, a straight line however many layers there are. A non-linear function lets the network learn complex, curved shapes."
+      ],
+      "example": "A football coach is teaching a player to shoot. **Forward**: the player shoots. **Loss**: the ball went a metre to the right of the goal. **Backpropagation**: the coach analyses: how much of the error was due to the angle of the foot, how much to the body position, and how much to the power of the strike. **Optimiser**: adjusts each of these a little. Then the player shoots again. The player going through all of the day's drills once is called an **epoch**.",
+      "terms": [
+        {
+          "ar": "دالة التنشيط",
+          "en": "Activation function (ReLU, GELU, SiLU)",
+          "def": "A simple non-linear function applied to the output of every neuron. ReLU, for example, turns every negative number into zero and leaves positive ones as they are."
+        },
+        {
+          "ar": "التمرير الأمامي",
+          "en": "Forward pass",
+          "def": "Feeding the data into the network and computing layer after layer until we get the prediction."
+        },
+        {
+          "ar": "الانتشار العكسي",
+          "en": "Backpropagation",
+          "def": "Calculating how much each weight contributed to the error, working back from the output to the input layer by layer."
+        },
+        {
+          "ar": "التدرّج",
+          "en": "Gradient",
+          "def": "A number for each weight that tells us: if we increase this weight slightly, does the error go up or down, and by how much? We move the weight in the direction that reduces the error."
+        },
+        {
+          "ar": "المُحسِّن",
+          "en": "Optimiser",
+          "def": "The algorithm that decides how the weights are adjusted using the gradients, such as SGD and Adam."
+        },
+        {
+          "ar": "الحقبة",
+          "en": "Epoch",
+          "def": "One pass of the model over the whole training set. Training usually takes several epochs."
+        },
+        {
+          "ar": "الدفعة الصغيرة",
+          "en": "Mini-batch",
+          "def": "A small group of examples (32 or 256, for instance) used together in a single adjustment step, instead of one example or all the data."
+        }
+      ]
+    },
+    "1.2": {
+      "simple": [
+        "The **loss function** is the way we “penalise” the model for its error. Each type of task has a suitable function: for numbers we measure how far the prediction is from the correct number, and for classification we measure how confident the model is in the correct answer.",
+        "In language models the loss is: how surprised was the model by the real next word? We convert it into an easier number called **perplexity**. Lower perplexity means a model that is better at predicting the next word, but it **does not necessarily mean** it is more useful to the user."
+      ],
+      "example": "Perplexity is like “the number of options the model is torn between”. A perplexity of 10 means roughly that at every word the model hesitates as if it had 10 equally likely words in front of it. A perplexity of 3 means it is far more confident. But a model that is very confident at completing internet text may be poor at following your instructions.",
+      "terms": [
+        {
+          "ar": "الإنتروبيا المتقاطعة",
+          "en": "Cross-entropy / log loss",
+          "def": "A classification loss function that penalises the model more the lower the probability it gives to the correct answer."
+        },
+        {
+          "ar": "softmax",
+          "en": "Softmax",
+          "def": "A function that turns a set of numbers into positive probabilities that sum to 1. It is used at the end of the network to choose a class or a word."
+        },
+        {
+          "ar": "الحيرة",
+          "en": "Perplexity",
+          "def": "A metric for language models equal to exp(loss). Lower is better at predicting the next word, but it does not measure real usefulness."
+        },
+        {
+          "ar": "Focal loss",
+          "en": "Focal loss",
+          "def": "A loss function that reduces the weight of easy examples and focuses on hard ones. Useful when the class you are looking for is rare."
+        },
+        {
+          "ar": "الخسارة التباينية",
+          "en": "Contrastive loss (InfoNCE)",
+          "def": "A function that trains embedding models: it pulls similar pairs (a question and its answer) together and pushes dissimilar ones apart."
+        },
+        {
+          "ar": "تنعيم التسميات",
+          "en": "Label smoothing",
+          "def": "Instead of telling the model “the answer is 100% correct”, we tell it “95%”, so it does not become over-confident."
+        }
+      ]
+    },
+    "1.3": {
+      "simple": [
+        "The **optimiser** is the “driver” of the adjustment. The simplest is SGD: a step opposite to the direction of the error. **Momentum** makes it like a rolling ball, which gains speed and does not stop at every small bump. **Adam** is smarter: it gives each weight its own step size. It is the common choice with transformers (in the AdamW version).",
+        "But Adam needs to remember two extra numbers for every weight, which is why **training needs far more memory than use**. The most important setting in all of training is the **learning rate**: the size of the step."
+      ],
+      "example": "You are going down a mountain in fog. A learning rate that is too large: you take huge leaps, overshoot the valley and climb the opposite mountain, and this is what makes the loss oscillate or explode. Too small: you walk in ant steps and never arrive. **Warm-up**: you start with small steps until you get used to the ground, then lengthen them. **Gradient clipping**: if you see a sudden steep slope, you do not leap into it; you set a maximum step.",
+      "terms": [
+        {
+          "ar": "SGD والزخم",
+          "en": "Stochastic Gradient Descent / momentum",
+          "def": "SGD: adjusting the weights opposite to the direction of the gradient computed on a mini-batch. Momentum adds a “memory” of the previous movement, so the adjustment becomes smoother."
+        },
+        {
+          "ar": "Adam / AdamW",
+          "en": "Adam optimiser",
+          "def": "An optimiser that adapts the step size for each weight based on the history of its gradients. AdamW is a version that decouples weight decay, and it is the default for transformers."
+        },
+        {
+          "ar": "تضاؤل الأوزان",
+          "en": "Weight decay",
+          "def": "Shrinking the weights slightly at every step so that they do not grow too large. A kind of regularisation against overfitting."
+        },
+        {
+          "ar": "NaN",
+          "en": "Not a Number",
+          "def": "A non-numeric value that appears when the computation blows up (division by zero or an extremely large number). Seeing it in the loss means training has collapsed."
+        },
+        {
+          "ar": "الإحماء",
+          "en": "Warm-up",
+          "def": "Starting training with a very small learning rate and then raising it gradually over the first steps to avoid instability."
+        },
+        {
+          "ar": "قص التدرّج",
+          "en": "Gradient clipping",
+          "def": "Putting a ceiling on the size of the gradient, so a single bad batch cannot push the weights with a huge shove and ruin training."
+        },
+        {
+          "ar": "تراكم التدرّج",
+          "en": "Gradient accumulation",
+          "def": "Summing the gradients of several small batches and then adjusting once, so we simulate a large batch without needing large memory."
+        }
+      ]
+    },
+    "1.4": {
+      "simple": [
+        "This table lists “stability tools” that make deep networks trainable. Three of them matter most: **normalisation** keeps the numbers inside the network within a reasonable range. **Residual connections** open a “shortcut” along which the signal and the gradient pass through many layers without weakening. **Regularisation** (dropout and weight decay) prevents memorisation.",
+        "Why do we need residual connections? Because the signal in a network of 100 layers weakens or swells layer after layer, just as a message distorts when 100 people pass it on by whispering. The shortcut carries the original message alongside the modifications."
+      ],
+      "example": "**Dropout**: a work team from which random people are absent every day. Each member learns to know a little of the others' work, so the whole team does not depend on one person. This makes the network more robust. A **residual connection**: each layer adds an “adjustment” to what reached it instead of rewriting it from scratch.",
+      "terms": [
+        {
+          "ar": "تطبيع الدفعة",
+          "en": "Batch normalisation",
+          "def": "Rescaling a layer's outputs to have a fixed mean and spread, computed across the examples of the batch. Common in image networks."
+        },
+        {
+          "ar": "تطبيع الطبقة / RMSNorm",
+          "en": "Layer normalisation / RMSNorm",
+          "def": "Like batch normalisation but computed for each token separately, so it does not depend on batch size. It is the one used in transformers."
+        },
+        {
+          "ar": "الوصلة المتبقية",
+          "en": "Residual connection",
+          "def": "Adding a layer's input directly to its output, so the layer learns an “adjustment” to what reached it. It makes it possible to train very deep networks."
+        },
+        {
+          "ar": "التكيّف المشترك",
+          "en": "Co-adaptation",
+          "def": "Neurons depending on each other so heavily that they only work together. Dropout breaks this."
+        },
+        {
+          "ar": "التهيئة",
+          "en": "Initialisation (He / Xavier)",
+          "def": "Choosing the initial values of the weights before training in a considered way, so the signal does not vanish or explode from the start."
+        },
+        {
+          "ar": "الترجمة العكسية",
+          "en": "Back-translation",
+          "def": "Augmenting text data by translating a sentence into another language and back, giving a new wording with the same meaning."
+        }
+      ]
+    },
+    "1.5": {
+      "simple": [
+        "Every weight in the model is a number, and a number needs space in memory. **FP32** uses 4 bytes per number, and **FP16/BF16** use 2 bytes, that is, half the memory and more speed. The difference between FP16 and BF16: FP16 cannot represent very small numbers and so needs a trick, whereas BF16 covers a wider range, which is why it became the default.",
+        "Now the most important calculation: **training** needs not only the weights, but also the gradients, a precise copy of the weights, and the two numbers Adam remembers for every weight. The total is about **16 bytes per parameter**, whereas **use** in FP16 needs **only 2 bytes**. That is, training needs eight times the memory of use."
+      ],
+      "example": "The calculation for a 7-billion-parameter model. For training: 2 (weights) + 2 (gradients) + 4 (precise copy) + 8 (Adam's two numbers) = 16 bytes per parameter. So 7 billion × 16 = 112 billion bytes ≈ 112 GB, and that is before counting anything else. The largest common GPU has 80 GB, so one machine is not enough for full training. For use: 7 billion × 2 = 14 GB, so a single machine is easily enough.",
+      "terms": [
+        {
+          "ar": "FP32 / FP16 / BF16 / FP8",
+          "en": "Floating-point formats",
+          "def": "Formats for storing decimal numbers at different sizes: 4, 2, 2 and 1 bytes. The smaller is faster, lighter and less precise."
+        },
+        {
+          "ar": "أنوية الموترات",
+          "en": "Tensor cores",
+          "def": "Special parts in modern GPUs designed to multiply matrices very fast, especially at low precision."
+        },
+        {
+          "ar": "تحجيم الخسارة",
+          "en": "Loss scaling",
+          "def": "Multiplying the loss by a large number before computing gradients in FP16, so that very small gradients do not become zeros, and then dividing afterwards."
+        },
+        {
+          "ar": "الدقة المختلطة",
+          "en": "Mixed precision",
+          "def": "Running the computations at low precision (BF16) for speed, while keeping a master copy of the weights in FP32 to preserve accuracy."
+        },
+        {
+          "ar": "التنشيطات",
+          "en": "Activations",
+          "def": "The intermediate results each layer computes during the forward pass. They are stored for backpropagation, so they need extra memory that grows with batch size and text length."
+        },
+        {
+          "ar": "ZeRO / FSDP",
+          "en": "Sharded training",
+          "def": "Methods that distribute the weights, gradients and optimiser states across several GPUs instead of copying them in full onto each one. You will see them in Unit 08."
+        }
+      ]
+    },
+    "1.6": {
+      "simple": [
+        "This is the “training doctor” table: for each symptom, its cause and remedy. The two most important symptoms: **the loss explodes** (becomes NaN), usually because of a step that is far too large; and **the loss never moves**, usually because of a fault in the data or the setup.",
+        "The smartest test for this second symptom is the **sanity test**: give the model only 10 examples and train it on them. Any healthy model can memorise 10 examples. If it cannot, the problem is not that it is “weak”, but in the data or the code."
+      ],
+      "example": "A student whose grades never improve. Before you say “not intelligent”, ask them to memorise just 5 definitions. If they cannot, perhaps the book they have is for a different subject, that is, the fault is in the “data”. Another symptom: **a GPU used at only 20%**. The worker is fast but is waiting for materials, and the problem is in delivering the data to it, not in its speed.",
+      "terms": [
+        {
+          "ar": "فيض الأرقام",
+          "en": "Overflow",
+          "def": "When a number becomes larger than the maximum the format can represent, so it turns into infinity or NaN. Common with FP16."
+        },
+        {
+          "ar": "الطبقات المجمّدة",
+          "en": "Frozen layers",
+          "def": "Layers whose weights we have prevented from being adjusted during training. Useful in transfer learning, but freezing them by mistake prevents learning."
+        },
+        {
+          "ar": "التنشيطات الميتة",
+          "en": "Dead activations",
+          "def": "Neurons whose output has become permanently zero (with ReLU, for example), so they learn nothing afterwards."
+        },
+        {
+          "ar": "محمّل البيانات",
+          "en": "Data loader",
+          "def": "The part of the code that reads the data, prepares it in batches and sends it to the model. If it is slow, the GPU waits for it."
+        },
+        {
+          "ar": "نقاط تفتيش التدرّج",
+          "en": "Gradient checkpointing",
+          "def": "Saving memory by not storing all the activations, and recomputing some of them when needed. Less memory in exchange for slightly more time."
+        },
+        {
+          "ar": "الجلب المسبق",
+          "en": "Prefetching",
+          "def": "Preparing the next batch of data while the model works on the current one, so it does not wait."
+        }
+      ]
+    },
+    "1.7": {
+      "simple": [
+        "This table summarises the whole chapter in the form in which it comes in the exam: a symptom or need in the scenario, the concept it points to, and the usual answer. Use it for quick revision before the exam.",
+        "Note two new concepts: **vanishing gradients** (the signal weakens across many layers so the first layers do not learn; the remedy is residual connections and normalisation), and **knowledge distillation** (a small model learns to imitate a large one)."
+      ],
+      "example": "**Vanishing gradients**: an adjustment message passes through 50 people, and each person passes on only half of what they heard. After 50 people almost nothing reaches the first. **Distillation**: an expert teacher writes detailed solutions for thousands of problems, and a student trains on them. The student reaches a level close to the teacher's on this type of problem, with less effort and more speed.",
+      "terms": [
+        {
+          "ar": "تلاشي التدرّج",
+          "en": "Vanishing gradients",
+          "def": "Gradients becoming very small as we go back to the first layers, so these layers stop learning."
+        },
+        {
+          "ar": "انفجار التدرّج",
+          "en": "Exploding gradients",
+          "def": "The opposite: gradients grow violently across the layers, so the weights leap by huge amounts and training collapses."
+        },
+        {
+          "ar": "العمود الفقري والرأس",
+          "en": "Backbone / head",
+          "def": "The backbone: the large pre-trained layers that extract features. The head: the small final layer specific to your task."
+        },
+        {
+          "ar": "تقطير المعرفة",
+          "en": "Knowledge distillation",
+          "def": "Training a small model (the “student”) to imitate the outputs of a large model (the “teacher”), so it becomes close to it in quality and faster and cheaper."
+        },
+        {
+          "ar": "التقليم",
+          "en": "Pruning",
+          "def": "Removing weights or parts of the model that matter little, to shrink it and speed it up."
+        }
+      ]
+    },
+    "2.1": {
+      "simple": [
+        "The **convolutional network (CNN)** is designed for images. It slides small “lenses” over the image, each lens looking for a simple pattern: an edge, a corner or a colour. The first layers see simple things, and the deeper ones assemble them into shapes, then parts (an eye, a wheel), then whole objects.",
+        "The **vision transformer (ViT)** is a newer approach: it cuts the image into small squares and treats each square as if it were a “word”, then applies to them the same transformer used in language. The most important practical lesson: **do not train from scratch**. Start from a model trained on millions of images, and adapt it to your few images."
+      ],
+      "example": "A factory wants to detect defects in its products, and has only 2,000 images. Training from scratch will fail, because 2,000 images are not enough to learn “what an edge is and what a shape is”. But a model that has learned from millions of images already knows that. We take it and change its last layer to say “sound/defective”, train it on our images, and add images that are flipped and lit differently (data augmentation).",
+      "terms": [
+        {
+          "ar": "الشبكة الالتفافية",
+          "en": "Convolutional Neural Network — CNN",
+          "def": "A neural network for images that slides small filters over the image to detect patterns, using the same weights at every position in the image."
+        },
+        {
+          "ar": "المرشّح",
+          "en": "Filter / kernel",
+          "def": "A small matrix of weights (3×3, for example) slid over the image to detect a particular pattern."
+        },
+        {
+          "ar": "التجميع",
+          "en": "Pooling",
+          "def": "Shrinking the intermediate image by taking the maximum or the average in each small region, so computation falls and the model tolerates small shifts."
+        },
+        {
+          "ar": "محوّل الرؤية",
+          "en": "Vision Transformer — ViT",
+          "def": "A model that splits the image into small patches and processes them as a sequence of tokens with the attention mechanism, like text."
+        },
+        {
+          "ar": "CLIP",
+          "en": "Contrastive Language–Image Pre-training",
+          "def": "A model that learned to place images and their descriptive texts in a single vector space, so it can search for an image with a text description."
+        },
+        {
+          "ar": "MobileNet",
+          "en": "MobileNet",
+          "def": "A family of lightweight image networks designed to run on phones and small devices."
+        }
+      ]
+    },
+    "2.2": {
+      "simple": [
+        "Before transformers, text was processed with **recurrent networks (RNNs)**: they read the sentence word after word, and carry a small “memory” that they update with every word. The first problem: slowness, because the second word waits for the first. The second: forgetting, so by the end of a long paragraph the memory of its beginning has weakened.",
+        "The **transformer** solved both problems: it looks at all the words **at the same time**, and every word can “look” directly at any other word however far away. But it has a price: the longer the text, the far more comparisons there are."
+      ],
+      "example": "Reading a novel. The recurrent network is like a reader who reads page by page and keeps only a short summary in mind, so by the tenth chapter they have forgotten the name of a character from the first. The transformer is like a reader who spreads all the pages in front of them on a huge table and can look at any page at any moment. But the table grows enormously the longer the novel.",
+      "terms": [
+        {
+          "ar": "الشبكة المتكررة",
+          "en": "Recurrent Neural Network — RNN",
+          "def": "A network that processes a sequence element by element, carrying a hidden state that passes information from one step to the next."
+        },
+        {
+          "ar": "LSTM / GRU",
+          "en": "Gated recurrent units",
+          "def": "Improved types of recurrent networks that have “gates” that decide what is kept and what is forgotten, so they remember over a longer span."
+        },
+        {
+          "ar": "الحالة المخفية",
+          "en": "Hidden state",
+          "def": "A vector of numbers that carries a summary of what the recurrent network has seen so far."
+        },
+        {
+          "ar": "نماذج فضاء الحالة",
+          "en": "State-space models (Mamba)",
+          "def": "A newer family that processes a sequence in time proportional to its length, so it is more efficient on very long texts, with a relative weakness in exact recall."
+        }
+      ]
+    },
+    "2.3": {
+      "simple": [
+        "**Attention** is the heart of the transformer. Its idea: to understand a word, look at the other words and decide which of them matter to it. In the sentence “Ahmed drank the tea because he was thirsty”, for the model to understand the “he” (in Arabic, the suffix [[ar:ـه]] attached to “because”, [[ar:لأنه]]), it must attend to “Ahmed”, not to “the tea”.",
+        "How does this happen mathematically? Each word makes three things: a **query** (what am I looking for?), a **key** (what do I offer?), and a **value** (what is my information?). We compare the word's query with the keys of the other words, which tells us their degree of relevance, and then we take from their values in proportion to these scores. Dividing by √d_k stops the scores from growing so large that a single word dominates all the attention."
+      ],
+      "example": "A library. You walk in with a **query**: “I want a book about Saudi cooking”. Each book has a **key**, which is its title and classification. You compare your query with the titles and give each book a relevance score: 0.7 for the book “Najdi Cuisine”, 0.25 for “Gulf Dishes”, and 0.05 for “The History of Riyadh”. Then you take from the **value** (content) of each book in proportion to its score. This is what every word does with all the other words.",
+      "terms": [
+        {
+          "ar": "الانتباه",
+          "en": "Attention",
+          "def": "A mechanism that computes, for each word, how relevant it is to every other word, and then builds its representation from the other words according to that relevance."
+        },
+        {
+          "ar": "الاستعلام والمفتاح والقيمة",
+          "en": "Query / Key / Value",
+          "def": "Three vectors that each word makes: the query for what it is looking for, the key for what it offers, and the value for the information it carries."
+        },
+        {
+          "ar": "القناع السببي",
+          "en": "Causal mask",
+          "def": "Preventing each word from looking at the words after it during training, because the model is learning to predict the next word and must not see the answer."
+        },
+        {
+          "ar": "الانتباه متعدد الرؤوس",
+          "en": "Multi-head attention",
+          "def": "Running several attention operations in parallel, each “head” specialising in a type of relationship (syntactic, coreference, position), and then merging their results."
+        },
+        {
+          "ar": "الطبقة الأمامية",
+          "en": "Feed-forward layer",
+          "def": "A small network in every transformer block that processes each word separately after attention, and carries a large part of the model's knowledge."
+        },
+        {
+          "ar": "المشفِّر والمفكِّك",
+          "en": "Encoder / decoder",
+          "def": "The encoder reads the whole text and understands it (for classification and embeddings). The decoder generates text word after word (for conversation and writing)."
+        },
+        {
+          "ar": "تربيعي",
+          "en": "Quadratic",
+          "def": "Growth proportional to the square of the length. A text twice as long needs 4 times as many comparisons in standard attention."
+        }
+      ]
+    },
+    "2.4": {
+      "simple": [
+        "When the model generates an answer, it writes it word after word, and each new word needs to look at everything before it. Instead of recomputing the “keys and values” for all the previous words with every new word, **we keep them in memory**. This is the **KV cache**.",
+        "The problem is that it grows with every word and with every user. With long conversations and many users it becomes **bigger than the model itself**. That is why researchers invented GQA: instead of each “attention head” having its own keys and values, a group of heads shares one set of keys and values, so memory shrinks a lot."
+      ],
+      "example": "The calculation step by step for an 8-billion-parameter model. For each word we store: keys and values (×2), across 32 layers (×32), for 8 shared heads (×8), each head 128 numbers (×128), and each number 2 bytes (×2). The result: 2 × 32 × 8 × 128 × 2 = 131,072 bytes ≈ 128 KB per word. A conversation of 8,192 tokens: 8,192 × 128 KB ≈ 1 GB. 30 users together = 30 GB, whereas the model's own weights are only 16 GB!",
+      "terms": [
+        {
+          "ar": "ذاكرة KV",
+          "en": "KV cache",
+          "def": "Storing the keys and values computed for the previous words during generation, to avoid recomputing them with every new word. It grows with conversation length and the number of users."
+        },
+        {
+          "ar": "MHA / GQA / MQA",
+          "en": "Attention head-sharing variants",
+          "def": "MHA: each head has its own keys and values. GQA: groups of heads share. MQA: all heads share a single pair. The more sharing, the smaller the memory, with a slight loss in quality."
+        },
+        {
+          "ar": "الانتباه المقسّم إلى صفحات",
+          "en": "PagedAttention",
+          "def": "A technique that manages the KV cache in small pieces like the pages of a book instead of reserving a large contiguous block for each user, so memory is not wasted."
+        },
+        {
+          "ar": "تكميم ذاكرة KV",
+          "en": "KV-cache quantisation",
+          "def": "Storing the keys and values at lower precision (1 byte instead of 2, for example) to shrink memory and serve more users."
+        }
+      ]
+    },
+    "2.5": {
+      "simple": [
+        "Attention alone does not know the **order** of words. “The boy ate the apple” and “The apple ate the boy” contain nearly the same words. So we add “position” information to every word, and the common modern method is **RoPE**: it rotates each word's vector by an angle that depends on its position.",
+        "**context extension**: a model trained on texts of 8,000 tokens can be adjusted to accept 128,000. But watch out for the **lost in the middle** phenomenon: the model remembers the beginning and end of a text better than its middle. That is why retrieving only the important passages (RAG) is often better and cheaper than throwing everything into a huge context."
+      ],
+      "example": "You read a 300-page report in one sitting. You will remember the introduction and the conclusion well, but an important detail on page 150 may escape you. But if someone gave you only the three pages relevant to your question, you would answer more accurately and in less time.",
+      "terms": [
+        {
+          "ar": "معلومات الموضع",
+          "en": "Positional encoding",
+          "def": "A way of telling the model the order of the words, because attention alone does not know which word came first."
+        },
+        {
+          "ar": "RoPE",
+          "en": "Rotary Position Embedding",
+          "def": "A positional method that rotates the query and key vectors by an angle that depends on position, so attention depends on the distance between the two words."
+        },
+        {
+          "ar": "تمديد السياق",
+          "en": "Context extension (YaRN, position interpolation)",
+          "def": "Techniques that make a model trained on short texts work on much longer ones, by re-tuning the positional information and a short period of training."
+        },
+        {
+          "ar": "الضياع في المنتصف",
+          "en": "Lost in the middle",
+          "def": "The tendency of models to use information at the beginning and end of a long context better than the middle."
+        }
+      ]
+    },
+    "2.6": {
+      "simple": [
+        "**FlashAttention** computes **exactly** the same attention, with no approximation, but is clever in its use of memory: it works on small pieces that stay in the small, fast memory inside the chip, instead of moving huge tables back and forth to the large, slow memory. The result: much faster, with the same output.",
+        "**mixture of experts (MoE)**: instead of one huge layer that works in full for every word, there are several “experts” and a router that sends each word to only two experts. The computation is small, but **all the experts must be in memory**, because you do not know in advance which expert the next word will need."
+      ],
+      "example": "**FlashAttention**: a cook preparing a dish. The slow way: going to the distant storeroom for each ingredient separately. The clever way: bringing enough for a whole step to the table, finishing it, then bringing the next. The same dish, in less time. **MoE**: a hospital with 8 specialist doctors, where each patient is seen by only two. The work per patient is small, but the salaries are for eight doctors.",
+      "terms": [
+        {
+          "ar": "FlashAttention",
+          "en": "FlashAttention",
+          "def": "A way of computing the same attention at full accuracy while reducing data movement in memory, so it becomes faster and uses less memory."
+        },
+        {
+          "ar": "SRAM وHBM",
+          "en": "On-chip vs device memory",
+          "def": "SRAM is a very small, very fast memory inside the GPU chip. HBM is the GPU's large memory (80 GB, for example), which is relatively slower."
+        },
+        {
+          "ar": "انتباه النافذة المنزلقة",
+          "en": "Sliding-window attention",
+          "def": "Each word attends only to a fixed number of words before it, not to the whole text. Lower cost in exchange for seeing less."
+        },
+        {
+          "ar": "خليط الخبراء",
+          "en": "Mixture of Experts — MoE",
+          "def": "An architecture with several “experts” and a router that sends each token to a few of them. Little computation, and large memory because all the experts are loaded."
+        },
+        {
+          "ar": "المعاملات النشطة",
+          "en": "Active parameters",
+          "def": "The parameters actually used for each token in an MoE model, which are a fraction of the total parameters."
+        }
+      ]
+    },
+    "2.7": {
+      "simple": [
+        "Four rules of thumb for computation. **Training** needs about 6 × the number of parameters × the number of training tokens operations. **Use** needs about 2 × the number of parameters per generated token. The **Chinchilla** rule: the compute-optimal amount is about 20 training tokens per parameter.",
+        "The most important rule in practice: generating words is **limited by the speed of reading memory**, not by the speed of computation. With every word, the whole model must be read from memory. That is why **shrinking the model by quantisation speeds up generation**, rather than just saving memory."
+      ],
+      "example": "A GPU chip reads 2,000 GB per second from its memory. A model of 8 GB: for each word it must be read in full, so the maximum is about 2,000 ÷ 8 = 250 words per second for one user. If we quantised it to 4 GB: 2,000 ÷ 4 = 500 words per second. Quantisation doubled the speed. There is a difference between two phases: reading your whole question in one go (**prefill**, which is compute-bound) and then writing the answer word by word (**decode**, which is memory-bound).",
+      "terms": [
+        {
+          "ar": "FLOPs",
+          "en": "Floating-point operations",
+          "def": "The number of arithmetic operations (multiplication and addition on decimal numbers). Used to measure the size of the computational work."
+        },
+        {
+          "ar": "قاعدة Chinchilla",
+          "en": "Chinchilla scaling",
+          "def": "A research result saying that the compute-optimal amount for training a model is about 20 training tokens per parameter. Many modern models deliberately exceed it so they are smaller and cheaper to use."
+        },
+        {
+          "ar": "عرض نطاق الذاكرة",
+          "en": "Memory bandwidth",
+          "def": "The amount of data a GPU can read from its memory per second. It determines generation speed."
+        },
+        {
+          "ar": "التعبئة والتوليد",
+          "en": "Prefill vs decode",
+          "def": "Prefill: processing the whole question text in one go, which determines time to first token. Decode: writing the answer token after token, which determines how fast the answer appears."
+        }
+      ]
+    },
+    "3.1": {
+      "simple": [
+        "The language model you talk to goes through several stages. **Pre-training**: it reads trillions of words and learns to predict the next word, producing a “base model” that knows a lot but only continues texts and does not follow commands. Then **instruction tuning**: it trains on “question → good answer” examples and learns to be an assistant. Then **preference alignment**: humans compare two answers and choose the better one, so the model learns what people prefer. Then **safety testing**.",
+        "The two best-known alignment methods are: **RLHF** (we build a model that imitates human ratings, then train the language model to please it; this is powerful but complex), and **DPO** (we learn directly from pairs of “this is better than that”; this is simpler)."
+      ],
+      "example": "Write to a **base** model: “What is the capital of France?”. It may continue: “What is the capital of Germany? What is the capital of Italy?”, because it has seen lists of questions like that on the internet. The **instruction-tuned** model, by contrast, answers: “Paris”. That is why you do not build an assistant on a base model.",
+      "terms": [
+        {
+          "ar": "التدريب المسبق",
+          "en": "Pre-training",
+          "def": "The first and most expensive stage: training the model on a huge amount of general text so it learns language and knowledge."
+        },
+        {
+          "ar": "نموذج الأساس",
+          "en": "Base model",
+          "def": "The product of pre-training. It knows a lot but continues texts and does not follow instructions."
+        },
+        {
+          "ar": "الضبط بالتعليمات",
+          "en": "Supervised fine-tuning (SFT) / instruction tuning",
+          "def": "Training the model on examples of an instruction and its good answer, so it learns to follow commands and the assistant style."
+        },
+        {
+          "ar": "RLHF",
+          "en": "Reinforcement Learning from Human Feedback",
+          "def": "Training a reward model on human preferences, and then optimising the language model with reinforcement learning to maximise that reward."
+        },
+        {
+          "ar": "DPO",
+          "en": "Direct Preference Optimisation",
+          "def": "Learning preferences directly from pairs of “preferred answer / rejected answer” with no separate reward model. Simpler and more stable."
+        },
+        {
+          "ar": "النهج الدستوري / RLAIF",
+          "en": "Constitutional AI / RL from AI Feedback",
+          "def": "An AI model that evaluates answers according to written principles instead of humans evaluating every example."
+        },
+        {
+          "ar": "نماذج الاستدلال",
+          "en": "Reasoning models",
+          "def": "Models trained to “think” through longer internal steps before answering. More accurate on complex problems, and slower and more expensive."
+        }
+      ]
+    },
+    "3.2": {
+      "simple": [
+        "**Reasoning models** are more accurate on complex problems because they “think” longer, but thinking means more words, that is, more time and cost. The rule: send them only the hard questions.",
+        "The second lesson: as an engineer you **rarely train a model from scratch**. You choose a ready-made model and then adapt it in order from cheapest to most expensive: a good prompt first, then RAG, then LoRA tuning, then preference tuning. Do not forget the licence terms, the hosting location, and support for Arabic and its dialects."
+      ],
+      "example": "A company builds an assistant for its employees. “What is my leave balance?” is a simple question that a fast model can handle. But “Analyse this contract and compare its clauses with our internal policy” may deserve a reasoning model. Sending every question to the reasoning model is like calling in a senior consultant to answer every question about lunchtime.",
+      "terms": [
+        {
+          "ar": "نقطة الحفظ",
+          "en": "Checkpoint",
+          "def": "A saved copy of the model's weights at a particular stage. A “base checkpoint” means the model's weights before instruction tuning."
+        },
+        {
+          "ar": "الأوزان المفتوحة",
+          "en": "Open weights",
+          "def": "A model whose weights are published so it can be downloaded and run on your own machines, as opposed to a model available only through a provider's API."
+        },
+        {
+          "ar": "الترخيص",
+          "en": "Licence",
+          "def": "The terms of use of the model: is commercial use allowed? Are there restrictions on the number of users or on domains?"
+        }
+      ]
+    },
+    "3.3": {
+      "simple": [
+        "You met tokens in Unit 00. Here are the details that matter for the exam. The most important is **fertility**: how many tokens a single word needs. Tokenizers designed for English cut Arabic words into more pieces, because of prefixes and suffixes (for example the single word [[ar:وبمستشفياتهم]] (“and in their hospitals”)) and diacritics. The result: Arabic text **costs more, runs slower, and takes up more space** in the context window.",
+        "An important rule: **the tokenizer is an inseparable part of the model**. It cannot be swapped. When comparing two models, do not compare only the “price per token”, but the **actual cost for your texts** after tokenising them with each model's tokenizer."
+      ],
+      "example": "Two models: the first costs 1 dollar per million tokens, but its tokenizer turns an Arabic word into 3 tokens on average. The second costs 1.5 dollars, and its Arabic tokenizer needs 1.5 tokens per word. For a million Arabic words: the first is 3 million tokens × 1 = 3 dollars, and the second is 1.5 million × 1.5 = 2.25 dollars. The “more expensive” one on paper is the cheaper one in reality.",
+      "terms": [
+        {
+          "ar": "BPE / WordPiece / SentencePiece",
+          "en": "Subword tokenisation algorithms",
+          "def": "Algorithms that build a vocabulary from common word pieces. Common words stay a single token, and rare ones are cut into smaller pieces."
+        },
+        {
+          "ar": "المفردات",
+          "en": "Vocabulary",
+          "def": "The list of all the tokens the tokenizer knows, which may be tens or hundreds of thousands. Each token has a number and a vector of its own in the model."
+        },
+        {
+          "ar": "علّام",
+          "en": "ALLaM",
+          "def": "A large language model focused on Arabic, developed by SDAIA. Other Arabic models include Jais."
+        },
+        {
+          "ar": "التطويل",
+          "en": "Tatweel / kashida (ـ)",
+          "def": "A character that stretches a word cosmetically (for example stretching [[ar:الريـــاض]] (“Riyadh”) by inserting elongation characters between its letters). It must be removed in normalisation so it does not spoil search."
+        }
+      ]
+    },
+    "3.4": {
+      "simple": [
+        "An **embedding model** converts text into a list of numbers so that texts similar in meaning lie close to each other. How does it learn this? By training on pairs: “this question and its answer” should be close, and “this question and the answer to another question” should be far apart.",
+        "There are two important types. The **bi-encoder**: converts the question alone and the document alone, and then we compare the numbers. Very fast, because documents are converted once in advance. The **cross-encoder**: reads the question and the document together. Much more accurate but slow, so it is used only to rerank the best results. The most important operational rule: **do not mix the vectors of two models** in one index."
+      ],
+      "example": "The bi-encoder analogy: every book in the library has a “summary card” written in advance, and you write a card for your question and compare it quickly with the cards. The cross-encoder: the librarian reads your question together with the first page of each candidate book, and judges precisely. More accurate, but they cannot do that with a million books. If you changed the way the cards are written, you would have to rewrite all the library's cards, not mix old ones with new.",
+      "terms": [
+        {
+          "ar": "التعلم التبايني",
+          "en": "Contrastive learning",
+          "def": "Training that pulls together the representations of related things and pushes apart unrelated ones."
+        },
+        {
+          "ar": "المشفّر الثنائي",
+          "en": "Bi-encoder",
+          "def": "A model that converts the question and the document separately into a vector, and then compares them. Fast and suitable for searching millions of documents."
+        },
+        {
+          "ar": "MTEB",
+          "en": "Massive Text Embedding Benchmark",
+          "def": "A public leaderboard for comparing embedding models across many tasks. Useful for a start, but what matters most is testing on your own data."
+        },
+        {
+          "ar": "نماذج ماتريوشكا",
+          "en": "Matryoshka embeddings",
+          "def": "Embedding models whose vectors can be truncated to a shorter length (256 instead of 1,024, for example) with a gradual loss of quality, to save memory."
+        },
+        {
+          "ar": "الاقتطاع الصامت",
+          "en": "Silent truncation",
+          "def": "When the model cuts text beyond its maximum limit without any error message, so part of the content is lost without you noticing."
+        },
+        {
+          "ar": "بصمة المحتوى",
+          "en": "Content hash",
+          "def": "A short, unique number computed from the content of the text. If the text has not changed, the hash has not changed, so there is no need to recompute its vector representation."
+        }
+      ]
+    },
+    "3.5": {
+      "simple": [
+        "This is a quick revision table for many topics you will see in detail in Unit 05: **agents**, tool use and their risks, the **MCP protocol** for connecting models to tools, **multimodal** (images and audio), and **diffusion models** for generating images.",
+        "Two important Saudi facts. **Arabic models**: SDAIA's study of 27 Arabic models found that most cover only 4–5 dialects out of more than 30. **SDAIA's guide to small and large models**: small ones are under 5 billion parameters, and large ones over 50 billion."
+      ],
+      "example": "When do you choose a small model? A banking application classifies customer messages into 10 categories. The task is narrow and clear, speed matters, and the data is sensitive. A small model (2 billion parameters) tuned for the task runs inside the bank, and is fast, cheap and sufficient. A general assistant that answers any question and writes and analyses, however, needs a large model.",
+      "terms": [
+        {
+          "ar": "الوكالة المفرطة",
+          "en": "Excessive agency",
+          "def": "Giving the agent more permissions, tools or autonomy than it needs, so it can cause great harm if it errs or is deceived."
+        },
+        {
+          "ar": "حقن الأوامر",
+          "en": "Prompt injection",
+          "def": "Inserting malicious instructions into text the model reads (a message, a web page, a document) to trick it into violating its original instructions. You will see it in detail in Unit 09."
+        },
+        {
+          "ar": "بروتوكول سياق النموذج",
+          "en": "Model Context Protocol — MCP",
+          "def": "An open standard for connecting LLM applications to tools and data sources through a unified interface, instead of building a separate integration for each tool."
+        },
+        {
+          "ar": "نماذج الانتشار",
+          "en": "Diffusion models",
+          "def": "Models that generate images by starting from random noise and removing it gradually until an image matching the description appears."
+        },
+        {
+          "ar": "النماذج الصغيرة",
+          "en": "Small Language Models — SLM",
+          "def": "Language models with fewer than 5 billion parameters according to SDAIA's guide. Fast and cheap, they run on devices and suit narrow tasks."
+        },
+        {
+          "ar": "إنترنت الأشياء",
+          "en": "Internet of Things — IoT",
+          "def": "Internet-connected devices with limited computing capability, such as sensors, cameras and home appliances."
+        }
+      ]
+    },
+    "4.1": {
+      "simple": [
+        "This is the most important decision table in the unit, and it recurs often in the exam. The question: how do I make the model useful for my work? Three ways, each with its cases.",
+        "The rule in short: if the problem is **knowledge** (information that changes, or needs a source, or permissions, or a right to deletion), the solution is **RAG**. If the problem is **behaviour** (a fixed style, a specific format, or a narrow task at huge volume), the solution is **fine-tuning**. If it is a quick, simple experiment, the **prompt** is enough. Sometimes you need both together."
+      ],
+      "example": "A smart new employee. **The prompt**: you give them clear instructions for every task. **RAG**: you give them access to the company's up-to-date files, so they search them, answer and name the file. If a policy changes, they read the new version immediately. **Fine-tuning**: an intensive training course that changes their writing style. But the course does not make them know what changed in the policies last week, and they cannot “forget” what they learned if asked to delete it.",
+      "terms": [
+        {
+          "ar": "مرشّحات الوصول",
+          "en": "Access filters",
+          "def": "Conditions applied to the search in RAG so that only documents the user is entitled to see are retrieved."
+        },
+        {
+          "ar": "الضبط الكفء بالمعاملات",
+          "en": "Parameter-Efficient Fine-Tuning — PEFT",
+          "def": "Tuning methods that adjust a very small part of the model instead of all its weights, such as LoRA. Much cheaper and needing less memory."
+        },
+        {
+          "ar": "حق طلب الإتلاف",
+          "en": "Right to erasure",
+          "def": "The data subject's right to request deletion of their personal data under the Personal Data Protection Law. Deletion from a RAG index is possible; from the weights of a fine-tuned model it is impractical."
+        }
+      ]
+    },
+    "4.2": {
+      "simple": [
+        "If you decide on fine-tuning, there are options. **Full fine-tuning** adjusts all the weights, and is the most expensive. **LoRA** freezes the original model and adds beside it very small layers that learn the adjustment, so the size of the adjustment is megabytes instead of gigabytes. **QLoRA** is like LoRA but the original model is compressed to 4 bits, so a large model fits on a single GPU.",
+        "Watch out for the risk of **catastrophic forgetting**: if you train the model intensively on a narrow task, it may forget general abilities it had mastered. LoRA reduces this risk because the original model stays frozen."
+      ],
+      "example": "**LoRA** is like putting transparent “correction stickers” over the pages of a book instead of reprinting it. The original book has not changed, the stickers are light and cheap, and you can prepare a set of stickers for each department (task), all of them using the same book. **catastrophic forgetting**: a general practitioner who specialised for 5 years in eye surgery only, and forgot much of general medicine.",
+      "terms": [
+        {
+          "ar": "LoRA",
+          "en": "Low-Rank Adaptation",
+          "def": "A tuning method that freezes the model's weights and adds two small matrices that learn the required adjustment. Very light, and the “adapters” can be swapped for different tasks."
+        },
+        {
+          "ar": "QLoRA",
+          "en": "Quantised LoRA",
+          "def": "LoRA applied to a model compressed to 4-bit precision, so large models can be tuned on a single GPU."
+        },
+        {
+          "ar": "المهايئ",
+          "en": "Adapter",
+          "def": "The small extra weights that LoRA learns. They are saved separately from the base model and their size is megabytes."
+        },
+        {
+          "ar": "ضبط الموجّه الناعم",
+          "en": "Prompt / prefix tuning",
+          "def": "Learning special vectors added at the start of the input to steer the model, instead of writing a text prompt."
+        },
+        {
+          "ar": "النسيان الكارثي",
+          "en": "Catastrophic forgetting",
+          "def": "The model's loss of its general abilities after intensive tuning on a narrow task."
+        }
+      ]
+    },
+    "4.3": {
+      "simple": [
+        "Calculating a model's size is easy: **number of parameters × bytes per parameter**. Every step down in precision halves the size: from FP16 (2 bytes) to INT8 (1 byte) to INT4 (half a byte).",
+        "But the weights are not everything. Add to them the KV cache for the conversations, the intermediate computations, and what the runtime needs: usually **20–40% extra**, and far more with long conversations and many users. After any quantisation, **re-test on your Arabic data**, because quality may be affected more in Arabic than in English."
+      ],
+      "example": "A model of 70 billion parameters and a GPU with 80 GB of memory. **FP16**: 70 × 2 = 140 GB, does not fit. **INT8**: 70 × 1 = 70 GB, barely fits, but only 10 is left for conversations. **INT4**: 70 × 0.5 = 35 GB, fits and leaves 45 GB for the KV cache and users.",
+      "terms": [
+        {
+          "ar": "التكميم",
+          "en": "Quantisation",
+          "def": "Storing the model's weights as lower-precision numbers (8 or 4 bits instead of 16) to shrink it and speed it up, usually with a slight loss in quality."
+        },
+        {
+          "ar": "INT8 / INT4",
+          "en": "Integer formats",
+          "def": "Storage formats using integers of 1 byte or half a byte per number."
+        },
+        {
+          "ar": "GPTQ / AWQ / GGUF",
+          "en": "Quantisation methods & formats",
+          "def": "Well-known methods and formats for quantising language models to 4 bits while preserving quality as far as possible."
+        },
+        {
+          "ar": "عبء التشغيل",
+          "en": "Runtime overhead",
+          "def": "The extra memory needed by the runtime, the framework and the intermediate computations, on top of the size of the weights."
+        }
+      ]
+    },
+    "4.4": {
+      "simple": [
+        "During generation the model chooses the next word from a list of probabilities. The **generation settings** control how this choice is made. A low **temperature** always picks the most likely, and a high one allows variety. **Top-p** and **top-k** cut the low-probability words from the list before choosing.",
+        "Other practical settings: the **output limit** (the maximum length of the answer, to control cost), **stop sequences**, and **structured outputs** (forcing the model into valid JSON so another program can read it). Remember: **low temperature does not prevent hallucination**."
+      ],
+      "example": "The next word after “The best time to visit Riyadh is”, with probabilities: “winter” 60%, “spring” 25%, “November” 10%, “summer” 5%. **Temperature 0**: always picks “winter”. **Temperature 1**: picks at random according to the proportions, so it may say “summer” once in 20 times. **Top-p = 0.9**: keeps the smallest set that reaches 90% (winter, spring and November = 95%), and drops “summer”.",
+      "terms": [
+        {
+          "ar": "Top-p (أخذ العينات من النواة)",
+          "en": "Nucleus sampling",
+          "def": "Choosing only from the smallest set of words whose probabilities sum to p, such as 0.9, and dropping the rest."
+        },
+        {
+          "ar": "Top-k",
+          "en": "Top-k sampling",
+          "def": "Choosing only from the k most probable words, such as the top 40."
+        },
+        {
+          "ar": "تسلسل التوقف",
+          "en": "Stop sequence",
+          "def": "A specific text that, if the model generates it, makes generation stop immediately."
+        },
+        {
+          "ar": "المخرجات المهيكلة",
+          "en": "Structured output / JSON mode",
+          "def": "Forcing the model to produce output in a specific machine-readable format, such as JSON with known fields."
+        },
+        {
+          "ar": "JSON",
+          "en": "JavaScript Object Notation",
+          "def": "A common text format for exchanging data between programs, for example: {\"name\": \"Ahmed\", \"age\": 30}."
+        },
+        {
+          "ar": "التأريض",
+          "en": "Grounding",
+          "def": "Tying the model's answer to specific sources it was given (such as RAG documents), so that every claim can be verified."
+        }
+      ]
+    },
+    "4.5": {
+      "simple": [
+        "Hallucination has different causes, and each cause has a different remedy. This is the lesson: **diagnose the cause first**. If the knowledge is absent or out of date, the remedy is RAG. If retrieval returns wrong passages, fix retrieval. If the model was not asked to say “I do not know”, add the instruction. If the information is buried in the middle of a long context, reduce the passages and rank them.",
+        "The usual distractors in the exam: “use a bigger model” and “lower the temperature”. Neither remedies faulty retrieval."
+      ],
+      "example": "A customer-service employee gives wrong information. If the cause is that their price guide is out of date, the solution is to give them the new guide, not to hire a smarter person. If they are looking in the wrong section of the guide, the solution is to improve the guide's index. If they are embarrassed to say “I do not know” and so invent an answer, the solution is to tell them plainly: “If you do not find the answer in the guide, say you do not know”.",
+      "terms": [
+        {
+          "ar": "فحص الأمانة",
+          "en": "Faithfulness check",
+          "def": "Checking that every sentence in the answer is supported by the documents provided, using a judge model or a natural language inference model."
+        },
+        {
+          "ar": "الاستدلال اللغوي الطبيعي",
+          "en": "Natural Language Inference — NLI",
+          "def": "A task that determines whether a sentence follows from another text, contradicts it, or is unrelated to it. Used to check faithfulness."
+        },
+        {
+          "ar": "إعادة صياغة الاستعلام",
+          "en": "Query rewriting",
+          "def": "Turning the user's ambiguous or short question into a clearer wording before searching."
+        }
+      ]
+    },
+    "4.6": {
+      "simple": [
+        "How do we evaluate a system that generates different text every time? There is no “single correct answer” to compare with word for word. So we measure several separate things: is the answer **supported by sources**? Is it **relevant to the question**? Did the system **retrieve the right documents**? Is it **safe**? Is the **Arabic sound**? What are the **cost and time**?",
+        "A common tool is the **judge model**, that is, a language model that evaluates the answers of another model. Cheap and fast, but it has biases: it favours the longer answer, or the first in the order, or the answers of a model from its own family. So we first verify it against human evaluation. The golden rule: **separate evaluating retrieval from evaluating writing**."
+      ],
+      "example": "A wrong answer from a RAG system. Was the cause that the retriever did not find the right document, or that it found it and the model misunderstood it? If you measure only the final answer you will not know. So you measure both: “is the right document among those retrieved?” (Recall@k), and “does the answer match what is in the document?” (faithfulness). The remedy is completely different in the two cases.",
+      "terms": [
+        {
+          "ar": "النموذج المحكِّم",
+          "en": "LLM-as-a-judge",
+          "def": "Using a language model to evaluate the outputs of another model according to written criteria. Needs calibration against human evaluation."
+        },
+        {
+          "ar": "ملاءمة الإجابة",
+          "en": "Answer relevance",
+          "def": "Does the answer actually address the question asked, regardless of whether it is correct."
+        },
+        {
+          "ar": "المطابقة التامة",
+          "en": "Exact match",
+          "def": "A strict metric: the answer is correct only if it matches the reference answer literally. Suitable for extracting specific fields."
+        },
+        {
+          "ar": "انحياز الإطالة",
+          "en": "Verbosity bias",
+          "def": "The tendency of a judge model to prefer longer answers even when they are not better."
+        },
+        {
+          "ar": "n-gram",
+          "en": "n-gram",
+          "def": "A sequence of n consecutive words. Metrics such as BLEU count the word sequences shared between two texts."
+        }
+      ]
+    }
+  }
+}

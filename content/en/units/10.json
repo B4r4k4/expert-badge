@@ -1,0 +1,1536 @@
+{
+  "num": 10,
+  "title": "SDAIA Governance & the PDPL",
+  "english": "SDAIA Governance & the PDPL",
+  "subtitle": "From the official names of the seven principles to the obligations of the Personal Data Protection Law and the national governance system",
+  "domain": "Domain 6 · 14.7%",
+  "deliverable": "Identify, in a scenario, the principle or obligation that was breached by its exact official name, together with the deadline, figure or control that addresses it.",
+  "intro": "A warning from past candidates: “Memorise the principles by their exact official names; the options are close, the difference between two principles can be a single word, and a quick read is not enough.” The typical question in this part of the domain describes an entity’s behaviour and asks which principle, or which obligation, was breached. This unit builds four layers: first, the official names of SDAIA’s AI Ethics Principles, the risk levels, the lifecycle and the roles; second, the official controls for each principle at each stage, and the map from scenario to principle; third, the Personal Data Protection Law (PDPL) as engineering controls, with its deadlines and figures; and fourth, the national data governance system, the generative AI principles, deepfakes and the media sector. Set aside a separate study session for it.",
+  "outcomes": [
+    "Recall the official names of the seven principles in Arabic and English and their word order, and distinguish the near-identical pairs.",
+    "Distinguish the Ethics Principles document from the National AI Risk Management Framework in stages, categories and levels, and calculate the risk score.",
+    "Identify the stage in which an official control falls within the matrix of seven principles × four stages.",
+    "Link a violation scenario to the official principle and to the accompanying obligation in the law or the security control.",
+    "Apply the PDPL obligations with their deadlines: 30 days for requests, extendable by 30; 72 hours to notify SDAIA; and the penalties after the 2023 amendments.",
+    "Classify data according to the National Data Management Office (NDMO) levels and infer the effect on hosting and on the use of generative AI tools.",
+    "Distinguish the voluntary tools (badges, certificates and self-assessment) from the mandatory obligations in the law."
+  ],
+  "method": "This is a unit of precise memorisation followed by application. Start by writing the seven principles from memory in Arabic and English until they come out in the correct word order without hesitation. Then memorise the figures on a single card: 7 principles, 4 risk levels, 4 lifecycle stages, 5 risk-framework stages and 7 categories, a 1–4 × 1–4 scale, 30 + 30 days, 72 hours, two years and 3 million riyals, and 5 million riyals doubled on repetition. After that, practise the scenario map: read the scenario and ask one question that separates the two close principles before you look at the options. As for what the briefing note marked “verify”, know it, but do not build a definitive answer on it.",
+  "chapters": [
+    {
+      "title": "SDAIA’s AI Ethics Principles and Risk Frameworks",
+      "sections": [
+        {
+          "title": "1.1 Scope and the Seven Principles by Their Official Names",
+          "blocks": [
+            {
+              "p": "The **AI Ethics Principles** issued by the Saudi Data and AI Authority (SDAIA) — current edition: 2025 — apply to all public, private and non-profit entities, and to individuals, that develop, deploy or use AI systems in the Kingdom. There are **seven** principles; memorise both forms of each one word for word:"
+            },
+            {
+              "table": [
+                [
+                  "#",
+                  "Official English name",
+                  "Official Arabic name",
+                  "Core idea"
+                ],
+                [
+                  "1",
+                  "Fairness",
+                  "[[ar:النزاهة والإنصاف]] (Integrity and Fairness)",
+                  "No bias, discrimination or profiling; representative data; fairness metrics and their limits are defined before training"
+                ],
+                [
+                  "2",
+                  "Privacy & Security",
+                  "[[ar:الخصوصية والأمن]] (Privacy and Security)",
+                  "Protection of personal data and of the system — explicitly including model weights; the minimum necessary data; an impact assessment before processing personal or sensitive data"
+                ],
+                [
+                  "3",
+                  "Humanity",
+                  "[[ar:الإنسانية]] (Humanity)",
+                  "Human-centred, rights-based and culturally compatible; no deception or manipulation; preserving human choice"
+                ],
+                [
+                  "4",
+                  "Social & Environmental Benefits",
+                  "[[ar:المنافع الاجتماعية والبيئية]] (Social and Environmental Benefits)",
+                  "Positive social and environmental impact; continuous assessment of social, cultural, economic and environmental impacts"
+                ],
+                [
+                  "5",
+                  "Reliability & Safety",
+                  "[[ar:الموثوقية والسلامة]] (Reliability and Safety)",
+                  "Works to specification and is robust; human oversight of irreversible or life-related decisions; not used for social scoring or mass surveillance"
+                ],
+                [
+                  "6",
+                  "Transparency & Explainability",
+                  "[[ar:الشفافية والقابلية للتفسير]] (Transparency and Explainability)",
+                  "Understandable reasons for decisions; users know when they are dealing with AI; a complaints mechanism; if a third party built it, all documentation must be available and traceable before procurement or adoption"
+                ],
+                [
+                  "7",
+                  "Accountability & Responsibility",
+                  "[[ar:المساءلة والمسؤولية]] (Accountability and Responsibility)",
+                  "Named, reachable owners; designers, developers and assessors are accountable; oversight and governance across the lifecycle; audit and redress"
+                ]
+              ]
+            },
+            {
+              "quote": "Word order and synonyms matter: [[ar:الخصوصية والأمن]] (Privacy & Security), not [[ar:الأمن والخصوصية]] (“Security and Privacy”) and not [[ar:الخصوصية والسرية]] (“Privacy and Confidentiality”); [[ar:الموثوقية والسلامة]] (Reliability & Safety), not [[ar:المتانة والسلامة]] (“Robustness and Safety”) and not [[ar:المتانة والموثوقية]] (“Robustness and Reliability”); and [[ar:النزاهة والإنصاف]] (Fairness), not [[ar:النزاهة وتكافؤ الفرص]] (“Integrity and Equal Opportunity”). The guides in circulation publish reworded versions — and the official name is always the correct one."
+            }
+          ]
+        },
+        {
+          "title": "1.2 Close Pairs and One-Word Traps",
+          "blocks": [
+            {
+              "p": "Three pairs recur in the options, and each pair is settled by one question:"
+            },
+            {
+              "table": [
+                [
+                  "Pair",
+                  "The deciding question",
+                  "Answer"
+                ],
+                [
+                  "Transparency and Explainability ↔ Accountability and Responsibility",
+                  "Can the affected person understand? Was the use of AI disclosed?",
+                  "Yes → Transparency and Explainability"
+                ],
+                [
+                  "",
+                  "Is there a responsible person who is answerable, with logs, approvals and redress?",
+                  "Yes → Accountability and Responsibility"
+                ],
+                [
+                  "Privacy and Security ↔ Reliability and Safety",
+                  "Is the issue protecting the data, the model and lawful use?",
+                  "Privacy and Security"
+                ],
+                [
+                  "",
+                  "Is the issue the system behaving correctly and safely, robustness, and oversight?",
+                  "Reliability and Safety"
+                ],
+                [
+                  "Integrity and Fairness ↔ Humanity",
+                  "Are there unequal outcomes between groups?",
+                  "Integrity and Fairness"
+                ],
+                [
+                  "",
+                  "Is there manipulation, deception, or harm to dignity, autonomy or culture?",
+                  "Humanity"
+                ]
+              ]
+            },
+            {
+              "p": "Example: “Applicants were rejected without a reason being given” touches Transparency (the affected person cannot understand). By contrast, “There is no way to appeal or obtain redress” touches Accountability (no one is answerable and there is no redress)."
+            }
+          ]
+        },
+        {
+          "title": "1.3 Risk Levels, Lifecycle and Roles",
+          "blocks": [
+            {
+              "h": "The four official risk levels"
+            },
+            {
+              "table": [
+                [
+                  "Official level",
+                  "Meaning and example",
+                  "Requirement"
+                ],
+                [
+                  "Little or No Risk",
+                  "For example, spam filters",
+                  "Compliance with the principles is recommended"
+                ],
+                [
+                  "Limited Risk",
+                  "For example, technical software related to work, development and performance",
+                  "Apply the principles"
+                ],
+                [
+                  "High Risk",
+                  "A risk to fundamental human rights",
+                  "Conformity assessments before and after deployment + applicable regulations"
+                ],
+                [
+                  "Unacceptable Risk",
+                  "For example, social scoring, exploiting children, and distorting behaviour in a way that causes physical or psychological harm",
+                  "Not permitted"
+                ]
+              ]
+            },
+            {
+              "h": "The lifecycle: four stages"
+            },
+            {
+              "formula": "Planning and Design → Data Preparation → Building and Performance Measurement → Deployment and Monitoring"
+            },
+            {
+              "p": "In English: Planning & Design → Data Preparation → Building & Performance Measurement → Deployment & Monitoring. English translations vary (for example “Build & Validate”), **so memorise the official Arabic form**. Each principle has controls at each stage: a 7 × 4 matrix (Chapter 2)."
+            },
+            {
+              "h": "Roles within the entity"
+            },
+            {
+              "table": [
+                [
+                  "Role",
+                  "Responsibility"
+                ],
+                [
+                  "Head of the entity / Data Management Officer",
+                  "Approves and oversees the ethics plan, assigns roles, approves the annual AI ethics report, and escalates to SDAIA"
+                ],
+                [
+                  "Compliance Officer",
+                  "The strategic lead; reports to the Data Management Officer"
+                ],
+                [
+                  "AI Officer",
+                  "The operational lead; works with the data management team"
+                ],
+                [
+                  "AI System Assessor",
+                  "Audits AI systems, reviews feedback channels and indicators, and issues audit reports, including those on AI procurement from third parties"
+                ]
+              ]
+            },
+            {
+              "p": "At the national level, **SDAIA** prepares and updates the principles, the adoption plan and advice, measures compliance through **voluntary registration**, and coordinates with sector regulators."
+            },
+            {
+              "quote": "Registration and incentive badges are voluntary — unlike the PDPL, which is binding and carries penalties."
+            }
+          ]
+        },
+        {
+          "title": "1.4 The National AI Risk Management Framework (April 2026)",
+          "blocks": [
+            {
+              "p": "A standalone SDAIA framework for identifying, assessing, treating and monitoring AI risks, addressed to system developers and operators and to policy-makers in government and private entities. **It is not the Ethics Principles document itself**: the names of its stages and of its risk categories are different — ideal material for one-word traps."
+            },
+            {
+              "table": [
+                [
+                  "Element",
+                  "Official content"
+                ],
+                [
+                  "Reference pillars",
+                  "General principles · AI regulations · data regulations · sector regulations"
+                ],
+                [
+                  "Process stages (5)",
+                  "Context and Scope Definition → Risk Identification → Risk Assessment → Risk Treatment → Monitoring and Review"
+                ],
+                [
+                  "Risk categories (7)",
+                  "Bias, Discrimination and Harm · Privacy and Security · Misinformation · Harmful Use · Human–Machine Interaction · Social, Economic and Environmental Impacts · Safety and Limitation"
+                ],
+                [
+                  "Likelihood (1–4)",
+                  "Rare · Unlikely · Likely · Almost certain (≥ 50% annually)"
+                ],
+                [
+                  "Impact (1–4)",
+                  "Low · Medium · High · Catastrophic"
+                ],
+                [
+                  "Risk level",
+                  "Likelihood × Impact: 1–2 Low · 3–6 Medium · 8–12 High · 16 Catastrophic"
+                ],
+                [
+                  "Treatment options",
+                  "Avoid (redesign, restrict, stop) · Mitigate (technical, organisational and operational controls) · Transfer (contracts, guarantees, insurance — **does not remove the entity’s responsibility**) · Accept (residual risk within the approved risk tolerance, documented)"
+                ],
+                [
+                  "Documentation",
+                  "Every decision is recorded in the risk register with the justification, the owners and escalation for high risks; then acceptance or escalation of the residual risk"
+                ]
+              ]
+            },
+            {
+              "formula": "Risk level = Likelihood (1–4) × Impact (1–4)"
+            },
+            {
+              "formula": "3 × 4 = 12 → High ; 4 × 1 = 4 → Medium ; 2 × 3 = 6 → Medium ; 4 × 4 = 16 → Catastrophic"
+            },
+            {
+              "p": "Note the second example: “Almost certain” alone does not make a risk high if the impact is low. The possible products of the multiplication are only 1, 2, 3, 4, 6, 8, 9, 12 and 16, which is why the ranges jump from 6 to 8."
+            },
+            {
+              "h": "Traps between the two documents"
+            },
+            {
+              "ul": [
+                "The Ethics Principles write “**[[ar:الشفافية والقابلية للتفسير]]**” (Transparency and Explainability), while the Framework writes “**[[ar:الشفافية وقابلية التفسير]]**” (the same words, without the definite article “al-” before “explainability”).",
+                "The Ethics lifecycle has **4** stages, while the Framework’s process has **5** stages.",
+                "Ethics has **risk levels** (little or no · limited · high · unacceptable), while the Framework has **risk scores** (low · medium · high · catastrophic).",
+                "Read whichever document the question names before you choose."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.5 International Frameworks That May Be Named",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Framework",
+                  "What to remember"
+                ],
+                [
+                  "OECD AI Principles",
+                  "Inclusive growth and well-being; human rights and democratic values, including fairness and privacy; transparency and explainability; robustness, security and safety; accountability"
+                ],
+                [
+                  "NIST AI RMF 1.0",
+                  "Four functions: Govern · Map · Measure · Manage"
+                ],
+                [
+                  "EU AI Act",
+                  "Risk tiers: unacceptable (prohibited), high, limited (transparency duties), minimal"
+                ],
+                [
+                  "ISO/IEC 42001",
+                  "AI management system standard (certifiable)"
+                ],
+                [
+                  "ISO/IEC 23894",
+                  "AI risk management guidance"
+                ]
+              ]
+            },
+            {
+              "p": "These frameworks are useful for comparison, but when a question asks about “SDAIA’s principles”, the Saudi names and levels are the ones that count, not the OECD or European Union labels."
+            }
+          ]
+        },
+        {
+          "title": "1.6 Registration, Badges and Self-Assessment",
+          "blocks": [
+            {
+              "p": "SDAIA’s **AI Market Governance Tools** document (2025) describes three instruments built on the Ethics Principles:"
+            },
+            {
+              "ol": [
+                "**AI Ethics incentive badges:** five ascending levels reflecting the maturity of an entity’s or a product’s ethical practice, from adopting the principles to a role-model level. The assessment has four parts: product information (description, data sources), information about the product’s customers (target groups, number of customers), risk assessment (potential risks and their impact on society), and the documents required for audit.",
+                "**AI service-provider accreditation certificates:** for private-sector entities that hold a badge; obtained through the **National Data Governance Platform**: register the entity → appoint an AI Officer → add the product → complete the questionnaire with documents → committee review.",
+                "**AI Ethics Self-Assessment:** a tool that lets entities and individuals measure their products against all seven principles through a cycle: know your level of compliance → learn from the results → improve → re-assess."
+              ]
+            },
+            {
+              "quote": "All three tools are voluntary / incentive-based — unlike the mandatory, enforceable obligations of the PDPL. A badge does not replace any legal duty."
+            },
+            {
+              "p": "Expected traps: the badge is a prerequisite for the certificate, not the certificate itself; the certificate is not issued by the National Cybersecurity Authority; and the self-assessment tool is for learning and improvement, not for granting accreditation."
+            }
+          ]
+        },
+        {
+          "title": "1.7 SDAIA’s AI Adoption Framework",
+          "blocks": [
+            {
+              "p": "SDAIA’s **Framework for AI Adoption** (2025) targets policy-makers and government entities, and measures adoption across three dimensions:"
+            },
+            {
+              "table": [
+                [
+                  "Dimension",
+                  "What it covers"
+                ],
+                [
+                  "Directions (the strategic and institutional dimension)",
+                  "Clarity of vision and goals, quality of initiative design, alignment with the national strategy, governance policies and executive procedures, and use-case prioritisation"
+                ],
+                [
+                  "Enablers",
+                  "Infrastructure, data, human capabilities (the number, specialisation, development and retention of talent), and partnerships"
+                ],
+                [
+                  "Outputs",
+                  "Results of actual adoption: efficiency of developing and operating models, intelligent applications, and measurable benefits (savings, service quality, resource sustainability)"
+                ]
+              ]
+            },
+            {
+              "p": "The framework stresses **graduated** adoption: start with priority use cases, then build the enablers, then measure the outputs, then scale — without treating AI solely as a source of risk or as an end in itself. In the exam its three terms (Directions · Enablers · Outputs) may appear in maturity and readiness scenarios: a shortage of talent or infrastructure is a gap in Enablers, the absence of a vision or of governance policies is a gap in Directions, and the lack of measured benefits is a gap in Outputs."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Seven Principles Stage by Stage, and from Scenario to Control",
+      "sections": [
+        {
+          "title": "2.1 How to Read the Matrix, and the First Principle: Integrity and Fairness",
+          "blocks": [
+            {
+              "p": "The Ethics Principles (2025) attach controls to each principle at each of the four lifecycle stages. Knowing where a control sits answers two recurring questions: “At which stage should the team have…?” and “Which principle requires…?”. The following tables summarise the official text and keep its key phrases."
+            },
+            {
+              "p": "**Core text of Integrity and Fairness:** the system developer must take the necessary measures to ensure that there is no bias, discrimination or profiling affecting individuals or groups because of the data or the algorithms, or to reduce it; the criteria must be unbiased, fair, equitable, objective, inclusive, diverse and representative of all segments of society or of the target segments; the system’s function must not be limited to particular groups on the basis of gender, race, religion, age or otherwise; and when personal data is used, the purpose must be justified, specific and compatible with the Personal Data Protection Law, with data subjects anonymised or pseudonymised wherever possible."
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Official controls (summarised)"
+                ],
+                [
+                  "Planning and Design",
+                  "Define the purpose and design to prevent bias; technical and non-technical members together define the benefits and harms, the groups likely to be affected and the least represented, and whether the impacts are justified; choose fairness metrics according to the type of algorithm and the harm and benefit of correct and incorrect predictions; systematically identify data on the affected groups, and **define the threshold at which an assessment is fair or unfair** and its metrics for the later stages"
+                ],
+                [
+                  "Data Preparation",
+                  "Best practices in acquiring, classifying and managing data; data quality through recency and source integrity; no systematic exclusion of the least represented groups; sufficient sample size and quality; **sensitive data identified in the design must not be included among the model’s features** — an exception requires a justification and an alternative"
+                ],
+                [
+                  "Building and Performance Measurement",
+                  "Engineers’ awareness that combining, separating or excluding features may harm vulnerable groups; taking fairness metrics into account when selecting the model and within the threshold set for sensitive attributes; defining the method for assessing fairness and documenting the reasons if the model fails; validating the feature-selection method with stakeholders; mechanisms to prevent harmful outcomes in automated decision support"
+                ],
+                [
+                  "Deployment and Monitoring",
+                  "Protocols for measuring the fairness of outcomes between individuals and groups; monitoring the predefined fairness metrics and checking whether the model needs adjustment when they drift beyond the permitted threshold; measuring overall harm and benefit and acting on them"
+                ]
+              ]
+            },
+            {
+              "quote": "When are fairness metrics and their threshold set? In Planning and Design — before training. They are monitored against the threshold in Deployment and Monitoring."
+            }
+          ]
+        },
+        {
+          "title": "2.2 The Second Principle: Privacy and Security",
+          "blocks": [
+            {
+              "p": "**Core text:** systems are developed to be securely protected and to respect legal requirements, including protecting the privacy of personal data subjects and cybersecurity standards, to prevent unauthorised access to the data and the system that could lead to reputational, psychological, financial or professional harm; and they are designed with mechanisms and controls that allow outcomes to be managed and monitored throughout their lifecycle to ensure compliance with the privacy and security rules."
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Official controls (summarised)"
+                ],
+                [
+                  "Planning and Design",
+                  "Protect individuals’ privacy; do not misuse personal data; decision criteria are not based on identifying characteristics; personal data limited to the minimum necessary; **systems that profile specific individuals or groups are developed only with the approval of the Chief Data Officer or under a sector code of conduct**; security design according to best practice against attacks on the data, the model or the **model weights**; planning of data classification and anonymisation or pseudonymisation; **an impact assessment is carried out before processing personal or sensitive data** in accordance with the law"
+                ],
+                [
+                  "Data Preparation",
+                  "Compliance with privacy frameworks when collecting, buying or managing data; access restricted to authorised persons through delegated access controls; secure databases; classification of all processed data so that it receives protection proportionate to its sensitivity and in a way that does not allow personal information to be inferred; backup, encryption and archiving for continuity and disaster mitigation"
+                ],
+                [
+                  "Building and Performance Measurement",
+                  "Protecting the model’s components from corruption, modification or unauthorised access; keeping the system available to authorised users and secure; testing that the data made available does not unlawfully reveal personal or sensitive data and does not breach the rules on anonymisation or pseudonymisation"
+                ],
+                [
+                  "Deployment and Monitoring",
+                  "Continuous monitoring of privacy, safety and security; continuous review of the privacy impact assessment and of risk management; **the owner or officer of the AI system is responsible for protecting personal data across the lifecycle** and updates the system based on monitoring reports"
+                ]
+              ]
+            },
+            {
+              "p": "A recurring signal: “protecting model weights” falls explicitly under **Privacy and Security**, not under Reliability and Safety."
+            }
+          ]
+        },
+        {
+          "title": "2.3 The Third and Fourth Principles: Humanity, and Social and Environmental Benefits",
+          "blocks": [
+            {
+              "h": "Humanity"
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Official controls (summarised)"
+                ],
+                [
+                  "Core text",
+                  "Building AI with a fair and ethical methodology based on human rights and fundamental cultural values, for a positive impact; **it does not deceive or manipulate**, and does not impose behaviour that does not aim to empower or enhance human skills; **and it allows choice and decision-making in the interest of the human**"
+                ],
+                [
+                  "Planning and Design",
+                  "Design around fundamental human rights and cultural values; define how the system will comply with Saudi human rights and social and cultural values, and how it will enhance human skills and capabilities"
+                ],
+                [
+                  "Data Preparation",
+                  "Ethical data management practices and the Kingdom’s data management standards; obtaining, classifying, processing and making data available in ways that respect human rights and cultural values"
+                ],
+                [
+                  "Building and Performance Measurement",
+                  "Prioritising human-centred systems that facilitate human decision-making; automated decisions do not operate in isolation from human rights and social and cultural values"
+                ],
+                [
+                  "Deployment and Monitoring",
+                  "Periodic assessments that outcomes do not conflict with human rights and values; accuracy of performance indicators; the impact on individuals and groups; corrective actions by the AI system officer when harmful outcomes are discovered"
+                ]
+              ]
+            },
+            {
+              "h": "Social and Environmental Benefits"
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Official controls (summarised)"
+                ],
+                [
+                  "Core text",
+                  "Promoting positive social and environmental impact with a focus on the sustainable goals; AI does not cause or accelerate harm, but contributes to technical, social and environmental progress"
+                ],
+                [
+                  "Planning and Design",
+                  "Awareness that AI may produce harmful or transformative effects on society and the environment; ethical design that prevents harm to people and the environment; addressing relevant social and environmental issues responsibly"
+                ],
+                [
+                  "Data Preparation",
+                  "Following data management policies in classifying and structuring data; making social and environmental data available and showing its social benefit"
+                ],
+                [
+                  "Building and Performance Measurement",
+                  "Linking the models’ social and environmental impacts to the expected outcomes and benefits; defining how the system will address social and environmental concerns"
+                ],
+                [
+                  "Deployment and Monitoring",
+                  "**Continuous assessment of social, cultural, economic and environmental impact**; sustainability is an ongoing goal; support for the Sustainable Development Goals"
+                ]
+              ]
+            },
+            {
+              "p": "The Social and Environmental Benefits signal in a scenario is usually waste: training a huge model when a small one would suffice, while ignoring energy consumption."
+            }
+          ]
+        },
+        {
+          "title": "2.4 The Fifth Principle: Reliability and Safety",
+          "blocks": [
+            {
+              "p": "**Core text:** the system adheres to its specified requirements and works fully as its designers intended. **Reliability** is a measure of operational credibility and dependability, and **safety** is a measure of how the system avoids posing a danger to society and individuals (the text’s example: self-driving vehicles that fail to recognise people or were not trained for certain scenarios). The system must have built-in mechanisms to prevent harm, and the system officer works to reduce unintended risks and harms to a minimum."
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Official controls (summarised)"
+                ],
+                [
+                  "Planning and Design",
+                  "Design that tolerates instability and fluctuations; robustness across inputs and situations, including new and unexpected events; criteria and protocols for assessing reliability; documentation standards to trace the system’s evolution; **approval of all important design decision points by stakeholders**, so that the approvers bear responsibility; controls proportionate to the risk level"
+                ],
+                [
+                  "Data Preparation",
+                  "Measuring the data sample’s quality, accuracy, relevance and reliability; **verifying that the system works under emergency events** and unexpected scenarios"
+                ],
+                [
+                  "Building and Performance Measurement",
+                  "A comprehensive quality-testing methodology under unified policies; rigorous testing, validation and re-assessment with built-in oversight; integration testing approved by stakeholders; **human oversight of systems that make irreversible decisions or decisions related to preserving life**; **they should not be used for social scoring or mass surveillance**"
+                ],
+                [
+                  "Deployment and Monitoring",
+                  "Continuous periodic monitoring of credibility and dependability — technical risks (an internal perspective) and the scale of the risks the system poses (an external perspective); verifying that operations conform to the designed architecture; robustness against malicious use of its data and outputs"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.5 The Sixth Principle: Transparency and Explainability",
+          "blocks": [
+            {
+              "p": "**Core text:** a high degree of clarity and explainability, with properties that make it possible to trace the steps of an automated decision, especially one that may harm individuals; transparency of the data, algorithms, capabilities, processes and purpose to those who are affected directly and indirectly; its degree depends on the context, the purpose and the outcomes; and developers’ ability to justify the design, practices, algorithms and decisions."
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Official controls (summarised)"
+                ],
+                [
+                  "Planning and Design",
+                  "Affected stakeholders understand how outputs are produced and can reach the rationale for decisions in clear language; decisions are traceable; define the level of transparency for each category of stakeholder; an information section giving an overview of the model’s decisions; sharing information with end users; **a mechanism to record and handle problems and complaints** transparently"
+                ],
+                [
+                  "Data Preparation",
+                  "Documenting the datasets and the processes that explain decisions, for traceability; assessing the accuracy, relevance, validity and provenance of datasets for legal compliance"
+                ],
+                [
+                  "Building and Performance Measurement",
+                  "Transparency from two perspectives — the process (design and build practices) and the outcome (the content of the result and its rationale); **informing those affected when the outcome was processed by AI** and enabling them to request an explanation; **if a third party built it, making sure the ethics are applied and that all documentation is available and traceable before procurement or adoption**"
+                ],
+                [
+                  "Deployment and Monitoring",
+                  "Documenting performance metrics and their impact on the target groups; recording failures, breaches and data leaks, and notifying the competent authorities and stakeholders in accordance with the regulations; periodic testing of the user interface and experience to avoid bias or usability risks"
+                ]
+              ]
+            },
+            {
+              "p": "Two important signals: documentation of third-party systems before procurement falls under **Transparency and Explainability** in the **Building and Performance Measurement** stage, and so does informing people that the outcome was processed by AI."
+            }
+          ]
+        },
+        {
+          "title": "2.6 The Seventh Principle: Accountability and Responsibility",
+          "blocks": [
+            {
+              "p": "**Core text:** designers, developers, officers and assessors bear ethical responsibility for decisions and actions that may cause risks or harm; human oversight, governance and management across the whole lifecycle; systems do not deceive people or undermine their freedom of choice without justification; designers, developers and implementers are named and reachable by stakeholders; preventive and strategic measures to assess and mitigate risks; sustained fairness through oversight mechanisms."
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Official controls (summarised)"
+                ],
+                [
+                  "Planning and Design",
+                  "Responsible design or procurement; assigning ethical responsibility to stakeholders for key actions; a mature governance structure that defines delegation and responsibility for internal and external parties; tools such as impact assessment, risk-mitigation frameworks, audit, comprehensive assessment, and remediation and disaster-recovery plans; **decisions are monitored and open to intervention by authorised users, with levels of oversight and autonomy defined**"
+                ],
+                [
+                  "Data Preparation",
+                  "Data quality tests, screening and integrity checks; approval of datasets before model development; de-biased data; **no biometric attributes in the model’s data** — and if sensitive attributes are needed, the justification is documented; documentation of data preparation and quality checks by authorised persons for audit; organising the data in a way that allows later human intervention"
+                ],
+                [
+                  "Building and Performance Measurement",
+                  "Technical stakeholders who build and validate the models are accountable for feature selection, tuning and model selection; defined ownership and approvals; decisions supported by quantitative indicators (training and test performance, consistency across sensitive groups, and comparisons between tuning configurations) and qualitative ones (risk mitigation); review and approval after the tests and the user-acceptance validation rounds succeed, before deployment"
+                ],
+                [
+                  "Deployment and Monitoring",
+                  "Clearly defined responsibilities and obligations; continuous monitoring and verification of outcomes; alerts and notifications within risk mitigation or disaster recovery that may require human oversight"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.7 From Principle to Engineering Control, Tool and Evidence",
+          "blocks": [
+            {
+              "p": "When a question asks “What evidence does the team give the auditor for such-and-such a principle?” or “Which control satisfies the principle?”, use this table:"
+            },
+            {
+              "table": [
+                [
+                  "Principle",
+                  "Engineering control",
+                  "Tools",
+                  "Evidence for auditors"
+                ],
+                [
+                  "Integrity and Fairness",
+                  "A fairness metric + a threshold before training; evaluation by slice; analysis of alternatives; monitoring",
+                  "Fairlearn, AI Fairness 360, What-If Tool, Aequitas",
+                  "A fairness report for each release; threshold decisions"
+                ],
+                [
+                  "Privacy and Security",
+                  "Minimisation, classification, encryption, access control, impact assessment (DPIA), leakage tests, and weight protection",
+                  "DLP, KMS/HSM, personal-data detectors, differential privacy libraries",
+                  "Impact assessment, record of processing activities, and penetration-test and red-team reports"
+                ],
+                [
+                  "Humanity",
+                  "No dark patterns; human choice; evaluation sets for cultural values",
+                  "UX reviews, and Arabic cultural test sets",
+                  "Design reviews; evaluation results"
+                ],
+                [
+                  "Social and Environmental Benefits",
+                  "Choosing an efficient model; measuring energy; impact assessment",
+                  "Carbon and energy trackers",
+                  "Impact assessments; efficiency metrics"
+                ],
+                [
+                  "Reliability and Safety",
+                  "Robustness tests, chaos and emergency scenarios, human-oversight gates, and monitoring",
+                  "Testing frameworks, canary and shadow rollouts, and SLO dashboards",
+                  "Test reports; stakeholder approvals; incident logs"
+                ],
+                [
+                  "Transparency and Explainability",
+                  "Disclosure, explanations, a complaints channel, documentation, and third-party documents before procurement",
+                  "SHAP/LIME, model cards, datasheets",
+                  "Model cards; explanation samples; complaint logs"
+                ],
+                [
+                  "Accountability and Responsibility",
+                  "Named owners, an approval path, an audit trail, intervention and a kill switch, and redress",
+                  "Model registry, lineage tracking, and a ticketing system",
+                  "Approval records; audit logs; a RACI matrix"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.8 Map from Scenario to Principle or Obligation",
+          "blocks": [
+            {
+              "p": "This map is the heart of the unit: memorise every line as it stands, because the exam rephrases these very scenarios."
+            },
+            {
+              "table": [
+                [
+                  "Scenario",
+                  "Principle (SDAIA)",
+                  "Also (law / security)"
+                ],
+                [
+                  "A loan model approves women far less often at equal income",
+                  "Integrity and Fairness",
+                  "Slice metrics and alternatives"
+                ],
+                [
+                  "A chatbot presents itself as a human employee",
+                  "Transparency and Explainability",
+                  "Generative AI guidelines: disclosure"
+                ],
+                [
+                  "Applicants rejected without a reason",
+                  "Transparency and Explainability",
+                  "Reason codes"
+                ],
+                [
+                  "No way to appeal or obtain redress",
+                  "Accountability and Responsibility",
+                  "—"
+                ],
+                [
+                  "Streak mechanics and fake scarcity push minors to spend",
+                  "Humanity",
+                  "—"
+                ],
+                [
+                  "A model trained on conversations collected for support",
+                  "Privacy and Security",
+                  "Purpose limitation, and the legal basis"
+                ],
+                [
+                  "Customer data sent to a language-model API outside the Kingdom",
+                  "Privacy and Security",
+                  "Transfer outside the Kingdom; classification"
+                ],
+                [
+                  "Logs containing national ID numbers kept without limit",
+                  "Privacy and Security",
+                  "Retention and destruction"
+                ],
+                [
+                  "A leak was discovered and reporting was delayed by a month",
+                  "Privacy and Security / Accountability and Responsibility",
+                  "Notification within 72 hours"
+                ],
+                [
+                  "Autonomous medical treatment decisions without physician review",
+                  "Reliability and Safety",
+                  "Human oversight"
+                ],
+                [
+                  "A model deployed without testing and its outputs fluctuate wildly",
+                  "Reliability and Safety",
+                  "Gates and monitoring"
+                ],
+                [
+                  "No one knows who approved the production model",
+                  "Accountability and Responsibility",
+                  "Model registry and lineage tracking"
+                ],
+                [
+                  "Buying a supplied model without documentation",
+                  "Transparency and Explainability — third-party documents before procurement (and see Unit 11, Section 2.1)",
+                  "Supply chain (LLM03)"
+                ],
+                [
+                  "Training a huge model when a small one would suffice, while ignoring energy",
+                  "Social and Environmental Benefits",
+                  "—"
+                ],
+                [
+                  "Social scoring of citizens",
+                  "Unacceptable risk — prohibited",
+                  "—"
+                ]
+              ]
+            },
+            {
+              "quote": "Read the verb, not the topic: “pretends to be human” is disclosure → Transparency; “pushes minors with dark patterns” is manipulation → Humanity; “no one knows who approved” is ownership → Accountability."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Personal Data Protection Law: From Text to Operation",
+      "sections": [
+        {
+          "title": "3.1 Source and Scope",
+          "blocks": [
+            {
+              "p": "The **Personal Data Protection Law** (PDPL) was issued by Royal Decree **M/19** (1443 AH / 2021) and amended by Royal Decree **M/148** (1444 AH / 2023). It has been in force since **14 September 2023** with a grace period until **14 September 2024**, is supervised by **SDAIA**, and is detailed by the **Implementing Regulations** and the **Regulation on Personal Data Transfer outside the Kingdom**."
+            },
+            {
+              "p": "The Law covers processing **inside the Kingdom**, and processing **from outside it** of the data of residents of the Kingdom."
+            }
+          ]
+        },
+        {
+          "title": "3.2 Core Terms",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Term",
+                  "English",
+                  "Meaning"
+                ],
+                [
+                  "Personal data",
+                  "Personal Data",
+                  "Any data that identifies a person directly or indirectly — including pseudonymised data, and embeddings derived from personal data for as long as re-linking is possible"
+                ],
+                [
+                  "Sensitive data",
+                  "Sensitive Data",
+                  "Racial or tribal origin; religious, ideological or political belief; security and criminal data; biometric data; genetic data; health data; data indicating unknown parentage. **Credit data and location data were removed from this list by the 2023 amendment** — and an option that describes them as “sensitive under the Law” is wrong"
+                ],
+                [
+                  "Data subject",
+                  "Data Subject",
+                  "The individual to whom the data relates"
+                ],
+                [
+                  "Controller",
+                  "Controller",
+                  "Determines the purpose and the means — responsible for compliance"
+                ],
+                [
+                  "Processor",
+                  "Processor",
+                  "Processes on behalf of the controller; and the controller must verify the processor’s compliance"
+                ],
+                [
+                  "Processing",
+                  "Processing",
+                  "Any operation: collection, recording, storage, use, disclosure, transfer, destruction…"
+                ],
+                [
+                  "Destruction",
+                  "Destruction",
+                  "Removing data so that it can no longer be accessed or recovered"
+                ],
+                [
+                  "Anonymisation",
+                  "Anonymisation",
+                  "Permanently impossible to link back → no longer personal data"
+                ],
+                [
+                  "Pseudonymisation (pseudonyms)",
+                  "Pseudonymisation",
+                  "Can be re-linked with a key → remains personal data"
+                ]
+              ]
+            },
+            {
+              "quote": "Only irreversible anonymisation takes data outside the scope of the Law. Pseudonymisation and re-linkable embeddings remain personal data."
+            }
+          ]
+        },
+        {
+          "title": "3.3 The Obligations as Engineering Controls",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Obligation",
+                  "Engineering control",
+                  "Typical violation"
+                ],
+                [
+                  "Legal basis",
+                  "Consent records and a way to withdraw it; other bases include legitimate interest (since 2023 — **not suitable for sensitive data**)",
+                  "Training on customer conversations without a basis"
+                ],
+                [
+                  "Purpose limitation",
+                  "Tag datasets with their purpose; block incompatible reuse",
+                  "Delivery data reused for credit scoring"
+                ],
+                [
+                  "Data minimisation",
+                  "Delete unnecessary fields; mask identifiers in features and prompts",
+                  "Sending the full national ID number to a language model for a question about a product"
+                ],
+                [
+                  "Data accuracy",
+                  "Correction paths, and data-quality checks",
+                  "Outdated data driving decisions"
+                ],
+                [
+                  "Retention and destruction",
+                  "A retention schedule; automatic deletion or anonymisation (3.4)",
+                  "Raw conversation logs kept “forever, just in case”"
+                ],
+                [
+                  "Data security",
+                  "Encryption, access control, logs, and DLP",
+                  "An unencrypted training bucket; shared admin accounts"
+                ],
+                [
+                  "Data subject rights",
+                  "Search by data subject across all systems; export; correction; deletion (including vectors)",
+                  "Inability to delete a customer from a RAG index"
+                ],
+                [
+                  "Impact assessment",
+                  "A data protection impact assessment (DPIA) before high-risk, sensitive, large-scale or new-technology processing",
+                  "Launching a generative assistant on customer data without an assessment"
+                ],
+                [
+                  "Record of processing activities",
+                  "A maintained inventory",
+                  "No record of what data the model uses"
+                ],
+                [
+                  "Breach reporting",
+                  "Detect, contain, notify (3.4)",
+                  "Waiting weeks until the investigation ends"
+                ],
+                [
+                  "Transfer outside the Kingdom",
+                  "Adequacy or appropriate safeguards (such as standard contractual clauses and binding corporate rules), and a transfer risk assessment where needed; or keeping processing inside the Kingdom / removing personal data first",
+                  "Sending customer data to an external language-model API without a transfer basis"
+                ],
+                [
+                  "Data Protection Officer (DPO)",
+                  "Appointed where required (for example, large-scale processing of sensitive data, or regular and systematic monitoring) — verify",
+                  "—"
+                ],
+                [
+                  "Direct marketing",
+                  "Consent before promotional or awareness messages; easy unsubscribe",
+                  "Promotional SMS messages without consent"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.4 Rights, Deadlines, Penalties and Retention",
+          "blocks": [
+            {
+              "h": "Data subject rights"
+            },
+            {
+              "p": "**Article 4** of the Law lists five rights: **to be informed, to access, to obtain a copy in a readable format, to request correction, and to request destruction**. **Withdrawal of consent** is in **Article 5**. Requests are answered within **30 days**, extendable by **30 days** in specified cases."
+            },
+            {
+              "h": "Breach reporting"
+            },
+            {
+              "p": "Notify **SDAIA within 72 hours of becoming aware** if the incident may harm the data or its subject or conflict with the subject’s rights or interests (**Article 24 of the Implementing Regulations**); and inform the affected data subjects without undue delay where harm is likely. Contain first, and the investigation continues in parallel."
+            },
+            {
+              "formula": "Discovered 3 March 09:00 + 72 hours = notification deadline 6 March 09:00"
+            },
+            {
+              "quote": "An SDAIA draft amendment (October 2026) would apply the 72-hour deadline to every breach — check its status (verify)."
+            },
+            {
+              "h": "Penalties after the 2023 amendments"
+            },
+            {
+              "ul": [
+                "The only criminal offence that remains: **disclosing or publishing sensitive data in violation of the Law, with intent to harm or for personal benefit** → imprisonment of up to **2 years** and/or a fine of up to **3 million riyals**.",
+                "The prison sentence for unlawful transfer outside the Kingdom was **abolished**.",
+                "Other violations → a warning or a fine of up to **5 million riyals**, **doubled on repetition**; and the court may order confiscation of proceeds and publication of the judgment."
+              ]
+            },
+            {
+              "h": "Retention (a recurring word in the exam)"
+            },
+            {
+              "p": "Personal data is kept **only as long as the purpose requires** and then destroyed — unless a law requires it to be kept or it is needed in a court case — or its identifying information is removed. The retention schedule must cover **all copies**: databases, backups, logs, analytics extracts, embeddings and vector indexes, caches, and fine-tuning data."
+            }
+          ]
+        },
+        {
+          "title": "3.5 Before Launching an AI System That Processes Personal Data",
+          "blocks": [
+            {
+              "p": "The ten-step checklist — its order answers “What is the first step?” questions:"
+            },
+            {
+              "ol": [
+                "**Map the data:** what personal data, from whom, through which systems, stored where (including prompts, embeddings, logs and backups), and shared with which processors.",
+                "**Define the purpose and the legal basis:** a specific purpose; consent or another basis; and stricter conditions for sensitive data.",
+                "**Minimise:** delete the fields the model does not need; use pseudonymisation; and avoid training on personal data when retrieval or aggregation suffices.",
+                "**Impact assessment (DPIA):** required for high-risk processing, sensitive data, large scale and new technologies such as generative AI: describe the processing, assess necessity and proportionality, identify the risks to individuals, plan mitigations, and document the residual risk and the approvals.",
+                "**Privacy notice:** inform data subjects of the purpose, the legal basis, the data collected, the retention period, the recipients, transfers abroad, their rights and how to exercise them; and disclose interaction with AI where relevant.",
+                "**Retention schedule:** a period for each dataset and copy, with automatic deletion or anonymisation.",
+                "**Processor and transfer checks:** contracts with cloud and model providers that restrict use (such as no training on your data), security obligations, sub-processors, and audit rights; and a basis for transfer if any data leaves the Kingdom.",
+                "**Security controls:** encryption according to classification, access control, logs, and data loss prevention.",
+                "**Rights handling:** the system’s ability to find, export, correct and delete a person’s data everywhere, including vector indexes and caches, within the response deadline.",
+                "**Record of processing activities:** documented and ready to present."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.6 When a Breach Occurs, and the Data Subject Request Path",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Step",
+                  "Action"
+                ],
+                [
+                  "1. Contain",
+                  "Withdraw access, rotate keys, close the misconfiguration, and stop the leaking feature or model"
+                ],
+                [
+                  "2. Assess",
+                  "Which data, how many people, the sensitive categories, and the likelihood and severity of harm"
+                ],
+                [
+                  "3. Notify the competent authority",
+                  "Within 72 hours of becoming aware, when the incident may harm data subjects or their rights (Article 24 of the Implementing Regulations) — with the facts known so far, and updated later"
+                ],
+                [
+                  "4. Inform individuals",
+                  "Without undue delay where harm is likely, with practical advice (such as changing passwords and watching for fraud)"
+                ],
+                [
+                  "5. Document",
+                  "The timeline, the decisions and the evidence — necessary for accountability"
+                ],
+                [
+                  "6. Remediate and learn",
+                  "The root cause, the fixes, and new tests and monitors; and update the impact assessment and the risk register"
+                ]
+              ]
+            },
+            {
+              "h": "The data subject request path"
+            },
+            {
+              "formula": "Verify identity → log the request → locate the person’s data across systems → act (provide access / a copy, correct, destroy) → respond within 30 days (extendable by 30) → document the outcome"
+            },
+            {
+              "p": "Locating the data covers operational databases, the data lake, the feature store, the vector index, logs, the backup policy, and model training sets."
+            },
+            {
+              "quote": "For trained models, prevention is easier than cure: avoid putting personal data into training sets, keep it in retrievable stores (RAG) where deletion is straightforward, and document how deletion requests interact with retraining schedules."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The National Data Governance System, Generative AI, Deepfakes and the Media",
+      "sections": [
+        {
+          "title": "4.1 Data Classification Levels, and the Classification and Sharing Principles",
+          "blocks": [
+            {
+              "p": "The **National Data Management Office (NDMO)** sets four levels of data classification, and each level has a direct effect on where an AI system may be hosted:"
+            },
+            {
+              "table": [
+                [
+                  "Level",
+                  "Impact of unauthorised disclosure",
+                  "Effect on hosting"
+                ],
+                [
+                  "Top Secret",
+                  "Exceptionally grave damage to national interests",
+                  "Fully internal isolated environments only"
+                ],
+                [
+                  "Secret",
+                  "Serious damage",
+                  "Inside the Kingdom with tight control; no external APIs"
+                ],
+                [
+                  "Restricted",
+                  "Limited damage",
+                  "Approved cloud inside the Kingdom, encryption, access control"
+                ],
+                [
+                  "Public",
+                  "No damage",
+                  "Greater flexibility, with quality and safety controls remaining"
+                ]
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Data classification principles (NDMO)",
+                  "Data sharing principles (NDMO)"
+                ],
+                [
+                  "Openness by default",
+                  "Promoting a culture of sharing"
+                ],
+                [
+                  "Necessity and proportionality",
+                  "Legitimacy of purpose"
+                ],
+                [
+                  "Timely classification",
+                  "Authorised access"
+                ],
+                [
+                  "Highest level of protection (mixed data takes the highest level)",
+                  "Transparency"
+                ],
+                [
+                  "Segregation of duties",
+                  "Shared responsibility"
+                ],
+                [
+                  "Need to know",
+                  "Data security"
+                ],
+                [
+                  "Least privilege",
+                  "Ethical use of data"
+                ]
+              ]
+            },
+            {
+              "quote": "The briefing note marks the list of sharing principles “verify” — check it against the official document."
+            },
+            {
+              "p": "**An applied rule (from the “highest level of protection” principle):** a RAG index, embeddings, logs and fine-tuning data that combine mixed data **take the highest classification among them unless they are separated**. The classification must be known **before** choosing the architecture (for example, before deciding to use an external API)."
+            }
+          ]
+        },
+        {
+          "title": "4.2 Data Management Standards and Domains, Inter-Entity Sharing, and Open Data",
+          "blocks": [
+            {
+              "p": "Through the National Data Management Office, SDAIA issued the **Data Management and Personal Data Protection Standards** for government entities, together with national policies (data classification, data sharing, personal data protection, open data, and freedom of information). The standards cover domains that together describe a mature data organisation — and the briefing note asks for the list and its count to be checked against the current edition (verify):"
+            },
+            {
+              "table": [
+                [
+                  "Domain",
+                  "Relevance to AI"
+                ],
+                [
+                  "Data governance",
+                  "Ownership, oversight and policies — who approves the use of training data"
+                ],
+                [
+                  "Data catalogue and metadata",
+                  "Finding, classifying and tracing the lineage of datasets"
+                ],
+                [
+                  "Data quality",
+                  "Quality dimensions and controls that feed the models"
+                ],
+                [
+                  "Data operations",
+                  "Storage, backup and retention operations"
+                ],
+                [
+                  "Document and content management",
+                  "RAG sources; versions and retention"
+                ],
+                [
+                  "Data architecture and modelling",
+                  "Lakehouse or warehouse design, and integration"
+                ],
+                [
+                  "Data sharing and integration",
+                  "Rules for using another entity’s data for AI"
+                ],
+                [
+                  "Reference and master data",
+                  "Consistent entities (citizens, establishments) across systems"
+                ],
+                [
+                  "Business intelligence and analytics",
+                  "Use of data in analytics and AI"
+                ],
+                [
+                  "Data value realisation",
+                  "Measuring the benefit of data and AI initiatives"
+                ],
+                [
+                  "Open data",
+                  "Publishing non-sensitive data; anonymisation before publication"
+                ],
+                [
+                  "Freedom of information",
+                  "Handling public information requests"
+                ],
+                [
+                  "Data classification",
+                  "Top Secret / Secret / Restricted / Public — drives AI hosting (4.1)"
+                ],
+                [
+                  "Personal data protection",
+                  "Controls compatible with the Law for AI on personal data"
+                ],
+                [
+                  "Data security and protection",
+                  "Technical protection compatible with the National Cybersecurity Authority’s controls"
+                ]
+              ]
+            },
+            {
+              "h": "Data sharing between entities for AI purposes"
+            },
+            {
+              "p": "When an AI project needs the data of another government entity, the data sharing policy applies: a lawful purpose for the project, authorised access, transparency, shared responsibility for protection, data security, and ethical use — usually documented in a **sharing agreement** that specifies the purpose, the fields, the retention period, the security controls and the limits on onward use. **Reusing shared data for a new AI purpose needs a new basis** — purpose limitation applies between entities too."
+            },
+            {
+              "h": "Open data and anonymisation"
+            },
+            {
+              "p": "Publishing datasets for innovation requires robust anonymisation and a check for the possibility of re-identification through combinations of fields; synthetic or aggregated data may be safer. Models trained on open data still need the usual assessment for bias and representativeness."
+            }
+          ]
+        },
+        {
+          "title": "4.3 Other Saudi Frameworks That May Be Named",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Framework",
+                  "Issuer",
+                  "Relevance"
+                ],
+                [
+                  "Data Management and Personal Data Protection Standards",
+                  "National Data Management Office (SDAIA)",
+                  "Governance, quality, classification, metadata and privacy for government entities"
+                ],
+                [
+                  "Generative AI Principles for Government Entities / for the Public",
+                  "SDAIA (first issued 2024; current edition 2025)",
+                  "The rules in 4.4"
+                ],
+                [
+                  "Deepfake Principles: Mitigating Risks while Promoting Innovation",
+                  "SDAIA, 2025",
+                  "Guidance for developers, content creators, regulators and consumers (4.6)"
+                ],
+                [
+                  "Essential Cybersecurity Controls (ECC)",
+                  "National Cybersecurity Authority",
+                  "Baseline security for AI platforms, like any system"
+                ],
+                [
+                  "Cloud Cybersecurity Controls (CCC)",
+                  "National Cybersecurity Authority",
+                  "Hosting models and data in the cloud"
+                ],
+                [
+                  "Data Cybersecurity Controls (DCC)",
+                  "National Cybersecurity Authority",
+                  "Protecting data according to its classification across its lifecycle"
+                ]
+              ]
+            },
+            {
+              "p": "How to choose: if the question is about **hosting in the cloud**, it is CCC; if it is about **protecting data according to its classification**, it is DCC; and if it is about **baseline security for any platform**, it is ECC."
+            }
+          ]
+        },
+        {
+          "title": "4.4 Generative AI Principles: The Official Rules",
+          "blocks": [
+            {
+              "h": "For government entities"
+            },
+            {
+              "ul": [
+                "Employees must **not enter any data classified “Restricted” or above** (Restricted, Secret, Top Secret) into generative AI tools; and **use of these tools is limited to data classified “Public”**.",
+                "Apply the provisions of the Personal Data Protection Law.",
+                "Check the privacy policy of each tool (the disclosure and sharing terms).",
+                "Take into account the risks of leakage, misinformation and deepfakes.",
+                "Assess risk according to the levels in the Ethics Principles.",
+                "Users review the outputs critically.",
+                "Roles: the entity’s data management office, the users, and the entity that sets clear usage policies."
+              ]
+            },
+            {
+              "h": "For the public: seven risks and how to mitigate them"
+            },
+            {
+              "table": [
+                [
+                  "Risk",
+                  "Mitigation"
+                ],
+                [
+                  "1. Deepfakes and disinformation",
+                  "Watermarks, “know your customer”, and output verification"
+                ],
+                [
+                  "2. Safety threats",
+                  "Moderation and content filtering, and training-data filtering"
+                ],
+                [
+                  "3. Misinformation and “hallucination”",
+                  "Verification, citations, warnings, and content labelling"
+                ],
+                [
+                  "4. Sensitive-data leakage",
+                  "Usage policies, staff training, and user control over their data"
+                ],
+                [
+                  "5. Credential and assessment fraud",
+                  "—"
+                ],
+                [
+                  "6. Intellectual property infringement",
+                  "Licensing and due diligence"
+                ],
+                [
+                  "7. Output variability",
+                  "Documenting and reviewing AI-generated outputs and code"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.5 Generative AI in Government Entities: Practical Guidance",
+          "blocks": [
+            {
+              "p": "The **Generative AI Principles for Government Entities** (2025) go beyond the rules: **Appendix 1** describes how entities can benefit, the general and common challenges and risks, and examples of “good prompts / bad prompts”. It maps well onto scenarios about appropriate use."
+            },
+            {
+              "h": "Seven areas of benefit (with their official examples)"
+            },
+            {
+              "ol": [
+                "**Operational efficiency:** drafting job descriptions or routine documents, then editing them.",
+                "**Informed decision-making:** summarising large volumes of past data and reports (such as an overview during a disease outbreak).",
+                "**Service quality and citizen support:** chatbots that explain procedures and requirements.",
+                "**Faster research and analysis:** for example, public relations staff summarising global media coverage of the Kingdom.",
+                "**Crisis response:** processing unstructured data (weather, social media, emergency reports) to support a crisis control centre.",
+                "**Content creation:** text, audio, video, reports and summaries.",
+                "**Translation:** communicating in other languages while preserving tone and intent."
+              ]
+            },
+            {
+              "p": "**General challenges:** political (policy-making and international cooperation), economic (costs, labour-market disruption, and income inequality), social (public perception, ethical concerns, and acceptance), technical (infrastructure and access to research), environmental (energy consumption and e-waste), and legal (all applicable laws in the Kingdom, including intellectual property rights)."
+            },
+            {
+              "p": "**Common risks for staff:** data leakage (accidentally sharing restricted information with services that may retain or expose it), misinformation and hallucination, deepfakes, bias and unfairness, and safety concerns where incorrect content could cause harm."
+            },
+            {
+              "table": [
+                [
+                  "Task",
+                  "Official best practices",
+                  "Pattern of a bad prompt"
+                ],
+                [
+                  "Drafting documents and messages",
+                  "Give specific context; edit and review everything generated; do not use it for correspondence on sensitive topics",
+                  "Revealing internal organisational details without need"
+                ],
+                [
+                  "Simplifying content",
+                  "Name the audience and the reading level; try several versions; check for inclusive and respectful language (models may reproduce bias)",
+                  "Pasting unannounced internal plans to rewrite them for external use"
+                ],
+                [
+                  "Summarising texts",
+                  "Specify the format; review the full original to avoid losing information; remove sensitive data from the inputs",
+                  "Asking it to analyse a classified budget statement"
+                ],
+                [
+                  "Writing in another language",
+                  "Back-translate to verify accuracy; comply with the data classification policy; do not publish content in a language you do not understand without an expert; specify regional dialects when needed",
+                  "Vague targets (“so that Americans will understand it”)"
+                ],
+                [
+                  "Project planning",
+                  "Generate a baseline plan to improve on; avoid project details (the name, the entity, the budget, and system names)",
+                  "Including identifying project details"
+                ],
+                [
+                  "Data analysis",
+                  "Only with data that the classification allows; verify the results",
+                  "Uploading restricted datasets"
+                ]
+              ]
+            },
+            {
+              "p": "**The government checklist (Appendix 2)** asks users to confirm, among other things, that they understand the tool’s limits, that no data classified “Restricted” or above is entered, that outputs are reviewed for accuracy, bias and intellectual property issues, that users are informed that results may not comply with intellectual property rules and need continuous verification, and that generated content is disclosed where appropriate."
+            }
+          ]
+        },
+        {
+          "title": "4.6 Deepfake Principles by Audience",
+          "blocks": [
+            {
+              "p": "The **Deepfake Principles: Mitigating Risks while Promoting Innovation** (SDAIA, 2025) set expectations for four categories:"
+            },
+            {
+              "table": [
+                [
+                  "Audience",
+                  "Key expectations"
+                ],
+                [
+                  "Developers",
+                  "Legal compliance (the Personal Data Protection Law and international privacy laws); strong data protection and privacy by design; consent management and **the right of individuals to have their personal data removed from training data**; documentation of every component of the model (data sources, preprocessing, architecture); explainability (LIME/SHAP); robust, non-intrusive watermarks; periodic transparency reports on use and on preventing its misuse; bias checks"
+                ],
+                [
+                  "Content creators",
+                  "**Consent of the people who appear**; clear disclosure and labelling of synthetic content; respect for intellectual property; avoiding deceptive or harmful uses"
+                ],
+                [
+                  "Regulators",
+                  "Clear rules and enforcement, detection capability, coordination, and public awareness"
+                ],
+                [
+                  "Consumers / users",
+                  "Verifying sources, using detection tools, reporting harmful fakes, and protecting their images and voices"
+                ]
+              ]
+            },
+            {
+              "p": "Non-malicious uses (education, entertainment, accessibility and dubbing) are **recognised and encouraged with safeguards** — so the option “a total ban on all synthetic content” is wrong."
+            },
+            {
+              "quote": "In deepfake scenarios the decisive controls are: consent, disclosure / labelling, watermarks / provenance, and removal mechanisms."
+            }
+          ]
+        },
+        {
+          "title": "4.7 AI Principles in the Media",
+          "blocks": [
+            {
+              "p": "SDAIA’s **AI Principles in Media** document (June 2026) applies the ethics framework to newsrooms and content producers. The recurring themes are what you already know, applied to content:"
+            },
+            {
+              "ul": [
+                "Disclosure of AI-generated or AI-assisted content.",
+                "Accuracy and verification before publication (**editorial responsibility remains human**).",
+                "Avoiding deepfakes and manipulating the images or words of real people without consent.",
+                "Respect for intellectual property.",
+                "Fairness in representation.",
+                "Privacy of the people in the news.",
+                "Accountability of the publishing organisation."
+              ]
+            },
+            {
+              "p": "In media scenarios the decisive controls are: **labelling, editorial review and consent**."
+            },
+            {
+              "quote": "The briefing note cautions: check the exact names of the principles against the official document (verify) — the above are summarised themes, not official names."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Identify the principle, the obligation, the deadline and the control in a government scenario with several violations, using the exact official names.",
+    "scenario": [
+      "A government entity launched a generative assistant to answer citizens’ enquiries about social-support services. It runs on RAG over documents, some classified “Public” and some “Restricted”, and uses a language-model API hosted by a provider outside the Kingdom. The assistant introduces itself as “Sara from the customer service team” with no indication that it is AI.",
+      "The team reused call-centre conversation logs (collected for support) to fine-tune the model, and no impact assessment was carried out before launch. The raw logs are kept with no retention period. On the 10th of the month at 14:00, the team discovered that the assistant was displaying excerpts from other citizens’ files, and decided to wait for the internal investigation to finish “in about a month” before reporting anything. There is no path to appeal the assistant’s answers, and no one knows who approved its launch. In addition, an employee of the entity pasted a budget table classified “Restricted” into a public generative tool to summarise it."
+    ],
+    "steps": [
+      "Classification first: the index combines “Public” and “Restricted”, so it takes the highest classification in it (Restricted) unless separated — under the “highest level of protection” principle. Suitable hosting for Restricted: an approved cloud inside the Kingdom with encryption and access control; and sending to an external API is a transfer violation (Privacy and Security + transfer outside the Kingdom). Encryption does not cure it.",
+      "Pretending to be a human employee: the “Transparency and Explainability” principle, together with the disclosure duty in the generative AI guidelines.",
+      "Reusing support conversations for fine-tuning: the “Privacy and Security” principle, and the obligations of purpose limitation and legal basis. The absence of an impact assessment before launching a generative system on personal data violates the impact assessment obligation and the official control in Planning and Design.",
+      "Logs with no retention period: “Privacy and Security” + retention and destruction; the schedule must cover logs, embeddings and fine-tuning data.",
+      "The leak: immediate containment (stop the feature, fix the ACL), then assessment, then notifying SDAIA within 72 hours of becoming aware: the 10th at 14:00 + 72 hours = the 13th at 14:00 — with the facts known, updated later; the investigation continues in parallel. Waiting a month is a violation touching “Privacy and Security” and “Accountability and Responsibility”.",
+      "No appeal and no one knows who approved: “Accountability and Responsibility” — named owners, an approval record, and a redress path.",
+      "The employee and the public tool: a breach of the rule against entering data classified “Restricted” or above into generative AI tools; use is limited to “Public”; and it is also the bad-prompt pattern “asking it to analyse a classified budget statement”."
+    ],
+    "traps": [
+      "Writing a principle’s name in a reworded form: [[ar:الأمن والخصوصية]] (“Security and Privacy”), [[ar:المتانة والسلامة]] (“Robustness and Safety”), or [[ar:الشفافية وقابلية التفسير]] (“Transparency and Explainability” without the article, the risk framework’s form, not the Principles’).",
+      "Confusing the risk levels in the Ethics Principles (little or no · limited · high · unacceptable) with the risk scores in the National Framework (low · medium · high · catastrophic), or confusing 4 stages with 5 stages.",
+      "Treating credit data or location data as “sensitive under the Law” after the 2023 amendment, or treating pseudonymised data as non-personal.",
+      "Waiting for the investigation to finish before notifying SDAIA, or counting the deadline from the date the investigation ends instead of the date of awareness.",
+      "Thinking that incentive badges or accreditation certificates replace the Law’s obligations, or that transferring risk through insurance removes the entity’s responsibility.",
+      "Saying that imprisonment is still the penalty for unlawful transfer outside the Kingdom, or that a 5 million fine is not doubled on repetition."
+    ],
+    "deliverable": "A violations table of seven rows: the scenario, the official principle in Arabic and English, the obligation in the Law or the government rule, and the action or deadline."
+  },
+  "review": [
+    {
+      "q": "Write the seven principles by their official Arabic names.",
+      "a": "[[ar:النزاهة والإنصاف]] (Integrity and Fairness); [[ar:الخصوصية والأمن]] (Privacy and Security); [[ar:الإنسانية]] (Humanity); [[ar:المنافع الاجتماعية والبيئية]] (Social and Environmental Benefits); [[ar:الموثوقية والسلامة]] (Reliability and Safety); [[ar:الشفافية والقابلية للتفسير]] (Transparency and Explainability); [[ar:المساءلة والمسؤولية]] (Accountability and Responsibility). Word order is part of the name."
+    },
+    {
+      "q": "A system poses a risk to fundamental human rights; which risk level is it, and what does it require?",
+      "a": "High risk: conformity assessments before and after deployment, together with the applicable regulations. Social scoring and exploiting children, by contrast, are unacceptable risks and are not permitted."
+    },
+    {
+      "q": "A risk has likelihood “almost certain” (4) and impact “low” (1) in the National Risk Management Framework; what is its level?",
+      "a": "4 × 1 = 4, which is medium (3–6). High likelihood alone does not make a risk high; high is 8–12 and catastrophic is 16."
+    },
+    {
+      "q": "A company transferred a residual risk to an insurance company; is its responsibility removed?",
+      "a": "No. The transfer option (contracts, guarantees, insurance) in the National Framework does not remove the entity’s responsibility, and the decision remains documented in the risk register."
+    },
+    {
+      "q": "At which stage, and under which principle, does the control “making sure that third-party system documentation is available and traceable before procurement” fall?",
+      "a": "The Transparency and Explainability principle, at the Building and Performance Measurement stage."
+    },
+    {
+      "q": "Who is the strategic lead and who is the operational lead for AI ethics within the entity?",
+      "a": "The Compliance Officer is the strategic lead and reports to the Data Management Officer; the AI Officer is the operational lead and works with the data management team. The AI System Assessor audits and issues audit reports."
+    },
+    {
+      "q": "What are the five rights in Article 4 of the Law, and what is the response deadline?",
+      "a": "To be informed, to access, to obtain a copy in a readable format, to request correction, and to request destruction; and withdrawal of consent is in Article 5. The response is due within 30 days, extendable by 30 days in specified cases."
+    },
+    {
+      "q": "What is the only criminal offence that remains in the Law after the 2023 amendments, and what is its penalty?",
+      "a": "Disclosing or publishing sensitive data in violation of the Law with intent to harm or for personal benefit: imprisonment of up to 2 years and/or a fine of up to 3 million riyals. Other violations carry a warning or a fine of up to 5 million riyals, doubled on repetition."
+    },
+    {
+      "q": "A government employee wants to summarise a document classified “Secret” with a public generative AI tool; what is the ruling?",
+      "a": "Not permitted: the Generative AI Principles for Government Entities prohibit entering any data classified “Restricted” or above, and use is limited to data classified “Public”."
+    },
+    {
+      "q": "What are the three dimensions of the AI Adoption Framework, and which one does a shortage of talent belong to?",
+      "a": "Directions, Enablers and Outputs. A shortage of talent (its number, specialisation and retention) is a gap in Enablers, along with infrastructure, data and partnerships."
+    }
+  ],
+  "summary": "You have mastered this unit when, on reading a violation scenario, you name the official principle in its Arabic and English forms without changing a word, distinguish it from its close neighbour with a single question, add the accompanying obligation in the Personal Data Protection Law with its deadline and figure (30 + 30 days, 72 hours from awareness, two years and 3 million, 5 million doubled), know which SDAIA document the question is asking about (the Principles with four stages and four levels, or the Risk Framework with five stages, seven categories and scores of 1–16), and infer from data classification where hosting is allowed and the limits on using generative AI tools — while always distinguishing the voluntary tools from the mandatory obligations.",
+  "coverage": [
+    "7.1",
+    "7.2",
+    "7.3",
+    "7.7",
+    "7.9",
+    "7.10",
+    "7.11",
+    "7.12",
+    "7.13",
+    "7.18",
+    "7.22",
+    "7.23",
+    "7.24"
+  ]
+}

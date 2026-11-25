@@ -1,0 +1,1339 @@
+{
+  "num": 8,
+  "title": "Architecture, Infrastructure, Performance & Scalability",
+  "english": "Architecture, Infrastructure, Performance & Scalability",
+  "subtitle": "From choosing the inference mode to calculating GPU counts and latency and cost budgets",
+  "domain": "Domain 5 · 12.7%",
+  "deliverable": "Design a right-sized architecture for an AI service — inference mode, GPU count, scaling policy and hosting location — that meets the service target at peak without over-provisioning.",
+  "intro": "This domain covers about 19 of the 150 items and overlaps heavily with the cost questions. The terms that recur in the questions are familiar: latency in milliseconds, replicas, cost, and hours of high load. The idea the exam tests is a single one: **right-sized architecture** — enough to meet the service-level objective (SLO) at peak, and no more. This unit builds the tools you need for it: choosing the right inference mode, understanding the hardware that sets speed, calculating weight memory, KV-cache memory and replica counts, then tuning latency, caching and cost, together with the in-Kingdom residency constraints that turn hosting location into an architectural requirement.",
+  "outcomes": [
+    "Choose the right inference mode (online, batch, streaming, edge, pre-computation) from the latency need and the input pattern.",
+    "Calculate weight memory, KV-cache memory and concurrent sequences per GPU, then the GPU count needed for peak with an N+1 margin.",
+    "Distinguish memory-bandwidth-bound stages from compute-bound ones, and choose the GPU using the logic: memory → latency → throughput → lowest cost per useful unit.",
+    "Design a sound scaling policy on Kubernetes (scaling metric, minimum replicas, scheduled scaling, load shedding) and handle cold starts.",
+    "Diagnose the source of latency from traces and choose the right remedy for each source, while designing caching layers whose keys are safe.",
+    "Choose the hosting and pricing model (managed, self-hosted, in-Kingdom, Spot, reserved) according to volume, sensitivity, classification and unit economics.",
+    "Match a scenario to one of the three reference architectures and check each component against the requirements."
+  ],
+  "method": "Study the unit through the numbers, not the names. Every decision table in it answers one question: what is the minimum infrastructure that meets the requirement? Recalculate the GPU example (8 GB, 2 TB/s, 250 tokens/s) and the full capacity-planning example step by step, until you can change one number (prompt length, number of users) and trace its effect on the GPU count. Then memorise “the patterns behind the correct answers”: nobody is waiting → batch; slow after a quiet period → cold start, not a bigger GPU; saturated GPU with low CPU → scale on the queue, not on CPU; a cache shared across different permissions → a leakage vulnerability. In every scenario ask: where does the data sit? How does it scale? What happens on failure? What does a useful unit cost?",
+  "chapters": [
+    {
+      "title": "Deployment Patterns, Hosting and Reference Architectures",
+      "sections": [
+        {
+          "title": "1.1 Online, batch, streaming or edge",
+          "blocks": [
+            {
+              "p": "The first architectural decision is the inference mode, and two questions settle it: is anyone waiting for the answer right now? Are the inputs known in advance? Each mode has a different latency need and cost profile."
+            },
+            {
+              "table": [
+                [
+                  "Mode",
+                  "Latency need",
+                  "Cost profile",
+                  "Example"
+                ],
+                [
+                  "Online (real-time) inference",
+                  "Milliseconds to seconds, with the user waiting",
+                  "Always-on capacity with autoscaling",
+                  "A fraud score at card authorisation; chat"
+                ],
+                [
+                  "Batch inference",
+                  "Hours acceptable",
+                  "Cheapest; Spot/preemptible instances, then scale to zero",
+                  "Nightly churn scores for 10 million customers"
+                ],
+                [
+                  "Streaming / near-real-time",
+                  "Seconds to minutes",
+                  "Stream processors (Kafka/Flink) with the model",
+                  "Live anomaly detection on sensor data"
+                ],
+                [
+                  "Edge / on-device",
+                  "Milliseconds, and works offline",
+                  "Device constraints; no server cost per call",
+                  "Reading ID documents on a phone (OCR); a factory camera"
+                ],
+                [
+                  "Pre-computation + lookup",
+                  "Lookup in microseconds to milliseconds",
+                  "Compute once and serve from a cache or database",
+                  "Daily product recommendations stored per user"
+                ]
+              ]
+            },
+            {
+              "quote": "The test rule: if nobody is waiting for the answer, it has no place on expensive, always-on real-time infrastructure. If the inputs are known in advance (all customers, all products), pre-compute in batches and serve the results by lookup."
+            },
+            {
+              "p": "The common distractor here is proposing an online endpoint with autoscaling for a task that is refreshed once a day. The correct answer is cheaper and simpler: a nightly job on Spot instances that writes the results to a table that is read by lookup."
+            }
+          ]
+        },
+        {
+          "title": "1.2 Scaling patterns",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Pattern",
+                  "What it is",
+                  "When it is used"
+                ],
+                [
+                  "Horizontal scaling (replicas)",
+                  "More replicas behind a load balancer",
+                  "Stateless model servers. High-availability rule: at least two replicas spread across availability zones, and more for headroom"
+                ],
+                [
+                  "Vertical scaling",
+                  "A larger instance or GPU",
+                  "When the model does not fit; a quick fix, but it has a ceiling"
+                ],
+                [
+                  "Autoscaling (HPA/KEDA)",
+                  "Add or remove replicas according to a metric",
+                  "Variable load. Metrics: queue depth, concurrent requests, GPU utilisation — whereas CPU percentage is a weak metric for GPU inference"
+                ],
+                [
+                  "Scheduled scaling",
+                  "Pre-scaling before known peaks",
+                  "Predictable daily peaks (such as 9–11 a.m.), and Ramadan and salary-day patterns"
+                ],
+                [
+                  "Scale-to-zero",
+                  "No replicas when idle",
+                  "Rare or intermittent traffic and development environments; the price is cold starts"
+                ],
+                [
+                  "Load balancing",
+                  "Distributing requests",
+                  "The “least outstanding requests” algorithm beats round-robin for LLM calls of varying length"
+                ],
+                [
+                  "Queue-based load levelling",
+                  "Absorbing bursts in a queue",
+                  "Asynchronous jobs; protecting GPUs from spikes"
+                ],
+                [
+                  "Sharding / partitioning",
+                  "Splitting the data or the index across nodes",
+                  "Very large vector indexes"
+                ],
+                [
+                  "Multi-region",
+                  "Deploying near users or for disaster recovery",
+                  "Latency for distant users and recovery (DR) — while respecting data-residency rules"
+                ]
+              ]
+            },
+            {
+              "p": "Note why “least outstanding requests” wins: one LLM request may take half a second and another twenty, so round-robin piles the long requests onto one replica while the others sit idle."
+            }
+          ]
+        },
+        {
+          "title": "1.3 Cold starts",
+          "blocks": [
+            {
+              "p": "A cold start for large models can take minutes: downloading the weights, then loading them into GPU memory, then warm-up. Scale-to-zero therefore saves cost but pays for it on the first requests."
+            },
+            {
+              "quote": "If a scenario complains that “the first requests after a quiet period are very slow or time out”, the fix is: minimum replicas ≥ 1, pre-warming before scheduled peaks, and faster model loading (local cache, smaller or quantised artefacts) — not “a bigger GPU”."
+            },
+            {
+              "p": "A bigger GPU does not shorten download and load time, and lengthening the timeout hides the problem from the user instead of solving it. These are the two usual distractors."
+            }
+          ]
+        },
+        {
+          "title": "1.4 Cloud, hosting and pricing",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Option",
+                  "Strengths",
+                  "Watch-outs"
+                ],
+                [
+                  "Managed LLM API",
+                  "Fastest start, no operations, pay per token",
+                  "Data leaves your boundary; residency (the Personal Data Protection Law (PDPL) and classification); vendor lock-in; per-token cost at high volume"
+                ],
+                [
+                  "Managed ML platform (SageMaker/Vertex/Azure ML-type)",
+                  "Ready-made pipelines, model registry and endpoints",
+                  "Platform cost premium; lock-in"
+                ],
+                [
+                  "Self-hosted on Kubernetes",
+                  "Full control, data stays in-house, cheaper at high, steady volume",
+                  "Needs MLOps skills and carries the burden of operating GPUs"
+                ],
+                [
+                  "In-Kingdom cloud regions / sovereign cloud",
+                  "Residency for regulated and government data",
+                  "Check which services and GPUs are actually available in the region"
+                ],
+                [
+                  "Serverless inference",
+                  "Pay per use and scale to zero",
+                  "Cold starts and limits on model and GPU size"
+                ],
+                [
+                  "Spot / preemptible instances",
+                  "60–90% cheaper",
+                  "Can be reclaimed — only for batch jobs and fault-tolerant training, with checkpoints"
+                ],
+                [
+                  "Reserved / committed use",
+                  "30–60% cheaper for the steady baseline",
+                  "A commitment; use it for the permanent minimum, and on-demand or Spot for peaks"
+                ]
+              ]
+            },
+            {
+              "h": "Build-versus-buy break-even"
+            },
+            {
+              "p": "Per-token APIs win at low or variable volume, and self-hosting wins at high, steady volume provided utilisation stays high and the team can operate it."
+            },
+            {
+              "ul": [
+                "“Small team and uncertain demand” → a managed service.",
+                "“Very high, steady volume, sensitive data, an in-house platform team” → self-hosted in-Kingdom."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.5 Sovereign and in-Kingdom architecture",
+          "blocks": [
+            {
+              "p": "Data classification and the PDPL transfer rules turn hosting location from an operational detail into an **architectural requirement**. There are four common patterns:"
+            },
+            {
+              "ol": [
+                "**Fully in-Kingdom**: models, vector stores, logs, backups and disaster-recovery sites are all in approved regions or data centres inside the Kingdom. Required for the higher classifications, and typical for government personal data. Note: backups and the recovery site are part of the requirement, not the model alone.",
+                "**Classification-based routing**: an LLM gateway sends “Public” data to approved external services if that is permitted, and everything else to models inside the Kingdom. Under SDAIA’s generative-AI principles for government entities, government staff use generative tools only with Public data.",
+                "**Hybrid with redaction**: personal data is removed or replaced with pseudonyms before any external call — remembering that pseudonymised data remains personal data, and that redaction is never complete.",
+                "**Bring the model to the data**: deploy open-weight models inside the data owner’s environment instead of moving the data to the model."
+              ]
+            },
+            {
+              "h": "Checklist questions"
+            },
+            {
+              "ul": [
+                "Where are prompts, outputs, embeddings and logs stored?",
+                "Where are the backups and the disaster-recovery copies?",
+                "Who can access them, including the provider’s support staff?",
+                "What does the contract say about using the data for training?",
+                "Is the cloud provider approved for the classification level (the cloud cybersecurity controls issued by the National Cybersecurity Authority (NCA))?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.6 Edge and on-device AI",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Driver",
+                  "Example",
+                  "Engineering approach"
+                ],
+                [
+                  "Latency (no network round trip)",
+                  "Real-time camera inspection on a production line",
+                  "A small CNN/ViT quantised to INT8 on an edge GPU or NPU"
+                ],
+                [
+                  "Connectivity (operating without a network)",
+                  "Field inspections in remote areas",
+                  "An on-device model with periodic synchronisation"
+                ],
+                [
+                  "Privacy (data never leaves the device)",
+                  "Scanning documents that contain personal data on the phone",
+                  "A small language/vision model on the device; federated learning for improvement"
+                ],
+                [
+                  "Bandwidth cost",
+                  "Hundreds of video cameras",
+                  "Process at the edge and send only events"
+                ]
+              ]
+            },
+            {
+              "p": "**Edge constraints**: limited memory, compute and power; heterogeneous devices; and difficult updates. **Solutions**: small or distilled models (SDAIA’s guide to small language models states that models under about 5 billion parameters suit phones, edge devices and the Internet of Things), INT8/INT4 quantisation, hardware-specific runtimes (ONNX Runtime, TensorRT, Core ML and TFLite), over-the-air model updates with version tracking and rollback, and monitoring through aggregated telemetry."
+            },
+            {
+              "quote": "The hybrid pattern is common: the device handles the common case and escalates the hard cases to a model on the server."
+            }
+          ]
+        },
+        {
+          "title": "1.7 The three reference architectures",
+          "blocks": [
+            {
+              "h": "Real-time scoring service"
+            },
+            {
+              "code": "client → API gateway (auth, rate limit) → scoring service (stateless, N replicas, multi-AZ)\n      ├─ online feature store (key–value, < 5 ms)\n      ├─ model (in-process, ONNX/compiled trees)\n      └─ rules engine (hard blocks)\n  → decision + reason codes → event stream (monitoring, labels, retraining)"
+            },
+            {
+              "p": "The client passes through the API gateway (authentication and rate limiting) to a stateless scoring service with several replicas across several availability zones. It fetches features from an online feature store (key–value, under 5 ms), and runs the model in-process, alongside a rules engine for hard blocks, then issues the decision with reason codes and publishes an event for monitoring, labels and retraining."
+            },
+            {
+              "h": "Enterprise RAG assistant"
+            },
+            {
+              "code": "sources (DMS, wiki, policies) → change events → ingestion workers (parse, OCR, chunk, embed)\n  → vector + keyword index (ACL metadata, versions) → lineage store\nuser → SSO → LLM gateway (classification, PII redaction, quotas, cache)\n  → orchestrator: query rewrite → hybrid retrieve (ACL filter) → rerank\n  → in-Kingdom LLM (streaming) → output guardrails (citations, PII, schema)\n  → response + citations → traces/metrics → evaluation & feedback loop"
+            },
+            {
+              "p": "Note where access control sits: the permission data (ACLs) is stored with each chunk in the index, and filtering happens **during retrieval**, before the model sees any text. The LLM gateway is where classification, personal-data redaction, quotas and caching take place; the model is inside the Kingdom, and the guardrails check the outputs (citations, personal data, schema)."
+            },
+            {
+              "h": "Batch scoring pipeline"
+            },
+            {
+              "code": "scheduler (nightly) → data snapshot (lakehouse version) → validation\n  → distributed scoring on spot workers (checkpointed) → results table\n  → quality checks (row counts, score distribution) → publish to consumers\n  → alert if not complete by deadline; fallback: previous day's scores"
+            },
+            {
+              "quote": "Determine the shape from the latency need: “someone is waiting” → online; “documents and questions” → RAG; “every customer every night” → batch. Then check each component against the requirements: data location, scaling, failure handling and cost."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Hardware, Sizing and LLM Serving",
+      "sections": [
+        {
+          "title": "2.1 Hardware fundamentals: why GPUs?",
+          "blocks": [
+            {
+              "p": "Neural networks are dominated by large matrix multiplications. GPUs run thousands of simple cores in parallel and include tensor cores specialised in low-precision matrix mathematics (FP16/BF16/FP8/INT8). CPUs, by contrast, have few powerful cores and large caches, and are better for branching logic, classical machine learning, small models and data preparation. Other accelerators — TPUs from Google, and NPUs in phones and computers — follow the same idea: hardware specialised in matrices."
+            },
+            {
+              "h": "The memory hierarchy sets the speed"
+            },
+            {
+              "formula": "registers / on-chip SRAM (tens of MB) → HBM (tens of GB, TB/s) → host RAM (hundreds of GB, via PCIe) → local NVMe → network storage"
+            },
+            {
+              "p": "From the fastest and smallest to the slowest and largest. Token generation in language models is usually limited by how fast the weights and KV cache stream from HBM — that is, it is **memory-bound** — whereas prompt processing (prefill) and training are **compute-bound**. This is why bandwidth, and not TFLOPS alone, appears in good comparisons, and why techniques that reduce the bytes moved (quantisation, FlashAttention, GQA) speed up performance. It is also why offloading weights to host memory is slow: host memory is much slower over PCIe."
+            },
+            {
+              "h": "Interconnects"
+            },
+            {
+              "p": "Inside a server, GPUs communicate over high-bandwidth links (NVLink-class) much faster than PCIe; between servers, over InfiniBand or high-speed Ethernet (RDMA). Tensor parallelism needs the fast links inside a node; data parallelism tolerates slower links between nodes; and a poor interconnect makes multi-GPU training scale badly."
+            }
+          ]
+        },
+        {
+          "title": "2.2 Accelerator classes and the selection logic",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Accelerator class",
+                  "Typical memory",
+                  "Typical role"
+                ],
+                [
+                  "Data-centre GPUs for training and inference (A100/H100/H200/B-class)",
+                  "40–192 GB HBM",
+                  "Training and serving large models"
+                ],
+                [
+                  "Inference-oriented GPUs (L4/L40S-class)",
+                  "24–48 GB",
+                  "Cost-efficient serving of small and medium models, vision and video"
+                ],
+                [
+                  "Older/smaller GPUs (T4-class)",
+                  "16 GB",
+                  "Light inference, embeddings"
+                ],
+                [
+                  "CPUs",
+                  "System RAM",
+                  "Classical machine learning, small quantised models, pre- and post-processing"
+                ],
+                [
+                  "On-device NPUs",
+                  "Shared device memory",
+                  "Edge and on-phone inference"
+                ]
+              ]
+            },
+            {
+              "quote": "Exact figures change with each generation — in a scenario, use the numbers given in the table, and apply the selection logic: fit the memory → meet the latency → meet the throughput → lowest cost per useful unit."
+            }
+          ]
+        },
+        {
+          "title": "2.3 Compute sizing and utilisation as a cost multiplier",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Need",
+                  "Typical choice"
+                ],
+                [
+                  "Classical machine-learning inference (boosted trees, linear models)",
+                  "CPU — a GPU is usually wasted here"
+                ],
+                [
+                  "Small transformers / embeddings at moderate request rates",
+                  "CPU with an optimised runtime (ONNX) or a small/shared GPU (MIG, fractional)"
+                ],
+                [
+                  "LLM serving",
+                  "Size it with the memory table (weights + KV cache); a 70B-class model needs several GPUs (tensor parallelism) at FP16 or INT4/INT8"
+                ],
+                [
+                  "Training large models",
+                  "Several GPUs/nodes with a fast interconnect (NVLink/InfiniBand), data/tensor/pipeline parallelism, and ZeRO/FSDP sharding"
+                ],
+                [
+                  "Fine-tuning on a limited budget",
+                  "LoRA/QLoRA on a single GPU"
+                ]
+              ]
+            },
+            {
+              "h": "Utilisation is the cost multiplier"
+            },
+            {
+              "formula": "cost per useful hour ∝ 1 / utilisation → 1 / 0.15 ≈ 6.7×"
+            },
+            {
+              "p": "A GPU at 15% average utilisation costs about 6.7 times as much per useful hour as at 100% utilisation. The remedies, in order:"
+            },
+            {
+              "ol": [
+                "Right-size the instance type.",
+                "Batching.",
+                "Consolidate models onto shared GPUs (multi-model serving, MIG).",
+                "Autoscaling / scale-to-zero.",
+                "Spot instances for interruptible work."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.4 Reading a GPU spec table",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Column",
+                  "What it decides"
+                ],
+                [
+                  "Memory (GB)",
+                  "Do the model + KV cache fit? — a hard filter"
+                ],
+                [
+                  "Memory bandwidth (TB/s)",
+                  "Decode speed — token generation is memory-bound: per-stream tokens/s ≲ bandwidth ÷ model bytes"
+                ],
+                [
+                  "Compute (TFLOPS at FP16/FP8)",
+                  "Prefill (long prompts → time to first token, TTFT) and training speed"
+                ],
+                [
+                  "Interconnect (NVLink/InfiniBand)",
+                  "Multi-GPU tensor parallelism and distributed training"
+                ],
+                [
+                  "MIG / partitioning",
+                  "Several small models on one GPU"
+                ],
+                [
+                  "Price ($/hour)",
+                  "Cost per useful throughput, not per GPU"
+                ]
+              ]
+            },
+            {
+              "h": "A worked example"
+            },
+            {
+              "formula": "8B params × 1 byte (INT8) ≈ 8 GB\nper-stream tokens/s ≲ 2,000 GB/s ÷ 8 GB ≈ 250 tokens/s"
+            },
+            {
+              "p": "An 8B-parameter model at INT8 is about 8 GB. On a GPU with 2 TB/s of bandwidth, a single stream cannot exceed about 250 tokens/s, because every token requires reading all of the weights. Batching raises the **aggregate throughput**, not the speed of a single stream. To raise the single-stream ceiling: higher bandwidth or fewer bytes (quantisation, a smaller model)."
+            },
+            {
+              "quote": "Choose the cheapest GPU that (1) fits the model + KV cache, (2) meets the required stream speed, and (3) meets the aggregate throughput at peak."
+            }
+          ]
+        },
+        {
+          "title": "2.5 LLM serving performance techniques",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Technique",
+                  "What it does",
+                  "Effect"
+                ],
+                [
+                  "Continuous (in-flight) batching",
+                  "Adds and removes requests from the running batch at every step",
+                  "A large throughput gain compared with static batching (vLLM, TGI, TensorRT-LLM)"
+                ],
+                [
+                  "PagedAttention",
+                  "Manages the KV cache in pages with little fragmentation",
+                  "More concurrent sequences per GPU"
+                ],
+                [
+                  "Quantisation",
+                  "INT8/FP8/INT4 weights (and the KV cache as well)",
+                  "Less memory, and often higher throughput"
+                ],
+                [
+                  "Prefix / prompt caching",
+                  "Reuses the KV cache for identical prefixes",
+                  "Lower time to first token and lower cost"
+                ],
+                [
+                  "Speculative decoding",
+                  "A small draft model proposes tokens and the large model verifies them",
+                  "Lower latency per token with the **same output distribution**"
+                ],
+                [
+                  "Tensor parallelism",
+                  "Splits the model across GPUs in a single node",
+                  "Fits large models; lower latency"
+                ],
+                [
+                  "Smaller / distilled model",
+                  "Fewer parameters",
+                  "The biggest lever on cost and latency, if quality suffices"
+                ],
+                [
+                  "Limiting the maximum output tokens",
+                  "Shorter generations",
+                  "Cuts latency and cost directly"
+                ],
+                [
+                  "Model routing / cascade",
+                  "Easy queries → a small model; hard ones → a large one",
+                  "Lowers average cost while preserving quality"
+                ]
+              ]
+            },
+            {
+              "quote": "Batching trades latency for throughput. Larger batches raise GPU utilisation and requests per second, but can raise the latency of each request. With a strict p95 target, cap the batch size and the maximum wait time; for offline jobs, enlarge the batch to its maximum."
+            },
+            {
+              "p": "A recurring trap: if the scenario requires that outputs must not change, speculative decoding is acceptable because it preserves the output distribution, whereas switching to a smaller model or aggressive quantisation may change quality."
+            }
+          ]
+        },
+        {
+          "title": "2.6 LLM capacity in tokens, and load tests",
+          "blocks": [
+            {
+              "p": "For language models, measure capacity in **tokens per second, not requests per second**, because request length varies widely."
+            },
+            {
+              "formula": "required output tokens/s = concurrent streams × tokens/s per stream\n500 × 20 = 10,000 tokens/s\n10,000 ÷ 2,500 per GPU (at p95 TTFT ≤ 1 s) = 4 GPUs → + 1 spare = 5 GPUs"
+            },
+            {
+              "p": "500 concurrent chats × 20 tokens/s = 10,000 tokens/s. If a load test shows that a single GPU sustains 2,500 tokens/s while keeping the p95 of time to first token ≤ 1 second, you need 4 GPUs + 1 spare = 5. Concurrency per GPU is usually limited by the size of the KV cache: longer contexts → fewer concurrent users."
+            },
+            {
+              "h": "Types of load test"
+            },
+            {
+              "table": [
+                [
+                  "Type",
+                  "What it does",
+                  "What it reveals"
+                ],
+                [
+                  "Ramp",
+                  "Increase the load gradually until the p95 target is broken",
+                  "The breaking point (the knee of the curve) before users find it"
+                ],
+                [
+                  "Spike",
+                  "A sudden burst",
+                  "Autoscaling speed and queue behaviour"
+                ],
+                [
+                  "Soak",
+                  "Hours at a steady load",
+                  "Memory leaks"
+                ]
+              ]
+            },
+            {
+              "p": "They must be run with realistic distributions of prompt and output lengths, including the token counts of Arabic text."
+            }
+          ]
+        },
+        {
+          "title": "2.7 Capacity planning for an LLM service — a full worked example",
+          "blocks": [
+            {
+              "p": "**Scenario**: an Arabic assistant for a utility company. Expected peak: 1,500 concurrent users, about 20% of whom are waiting for an answer at any moment → 300 concurrent generations. The average prompt is 1,800 tokens (system prompt + retrieved chunks + history), and the average answer is 220 tokens. Requirements: p95 time to first token ≤ 1.5 seconds; streaming speed ≥ 15 tokens/s per user (faster than reading speed); in-Kingdom hosting; lowest cost."
+            },
+            {
+              "h": "Step 1 — Model and memory"
+            },
+            {
+              "formula": "weights: 8B × INT8 ≈ 8 GB\nKV (8B GQA): FP16 ≈ 128 KB/token; 8-bit KV ≈ 64 KB/token\nper sequence: 2,000 tokens × 64 KB ≈ 128 MB\nKV budget: 48 − 8 (weights) − ~6 (runtime overhead) ≈ 34 GB\n34 GB ÷ 128 MB ≈ 265 sequences at full length → plan 150–200 per GPU"
+            },
+            {
+              "p": "An 8B model that supports Arabic at INT8 ≈ 8 GB of weights. The KV cache for an 8B model with GQA attention at FP16 ≈ 128 KB per token, and with an 8-bit KV cache ≈ 64 KB. Each active sequence holds 2,000 tokens → ≈ 128 MB. On a 48 GB GPU, about 34 GB remains for the KV cache → ≈ 265 concurrent sequences at full length. In practice the serving engine handles variable lengths with its paged memory, but plan for **150–200 concurrent sequences per GPU** to leave headroom for longer conversations."
+            },
+            {
+              "h": "Step 2 — Throughput"
+            },
+            {
+              "formula": "150 sequences × 15 tokens/s = 2,250 tokens/s needed ≤ 3,000 available ✓"
+            },
+            {
+              "p": "The load test shows that a single GPU sustains about 3,000 output tokens/s in aggregate at 150 concurrent sequences, while keeping the p95 of time to first token ≈ 1.1 seconds. The prefill load is significant: 300 new prompts every ~15 seconds × 1,800 tokens; and caching the prefix of the fixed system prompt (900 tokens) cuts the prefill work roughly in half."
+            },
+            {
+              "h": "Step 3 — GPU count"
+            },
+            {
+              "formula": "300 concurrent ÷ 150 per GPU = 2 GPUs at peak → N+1 + zone spread = 3 GPUs\noff-peak: < 40 concurrent → 1 GPU suffices, keep 2 for zone availability"
+            },
+            {
+              "h": "Step 4 — Scaling policy"
+            },
+            {
+              "ul": [
+                "Scale on concurrent sequences per replica (target about 120) and queue wait time.",
+                "Scheduled pre-scaling before the evening peak.",
+                "A minimum of two replicas.",
+                "A maximum set by the budget, and beyond it, queue-based load shedding: a polite “busy, try again” message or a switch to a smaller model."
+              ]
+            },
+            {
+              "h": "Step 5 — Cost and levers"
+            },
+            {
+              "p": "Reserved capacity for two GPUs (always on) + on-demand capacity for the third during peak hours. Watch the biggest variable: **prompt length**. If retrieval sends 10 chunks instead of 4, the prompts double, prefill time and KV memory grow, and the GPU count must rise."
+            },
+            {
+              "quote": "Prompt discipline is capacity planning."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Distributed Training, Kubernetes and Vector Databases",
+      "sections": [
+        {
+          "title": "3.1 Distributed training in one table",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Technique",
+                  "What it splits",
+                  "When"
+                ],
+                [
+                  "Data parallelism (DDP)",
+                  "Batches across GPUs; a full model on each GPU",
+                  "The model fits on one GPU and you want faster training"
+                ],
+                [
+                  "ZeRO / FSDP (state sharding)",
+                  "Optimiser states, gradients and parameters across GPUs",
+                  "The model + optimiser state do not fit on one GPU"
+                ],
+                [
+                  "Tensor parallelism",
+                  "The matrices of the layers themselves",
+                  "Very large layers; needs fast links inside the node"
+                ],
+                [
+                  "Pipeline parallelism",
+                  "Layers into stages",
+                  "Very deep models across nodes"
+                ],
+                [
+                  "Mixed precision (BF16)",
+                  "—",
+                  "Almost always: faster and less memory"
+                ],
+                [
+                  "Gradient checkpointing",
+                  "Recompute the activations",
+                  "Trade compute for memory"
+                ],
+                [
+                  "Checkpointing to storage",
+                  "—",
+                  "Mandatory with Spot instances and long jobs"
+                ]
+              ]
+            },
+            {
+              "p": "Do not confuse the two terms: “gradient checkpointing” is a memory technique that recomputes activations in the backward pass, and “checkpointing to storage” saves the job’s state to durable storage to survive failures."
+            }
+          ]
+        },
+        {
+          "title": "3.2 Data parallelism and ZeRO/FSDP in detail",
+          "blocks": [
+            {
+              "p": "**Data parallelism (DDP)**: each GPU holds a full copy of the model and processes a different slice of the batch; after the backward pass, the gradients are averaged across the GPUs with an all-reduce collective operation, so the copies stay identical. It scales well as long as the model fits on one GPU, and communication cost grows with model size."
+            },
+            {
+              "p": "**Sharded data parallelism — ZeRO / FSDP**: removes the redundancy of every GPU holding everything:"
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "What it shards"
+                ],
+                [
+                  "ZeRO stage 1",
+                  "Optimiser states"
+                ],
+                [
+                  "ZeRO stage 2",
+                  "Optimiser states + gradients"
+                ],
+                [
+                  "ZeRO stage 3 / FSDP",
+                  "+ the parameters themselves, and each layer’s weights are gathered just before it is computed"
+                ]
+              ]
+            },
+            {
+              "p": "Memory per GPU falls roughly in proportion to the number of GPUs, at the cost of more communication. Offloading moves states to host memory or NVMe drives when GPU memory is not enough — slower, but it allows larger models on fewer GPUs."
+            },
+            {
+              "p": "**Model parallelism**: tensor parallelism splits the matrices themselves across GPUs (it needs very fast links — keep it inside a node). Pipeline parallelism places consecutive layers on different GPUs and streams micro-batches through them to reduce idle “bubbles”. 3D parallelism combines data, tensor and pipeline parallelism for the largest models; and expert parallelism distributes the experts of MoE models."
+            }
+          ]
+        },
+        {
+          "title": "3.3 Fault tolerance and training-throughput tuning",
+          "blocks": [
+            {
+              "p": "**Fault tolerance**: long multi-node jobs will inevitably meet hardware failures. Therefore:"
+            },
+            {
+              "ul": [
+                "Save checkpoints regularly to durable storage, including: the model, the optimiser, the data-loader position and the random states.",
+                "Use elastic training that can resume with a different number of nodes.",
+                "With Spot capacity, save often enough that a recovery costs you minutes, not hours."
+              ]
+            },
+            {
+              "p": "**Throughput tuning**: mixed precision, fused kernels and FlashAttention, larger micro-batches until memory is full, gradient accumulation to reach the target global batch, efficient data loading (pre-tokenised shards, enough workers), and overlapping communication with computation."
+            },
+            {
+              "formula": "MFU = achieved model FLOPs / theoretical peak FLOPs   (well-tuned large-scale: ~30–60%)"
+            },
+            {
+              "p": "Measure Model FLOPs Utilisation (MFU): the fraction of the theoretical peak actually used. Well-tuned large-scale training typically reaches only 30–60%. If MFU is low and the GPUs are waiting, the usual cause is a starved data loader, not a weak GPU."
+            }
+          ]
+        },
+        {
+          "title": "3.4 Kubernetes for machine-learning workloads",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Concept",
+                  "What it is",
+                  "ML relevance"
+                ],
+                [
+                  "Pod / Deployment",
+                  "Containers and a controller that keeps N replicas running",
+                  "Stateless model servers"
+                ],
+                [
+                  "Job / CronJob",
+                  "Run-to-completion / scheduled workloads",
+                  "Training, batch scoring, re-indexing"
+                ],
+                [
+                  "Requests and limits",
+                  "Guaranteed versus maximum CPU/memory/GPU",
+                  "Prevent noisy neighbours; GPUs are requested as whole devices or slices"
+                ],
+                [
+                  "Node pools, taints and tolerations",
+                  "Separate GPU nodes on which only GPU workloads are scheduled",
+                  "Keep the expensive GPUs for their own work"
+                ],
+                [
+                  "GPU sharing (MIG, time-slicing, MPS)",
+                  "Partitioning the GPU",
+                  "Pack small models onto one GPU"
+                ],
+                [
+                  "HPA",
+                  "Horizontal Pod Autoscaler on CPU/memory/custom metrics",
+                  "Scale replicas on requests per second, queue depth and concurrency"
+                ],
+                [
+                  "KEDA",
+                  "Event-driven autoscaling, including scale-to-zero",
+                  "Scale workers on queue length"
+                ],
+                [
+                  "Cluster autoscaler / Karpenter",
+                  "Adds or removes nodes when pods cannot be scheduled",
+                  "Must be fast enough for cold GPU starts"
+                ],
+                [
+                  "Probes (liveness, readiness, startup)",
+                  "Liveness, readiness and startup checks",
+                  "Do not route traffic before the model is loaded"
+                ],
+                [
+                  "PodDisruptionBudget",
+                  "Minimum available replicas during maintenance",
+                  "Keep availability during node upgrades"
+                ],
+                [
+                  "Topology spread",
+                  "Spread replicas across availability zones",
+                  "Survive the failure of a zone"
+                ],
+                [
+                  "Secrets / ConfigMaps",
+                  "Configuration and credentials",
+                  "Model endpoints and API keys from a secrets vault"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.5 Scaling an LLM service on Kubernetes — what actually limits you",
+          "blocks": [
+            {
+              "p": "Scaling pods is quick only if a node with a free GPU is available; adding a node may take minutes, and loading a large model several more. So plan for:"
+            },
+            {
+              "ul": [
+                "Headroom (permanent spare capacity).",
+                "Scheduled pre-scaling for known peaks.",
+                "Local model caches on the nodes.",
+                "Queue-based buffering so that short bursts wait briefly instead of failing."
+              ]
+            },
+            {
+              "quote": "Scale on in-flight requests or queue depth, not on CPU — a GPU-bound server’s CPU utilisation stays low while it is saturated."
+            },
+            {
+              "p": "The usual question pattern: GPU utilisation at 98%, a queue in the hundreds, and time to first token rising, while CPU is at 25% so HPA adds no replicas. The fix is to change the scaling metric to a custom one (concurrency or queue depth via HPA or KEDA) — not a bigger GPU and not lowering the CPU target."
+            }
+          ]
+        },
+        {
+          "title": "3.6 Storage, vector databases and data platforms",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Choice",
+                  "Guideline"
+                ],
+                [
+                  "Dedicated vector database or extension (such as pgvector)",
+                  "Up to a few million vectors with an existing Postgres and simple operations → the extension is often enough; very large scale / high request rates / advanced filtering → a dedicated vector database"
+                ],
+                [
+                  "Index type",
+                  "HNSW: fast, high recall, more memory; IVF/PQ: less memory with some loss of recall; Flat: exact but slow at large scale"
+                ],
+                [
+                  "Memory footprint",
+                  "Vectors × dimensions × 4 bytes (FP32) before index overhead → quantise the vectors or reduce the dimensions"
+                ],
+                [
+                  "Object storage",
+                  "Datasets and model artefacts; lifecycle policies move old data to cheaper tiers"
+                ],
+                [
+                  "Data lake or warehouse",
+                  "Lake: raw, varied and cheap (training data); warehouse: structured analytics"
+                ],
+                [
+                  "Logs and traces",
+                  "High volume — retention periods and storage tiers according to the monitoring policy"
+                ]
+              ]
+            },
+            {
+              "formula": "10,000,000 × 1,024 dims × 4 bytes ≈ 41 GB (FP32, before index overhead)"
+            },
+            {
+              "p": "10 million vectors with 1,024 dimensions need about 41 GB before index overhead. The two levers: vector quantisation (PQ or scalar quantisation saves 4–32 times) or reducing the dimensions."
+            }
+          ]
+        },
+        {
+          "title": "3.7 Tuning and scaling vector indexes",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Index",
+                  "Key parameters",
+                  "Effect"
+                ],
+                [
+                  "HNSW (graph)",
+                  "M (links per node), efConstruction (build quality), efSearch (query breadth)",
+                  "Higher M/ef → better recall, more memory and latency; efSearch is tunable per query"
+                ],
+                [
+                  "IVF (inverted file)",
+                  "nlist (number of clusters), nprobe (clusters searched)",
+                  "Higher nprobe → better recall, but slower"
+                ],
+                [
+                  "PQ / scalar quantisation",
+                  "Code size / bits per dimension",
+                  "4–32 times less memory; some loss of recall; often with re-ranking using the full vectors"
+                ],
+                [
+                  "Flat / brute force",
+                  "—",
+                  "Exact; suitable below roughly a million vectors or on a GPU"
+                ],
+                [
+                  "DiskANN-style",
+                  "A graph on SSD",
+                  "Billions of vectors with limited RAM"
+                ]
+              ]
+            },
+            {
+              "quote": "Recall versus latency is a tuning dial, not a fixed property: measure recall@k against exact search on a sample, and tune efSearch/nprobe to the lowest value that meets the target."
+            },
+            {
+              "ul": [
+                "**Filtering** (by tenant, permissions or date) can harm approximate-search performance when the filters are very selective: use indexes that support filtered search natively, or partition by the most common filter (one index per tenant, for example).",
+                "**Scaling out**: sharding (distributing the vectors across nodes) gives more capacity; replication (copies) gives more requests per second and higher availability.",
+                "**Updates and deletes** must be supported for freshness and for deletion under the Personal Data Protection Law (PDPL); and some indexes degrade with heavy deletion and need periodic rebuilds."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Latency Engineering, Caching, Cost and Energy",
+      "sections": [
+        {
+          "title": "4.1 Network and latency budgets",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Path",
+                  "Typical round-trip time"
+                ],
+                [
+                  "The same host (in-process / localhost)",
+                  "Microseconds"
+                ],
+                [
+                  "The same availability zone",
+                  "Well under 1 ms"
+                ],
+                [
+                  "Between zones in a single region",
+                  "About 1–2 ms"
+                ],
+                [
+                  "Between distant regions / continents",
+                  "Tens to over 100 ms"
+                ],
+                [
+                  "Mobile network to the cloud",
+                  "Tens to hundreds of milliseconds, and variable"
+                ]
+              ]
+            },
+            {
+              "p": "A real-time budget of 50 ms cannot afford a cross-continent call — one more reason why in-Kingdom hosting is also a performance decision for users in Saudi Arabia."
+            },
+            {
+              "ul": [
+                "Keep chatty calls between services inside a single zone or region.",
+                "Use connection pooling and keep-alive.",
+                "Place the feature store next to the model server.",
+                "Place caching as close to the caller as the data rules allow."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.2 Latency engineering playbook: where the time goes",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Where the time goes",
+                  "Diagnostic",
+                  "Fixes"
+                ],
+                [
+                  "Queueing before the model",
+                  "The queue-wait metric rises with load",
+                  "Scale out; continuous batching; admission control; separate queues by priority"
+                ],
+                [
+                  "Long prefill (time to first token, TTFT)",
+                  "TTFT grows with prompt length",
+                  "Shorter prompts; fewer and better chunks; prefix caching; chunked prefill; a smaller model"
+                ],
+                [
+                  "Slow decode (time per token)",
+                  "Low tokens/s per stream",
+                  "Quantisation; speculative decoding; a GPU with higher bandwidth; a smaller model; fewer concurrent streams per GPU"
+                ],
+                [
+                  "Too many output tokens",
+                  "Many tokens per answer",
+                  "Maximum-token limits; instructions for concise answers; structured outputs"
+                ],
+                [
+                  "Retrieval and re-ranking",
+                  "The trace shows a slow vector search or re-ranker",
+                  "Tune the approximate-search parameters; cache embeddings; re-rank fewer candidates; co-locate services"
+                ],
+                [
+                  "Tool calls",
+                  "Agent steps dominate",
+                  "Parallelise independent calls; cache tool results; cap the number of steps"
+                ],
+                [
+                  "Network hops",
+                  "Cross-region calls in the traces",
+                  "Co-locate in a single region/zone; keep-alive connections"
+                ],
+                [
+                  "Cold starts",
+                  "The first requests after idle are slow",
+                  "Minimum replicas; pre-warming; smaller artefacts; a local model cache"
+                ],
+                [
+                  "Tail latency (p99)",
+                  "p99 ≫ p50",
+                  "Remove head-of-line blocking; request hedging for idempotent calls; timeouts with fallbacks"
+                ]
+              ]
+            },
+            {
+              "p": "The rule: diagnose from the trace first, then treat the source that is actually consuming the time. A bigger GPU does not cure queue waiting, network hops or long prompts."
+            },
+            {
+              "h": "Perceived versus actual latency"
+            },
+            {
+              "p": "Users judge responsiveness by the moment something appears. Streaming, showing the retrieved sources first, and progress indicators improve perceived latency at no compute cost. API consumers who need the complete answer, however, care only about actual latency."
+            }
+          ]
+        },
+        {
+          "title": "4.3 Performance engineering for classical models",
+          "blocks": [
+            {
+              "p": "Classical models (boosted trees, linear models and small networks) usually meet millisecond budgets on CPUs when they are well engineered:"
+            },
+            {
+              "ul": [
+                "**Feature retrieval dominates**: a model that takes 2 ms behind 40 ms of database queries is slow because of the data, not the model. Pre-compute the features, use an online feature store (key–value lookup), batch the queries, and cache the stable features.",
+                "**Optimised runtimes**: export to ONNX or use native compiled predictors (Treelite-style for trees); and avoid Python overhead on every request in the critical path.",
+                "**Micro-batching**: for throughput, group the requests that arrive within a few milliseconds, with a cap on the wait time so that latency stays within the target.",
+                "**Model size**: fewer and shallower trees, or distilled models, when the budget is tight; and measure the cost of that in accuracy.",
+                "**Concurrency**: several worker processes per node; pin threads; avoid oversubscription.",
+                "**Pre-computation**: if the inputs are known (all customers, all products), score in batch and serve the results by lookup — under 1 ms at any scale."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.4 Caching layers end to end",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Layer",
+                  "What is cached",
+                  "Invalidation",
+                  "Risk"
+                ],
+                [
+                  "Client / CDN",
+                  "Static files and public responses",
+                  "TTL",
+                  "Never cache personalised or restricted answers in a public cache"
+                ],
+                [
+                  "API response cache",
+                  "Complete answers to identical requests",
+                  "TTL + source-change events",
+                  "Stale answers after documents are updated"
+                ],
+                [
+                  "Semantic cache",
+                  "Answers to similar questions",
+                  "Similarity threshold + source events",
+                  "A wrong answer to a subtly different question; leakage between users"
+                ],
+                [
+                  "Retrieval cache",
+                  "The top-k results for each normalised query",
+                  "A change of index version",
+                  "Stale results after re-indexing"
+                ],
+                [
+                  "Embedding cache",
+                  "Vectors per content hash + model version",
+                  "A change of model",
+                  "Mixing model versions"
+                ],
+                [
+                  "Prefix / KV cache",
+                  "The KV cache computed for shared prefixes",
+                  "A change of prompt",
+                  "Works only if the prefix is identical byte for byte"
+                ],
+                [
+                  "Feature cache",
+                  "Slowly changing features",
+                  "TTL",
+                  "Staleness for fast-changing features"
+                ]
+              ]
+            },
+            {
+              "quote": "The cache key must include everything that changes the answer: user permissions/tenant, language, model version, prompt version and index version. A cache shared between users with different permissions is a data-leakage vulnerability, not an optimisation."
+            },
+            {
+              "p": "A practical note on prefix caching: put the fixed part (system prompt, instructions) at the start of the prompt and the variable part (the question, the chunks) after it; any small change at the start of the prompt — even a timestamp — invalidates the cache."
+            }
+          ]
+        },
+        {
+          "title": "4.5 Cloud cost engineering (FinOps)",
+          "blocks": [
+            {
+              "h": "Pricing models"
+            },
+            {
+              "table": [
+                [
+                  "Model",
+                  "Characteristics",
+                  "Use in a mature strategy"
+                ],
+                [
+                  "On-demand",
+                  "Flexible and the most expensive",
+                  "Peaks, through autoscaling"
+                ],
+                [
+                  "Reserved / committed use / savings plans",
+                  "A one- or three-year commitment with large discounts",
+                  "The permanent minimum (the steady baseline)"
+                ],
+                [
+                  "Spot / preemptible",
+                  "Deep discounts, and may be reclaimed at short notice",
+                  "Interruptible batch work"
+                ],
+                [
+                  "Serverless / per-request",
+                  "No idle cost, cold starts, a per-unit premium",
+                  "Rare and intermittent traffic"
+                ]
+              ]
+            },
+            {
+              "h": "Hidden cost lines"
+            },
+            {
+              "p": "Data transfer between regions or to the internet (egress); traffic between availability zones; storage of snapshots, logs and old data; idle load balancers and endpoints; per-request calls to managed services; premium support; and — for language models — tokens. Bills that grow while traffic is flat usually hide one of these lines."
+            },
+            {
+              "h": "Unit economics"
+            },
+            {
+              "p": "Express cost per business unit: per prediction, per document processed, per resolved conversation, per thousand users. This makes optimisation comparable and lets you judge the profitability of an AI feature."
+            },
+            {
+              "formula": "cost per resolved conversation = (model cost + cost of handling unresolved conversations) ÷ resolved conversations"
+            },
+            {
+              "p": "The source gives an example: a model that is 30% cheaper but resolves 10% fewer conversations **may** cost more per resolved conversation. Note why: on model cost alone the ratio is 0.7 ÷ 0.9 ≈ 0.78, i.e. it is still cheaper; but when the cost of unresolved conversations is counted (escalation to a staff member, repeat contact) the verdict can flip. So measure on the unit of useful outcome with all its costs, not on the price per request."
+            },
+            {
+              "h": "FinOps practices"
+            },
+            {
+              "ul": [
+                "Tag every resource with its owner, project and environment.",
+                "Show costs to teams, or charge them back (showback / chargeback).",
+                "Budgets and anomaly alerts.",
+                "Review rightsizing recommendations monthly.",
+                "Delete orphaned resources.",
+                "Schedule non-production environments (switch them off outside working hours).",
+                "Include cost in architecture reviews alongside latency and reliability."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.6 Energy and sustainability",
+          "blocks": [
+            {
+              "p": "The “Social and Environmental Benefits” principle in the AI Ethics Principles issued by SDAIA, and the category of social, economic and environmental impacts in the risk framework (including energy consumption and carbon footprint), make efficiency a **governance topic**, not only a cost topic."
+            },
+            {
+              "h": "Engineering levers"
+            },
+            {
+              "ul": [
+                "Choose the smallest model that meets the requirements.",
+                "Quantisation and distillation.",
+                "Efficient batching.",
+                "Avoid unnecessary retraining.",
+                "Schedule flexible training when and where the energy is cleaner — within the data-residency constraints.",
+                "Measure the energy per training run and per thousand inferences.",
+                "Reuse pre-trained models instead of training from scratch."
+              ]
+            },
+            {
+              "quote": "In a scenario where a team trains an enormous model “because it is the latest” for a task that a small model would handle, the efficiency argument is both a cost argument and an ethics argument."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Apply the whole method of the unit — from choosing the mode to calculating the GPU count, the scaling policy, the cost and the residency — to a government service that is realistic in character.",
+    "scenario": [
+      "A government entity that provides services to beneficiaries wants to launch an Arabic chat assistant that answers questions from procedure manuals and internal regulations (RAG), in addition to a daily priority score for each open request out of about 4 million requests, to show to staff every morning.",
+      "The assistant’s expected peak is 2,000 concurrent users between 9 and 11 a.m., doubling on the days after salaries are paid, with about 25% of them waiting for an answer at any moment. The data is classified “Restricted” and includes personal data. Requirements: p95 of time to first token ≤ 1.5 seconds, and streaming ≥ 15 tokens/s per user. A load test of an 8B model at INT8 on a 48 GB GPU showed 3,000 tokens/s in aggregate at 150 concurrent sequences, with p95 of time to first token ≈ 1.1 seconds.",
+      "The current pilot runs on containers scaled to zero, complains of severe slowness on the first requests of the morning, scales HPA on 70% CPU, and uses a shared semantic cache keyed on the question only."
+    ],
+    "steps": [
+      "Determine the modes: the daily priority score is one nobody waits for and its inputs are known → a nightly batch scoring pipeline on Spot instances with checkpoints, writing the results to a table, with an alert if the deadline is exceeded and a fallback to the previous day’s scores. The assistant → the enterprise RAG architecture.",
+      "Determine the hosting: restricted and personal data → entirely inside the Kingdom, including the vector store, the logs, the backups and the recovery site, with a provider approved for the classification level; no external interface for this data.",
+      "Calculate the memory: weights ≈ 8 GB; 8-bit KV cache ≈ 64 KB/token × 2,000 tokens ≈ 128 MB per sequence; 48 − 8 − 6 ≈ 34 GB → ≈ 265 sequences as a theoretical limit, and plan on 150 per GPU.",
+      "Check the throughput: 150 × 15 = 2,250 tokens/s required ≤ 3,000 available ✓, and TTFT ≈ 1.1 seconds ≤ 1.5 ✓.",
+      "Calculate the GPU count: 2,000 × 25% = 500 concurrent generations; 500 ÷ 150 ≈ 3.3 → 4 GPUs; with N+1 and spreading across zones → 5 at the normal peak. For salary days, which double the load: 1,000 ÷ 150 ≈ 6.7 → 7 + 1 = 8, with scheduled pre-scaling before them.",
+      "Fix the scaling: a minimum of two replicas across two zones (which removes the cold start), warm-up before 9 a.m., a local model cache on the nodes, scaling on concurrent sequences per replica and queue wait time rather than on CPU, and a budget-based maximum with load shedding or a switch to a smaller model.",
+      "Fix the caching: the semantic-cache key must include permissions/tenant, language, model version, prompt and index, with invalidation when documents are updated; and make the fixed system prompt a byte-identical prefix to benefit from prefix caching.",
+      "Plan the cost: reserved capacity for the permanent minimum (two replicas), on-demand for the peaks, and Spot for batch scoring; and measure cost per resolved query, and watch the prompt length (the number of retrieved chunks) as the biggest variable in capacity."
+    ],
+    "traps": [
+      "A “bigger GPU” to fix the slowness of the first requests after idle — the fix is a minimum number of replicas, warm-up and faster loading.",
+      "Scaling on CPU percentage for a GPU-bound server — CPU stays low while the server is saturated.",
+      "Calculating capacity in requests/s instead of tokens/s, or forgetting N+1 and spreading across availability zones.",
+      "Treating pseudonymised data as non-personal, or keeping the backups and the recovery site outside the Kingdom despite “entirely in-Kingdom hosting”.",
+      "An always-on online endpoint for a job nobody is waiting for whose inputs are known.",
+      "A shared cache with a key that does not include permissions — leakage of data between users."
+    ],
+    "deliverable": "A one-page design document: the mode for each workload, the hosting location, the memory calculation and the GPU count at peak and off-peak, the scaling policy, the cache keys, and the pricing mix."
+  },
+  "review": [
+    {
+      "q": "A retailer needs a daily churn score for six million customers, shown in the morning in the customer-management system. Which inference mode do you choose?",
+      "a": "Nightly batch with pre-computation and serving by lookup: nobody is waiting for the answer and the inputs are known, so batches on Spot instances followed by scaling to zero are far cheaper than an always-on online endpoint."
+    },
+    {
+      "q": "An 8B model at INT8 on a GPU with 2 TB/s of bandwidth. What is the maximum speed of a single stream, and does batching raise it?",
+      "a": "About 2,000 ÷ 8 ≈ 250 tokens/s, because generation is memory-bound. Batching raises the aggregate throughput, not the speed of a single stream; raising it requires higher bandwidth or fewer bytes."
+    },
+    {
+      "q": "500 concurrent chats × 20 tokens/s, and the GPU sustains 2,500 tokens/s within the p95 target. How many GPUs do you need?",
+      "a": "10,000 ÷ 2,500 = 4 GPUs, and with one spare = 5."
+    },
+    {
+      "q": "In the capacity-planning example, how many sequences can a 48 GB GPU theoretically hold, and why do we plan for fewer?",
+      "a": "34 GB available for the KV cache ÷ 128 MB per sequence (2,000 tokens × 64 KB) ≈ 265. We plan for 150–200 to leave headroom for longer conversations and variation in lengths."
+    },
+    {
+      "q": "GPU utilisation is at 98% and the queue is swelling, but HPA adds no replicas because CPU is at 25% and two nodes are free. What is the first fix?",
+      "a": "Change the scaling metric to in-flight/concurrent requests or queue depth (custom metrics in HPA or KEDA), because a GPU-bound server’s CPU stays low while it is saturated."
+    },
+    {
+      "q": "The model does not fit with the optimiser state on one GPU. What is the difference between the ZeRO stages?",
+      "a": "Stage 1 shards the optimiser states, stage 2 adds the gradients, and stage 3/FSDP adds the parameters themselves and gathers each layer’s weights just before computing it; memory per GPU falls roughly in proportion to their number, at the cost of more communication."
+    },
+    {
+      "q": "How much memory do 10 million vectors with 1,024 dimensions at FP32 need, and what are the two levers?",
+      "a": "10M × 1,024 × 4 bytes ≈ 41 GB before index overhead. The two levers are vector quantisation (4–32 times less, often with re-ranking) or reducing the dimensions."
+    },
+    {
+      "q": "A real-time budget of 50 ms, and the service fetches features from a region on another continent. What is the problem?",
+      "a": "The cross-continent call alone consumes tens of milliseconds to over 100; the feature store must be co-located with the model server in the same region, which is what makes in-Kingdom hosting a performance decision as well."
+    },
+    {
+      "q": "Why is a shared semantic cache keyed on the question alone a risk?",
+      "a": "Because a user may receive an answer built on documents they have no permission to see; the key must include permissions/tenant, language, and the model, prompt and index versions, otherwise it is a leakage vulnerability, not an optimisation."
+    },
+    {
+      "q": "A model that is 30% cheaper but resolves fewer conversations. How do you decide?",
+      "a": "By unit economics: calculate the cost per resolved conversation, not per request; the cheaper model may be more expensive per useful business outcome."
+    }
+  ],
+  "summary": "You have mastered this unit when, faced with any scenario, you can determine the inference mode from the question “is anyone waiting?”, calculate weight memory, KV-cache memory and sequences per GPU and then the GPU count at peak with N+1, choose the GPU with the logic of memory, then latency, then throughput, then cost per useful unit, design scaling on the queue and concurrency rather than on CPU while curing cold starts, diagnose the source of latency from the trace, build safe cache keys, and place the data where the classification requires — at a size that suffices for the service target at peak, and no more.",
+  "coverage": [
+    "6.1",
+    "6.2",
+    "6.3",
+    "6.4",
+    "6.5",
+    "6.6",
+    "6.7",
+    "6.8",
+    "6.9",
+    "6.10",
+    "6.11",
+    "6.12",
+    "6.13",
+    "6.14",
+    "6.15",
+    "6.16",
+    "6.17",
+    "6.18",
+    "6.19",
+    "6.20",
+    "6.21"
+  ]
+}

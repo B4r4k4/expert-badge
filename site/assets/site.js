@@ -4,7 +4,8 @@
   const KEY = 'sdaia-done';
   const getDone = () => { try { return JSON.parse(localStorage.getItem(KEY)) || [] } catch(e){ return [] } };
   const setDone = v => { try { localStorage.setItem(KEY, JSON.stringify(v)) } catch(e){} };
-  const ar = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  const EN = document.documentElement.lang === 'en';
+  const ar = n => EN ? String(n) : String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 
   /* reveal on scroll */
   const els = $$('.rv');
@@ -30,7 +31,7 @@
     rows.forEach(li => li.classList.toggle('done', done.includes(+li.dataset.unit)));
     if (done.length) {
       $('#progress').hidden = false;
-      $('#progressText').textContent = `أنهيت ${ar(done.length)} من ${ar(rows.length)} وحدة`;
+      $('#progressText').textContent = EN ? `${done.length} of ${rows.length} units completed` : `أنهيت ${ar(done.length)} من ${ar(rows.length)} وحدة`;
       requestAnimationFrame(() => $('#progressBar').style.width = (done.length / rows.length * 100) + '%');
     }
   }
@@ -39,7 +40,7 @@
   const doneBtn = $('#doneBtn');
   if (doneBtn) {
     const u = +doneBtn.dataset.unit;
-    const paint = () => { const on = getDone().includes(u); doneBtn.setAttribute('aria-pressed', on); $('.lbl', doneBtn).textContent = on ? 'أنهيت هذه الوحدة' : 'علّم الوحدة كمكتملة' };
+    const paint = () => { const on = getDone().includes(u); doneBtn.setAttribute('aria-pressed', on); $('.lbl', doneBtn).textContent = on ? (EN ? 'Unit completed' : 'أنهيت هذه الوحدة') : (EN ? 'Mark unit as completed' : 'علّم الوحدة كمكتملة') };
     doneBtn.onclick = () => { const d = getDone(); setDone(d.includes(u) ? d.filter(x => x !== u) : [...d, u]); paint() };
     paint();
   }
@@ -92,7 +93,7 @@
         it.el.hidden = !hit; if (hit) n++;
         it.b.innerHTML = hl(it.raw[0], term); it.s.innerHTML = hl(it.raw[1], term); it.dd.innerHTML = hl(it.raw[2], term);
       }
-      $('#gcount').textContent = term ? `${ar(n)} نتيجة` : `${ar(items.length)} مصطلحًا`;
+      $('#gcount').textContent = term ? (EN ? `${n} result${n === 1 ? '' : 's'}` : `${ar(n)} نتيجة`) : (EN ? `${items.length} terms` : `${ar(items.length)} مصطلحًا`);
       $('#gempty').hidden = n > 0;
     };
     q.addEventListener('input', run);

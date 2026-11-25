@@ -1,0 +1,1726 @@
+{
+  "num": 11,
+  "title": "Business, Professional Practice & Cost Analysis",
+  "english": "Business, Professional Practice & Cost Analysis",
+  "subtitle": "From problem framing and feasibility to reviewing a cloud bill line by line",
+  "domain": "Domain 7 · 6.7% + cost questions",
+  "deliverable": "To read an AI proposal or invoice, identify the value, the waste and the risk, and recommend a documented decision that non-technical people can understand.",
+  "intro": "This is the smallest domain in the exam by weight (about 10 questions out of 150), but it is the easiest place to lose marks by overthinking the technical side. Its questions ask: what does an expert engineer do when business, ethics and engineering meet? Framing the problem, defining success metrics, weighing build against buy against partner, communicating trade-offs, and escalating when a violation exists. On top of that comes a pattern reported by test-takers: 3–4 questions containing expense tables and charts that ask “is this spending reasonable? Where is the waste? What should we cut?” — closer to an engineer reviewing a cloud bill than to a certification question. This unit builds both sides together: the logic of professional decision-making, and a cost-analysis workshop with invoices solved figure by figure. All prices in it are illustrative, and the exam will give you its own figures.",
+  "outcomes": [
+    "Frame the business problem before the technology: the objective, the baseline, data availability, success and guardrail metrics, the risk level, and return on the basis of total cost of ownership.",
+    "Build a numerical business case and calculate net benefit and payback period, while distinguishing the conditions that keep it robust.",
+    "Write testable requirements and acceptance criteria for an AI system, and match proposals and designs against them.",
+    "Weigh build against buy against partner according to the factors in SDAIA’s guide and the constraints of residency and classification, and know what must precede a purchase.",
+    "Communicate metrics, risks and uncertainty to each audience in its own language, and escalate professionally and with documentation when a known violation exists.",
+    "Diagnose waste in an invoice or usage chart using the twelve-item checklist, while distinguishing what must not be cut.",
+    "Calculate the break-even point between a managed API and self-hosting, size a fleet from the hourly load, and compare three-year total cost after applying the hard constraints."
+  ],
+  "method": "Read Chapters 1 and 2 as decision logic, not as information: for each table (stages, build versus buy, roles, audiences) ask yourself “which signal in the question text leads me to this row?” Memorise the patterns of the correct answer: documented escalation, not silence and not unilateral refusal; a range with a confidence level, not a single figure; the requirement, not the leaderboard. For Chapters 3 and 4, work with a pencil: recalculate every invoice yourself before reading the solution, check every figure (hours × processors × price), then apply the five steps of Section 4.4 to every table. The exam will change the numbers, but it will not change the method.",
+  "chapters": [
+    {
+      "title": "Framing and Delivering a Project: From Idea to Production",
+      "sections": [
+        {
+          "title": "1.1 Framing: Is AI the Solution at All?",
+          "blocks": [
+            {
+              "p": "Before any model, the expert engineer starts with business questions. Many questions in this domain reward the person who stops to ask: would a simple rule be enough? What would actually change if the system succeeded?"
+            },
+            {
+              "table": [
+                [
+                  "Step",
+                  "The question you ask"
+                ],
+                [
+                  "Business objective",
+                  "Which decision or outcome will change? (Reduce fraud losses by X%, cut processing time by Y minutes)"
+                ],
+                [
+                  "Baseline",
+                  "What happens today without machine learning? Would rules or a simple heuristic be enough?"
+                ],
+                [
+                  "Data availability",
+                  "Is there labelled, lawfully obtained, representative data?"
+                ],
+                [
+                  "Success metric",
+                  "A business indicator + a model metric + guardrail metrics such as fairness, latency and cost — agreed before building"
+                ],
+                [
+                  "Risk level",
+                  "What is the risk category under SDAIA’s framework? Is there personal or sensitive data? Is a data protection impact assessment (DPIA) required?"
+                ],
+                [
+                  "Feasibility & ROI",
+                  "Value against total cost of ownership (build, operation, monitoring, retraining, governance)"
+                ]
+              ]
+            },
+            {
+              "formula": "ROI = (benefit − cost) / cost"
+            },
+            {
+              "p": "Calculate the **total cost of ownership (TCO)**: data labelling, engineering, infrastructure, monitoring, retraining, compliance and support — not training compute alone. A proposal that looks profitable because its cost was calculated from the price of the GPU alone is a recurring distractor."
+            },
+            {
+              "quote": "Success and guardrail metrics are agreed before building, not after the results appear."
+            }
+          ]
+        },
+        {
+          "title": "1.2 From Proof of Concept to Minimum Product to Production",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Objective",
+                  "Exit criteria"
+                ],
+                [
+                  "Proof of concept (POC)",
+                  "Is it technically possible on real data?",
+                  "The offline metric beats the baseline by a meaningful margin"
+                ],
+                [
+                  "Pilot / MVP",
+                  "Does it deliver value to real users within a limited scope?",
+                  "The business indicator improves; users adopt it; the risks are understood"
+                ],
+                [
+                  "Production",
+                  "Reliable, monitored and governed at scale",
+                  "Service level objectives (SLOs), monitoring, runbooks, owners, impact assessment (DPIA) and documentation"
+                ]
+              ]
+            },
+            {
+              "p": "Note that each stage asks a different question: the first about technical feasibility, the second about value to the user, the third about reliability and governance. Jumping from proof of concept straight to scale skips the value question."
+            },
+            {
+              "quote": "Scenario signal: “the proof of concept succeeded but the project stalled” → a lack of production readiness (data pipelines, MLOps, ownership, integration), or the success metric was never tied to a business indicator."
+            }
+          ]
+        },
+        {
+          "title": "1.3 Building the Business Case",
+          "blocks": [
+            {
+              "p": "A credible business case for an AI project answers five questions **with numbers**:"
+            },
+            {
+              "ol": [
+                "Which decision or process will change, and what is it worth today? The current volume, cost, error rate and cycle time. (For example: 120,000 claims a year, 18 minutes of manual review for each, and 4% fraud leakage.)",
+                "What is the realistic improvement? From a pilot or comparable cases, **as a range, not a single figure** (for example: 30–45% less review time; and a 0.5–1 point reduction in fraud leakage).",
+                "What does it cost to build and run? One-off costs (data work, development, integration, change management) plus recurring costs (compute, licences, monitoring, retraining, support, governance, auditing).",
+                "What are the risks and what do they cost? Errors, regulatory exposure, reputational damage and vendor lock-in — and the cost of the controls (human review, explainability, impact assessment).",
+                "When is the investment recovered, and how will we know? Payback period, net present value (NPV) / return, and the indicators that will be tracked after launch."
+              ]
+            },
+            {
+              "p": "The usual value levers: cost reduction (automation, fewer errors), revenue (conversion, retention, pricing), risk reduction (fraud, compliance), speed (cycle time, customer waiting), and quality (consistency, accuracy). Avoid counting the same benefit twice, and remember that **“hours saved” do not become money unless the time is redeployed**."
+            },
+            {
+              "h": "Worked case: claims triage"
+            },
+            {
+              "table": [
+                [
+                  "Item",
+                  "Value"
+                ],
+                [
+                  "Claims per year",
+                  "120,000"
+                ],
+                [
+                  "Current manual review",
+                  "18 minutes/claim → 36,000 hours/year"
+                ],
+                [
+                  "Fully loaded cost of a reviewer hour",
+                  "SAR 120 → SAR 4.32 million/year"
+                ],
+                [
+                  "The model routes 40% of claims to a fast track (5-minute review)",
+                  "48,000 × 13 minutes saved = 10,400 hours ≈ SAR 1.25 million/year"
+                ],
+                [
+                  "Earlier fraud detection (pilot estimate)",
+                  "SAR 0.6–1.0 million/year"
+                ],
+                [
+                  "Build cost (one-off)",
+                  "SAR 1.4 million"
+                ],
+                [
+                  "Running cost (compute, monitoring, retraining, governance)",
+                  "SAR 0.45 million/year"
+                ],
+                [
+                  "Annual net benefit",
+                  "≈ SAR 1.4–1.8 million"
+                ],
+                [
+                  "Payback period",
+                  "≈ 9–12 months (the source rounds it to 10–12)"
+                ]
+              ]
+            },
+            {
+              "formula": "36,000 h = 120,000 × 18 min ÷ 60 ;  36,000 × 120 = SAR 4.32M"
+            },
+            {
+              "formula": "48,000 × (18 − 5) = 624,000 min = 10,400 h ;  10,400 × 120 ≈ SAR 1.25M"
+            },
+            {
+              "formula": "net = 1.25 + (0.6 … 1.0) − 0.45 ≈ SAR 1.4 … 1.8M/yr ;  payback = build 1.4 ÷ net (1.4 … 1.8) per yr ≈ 0.78 … 1.0 yr ≈ 9–12 months"
+            },
+            {
+              "p": "The case holds only under three conditions: that the reviewers’ time is genuinely redeployed (or hiring is avoided), that the error rate on the fast track is monitored (fraudulent claims wrongly routed there eat into the benefit), and that customers can contest automated outcomes. These same conditions become the project’s **success metrics and guardrail metrics**."
+            }
+          ]
+        },
+        {
+          "title": "1.4 Requirements Engineering for AI",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Requirement type",
+                  "Examples",
+                  "Why it is specific to AI"
+                ],
+                [
+                  "Functional",
+                  "Classifying 12 types of complaint; summarising contracts; answering HR questions with citations",
+                  "Behaviour is probabilistic — specify acceptable error rates, not just features"
+                ],
+                [
+                  "Quality and accuracy",
+                  "Recall ≥ 0.9 for fraud; faithfulness ≥ 95%; macro-F1 ≥ 0.85",
+                  "Must be measured on a defined, representative evaluation set"
+                ],
+                [
+                  "Performance",
+                  "p95 ≤ 300 ms; 500 requests/second at peak; batch finished before 06:00",
+                  "Model size, hardware and batching are derived from these"
+                ],
+                [
+                  "Data",
+                  "Sources, freshness, classification, residency and retention",
+                  "Drives architecture and compliance"
+                ],
+                [
+                  "Explainability",
+                  "Reason codes for rejections; citations for answers",
+                  "Constrains model choice"
+                ],
+                [
+                  "Fairness",
+                  "Maximum gap in approval rate between groups",
+                  "A policy decision; set before training"
+                ],
+                [
+                  "Human oversight",
+                  "A human approves payments above SAR 50,000; an escalation path",
+                  "Required for irreversible or high-impact decisions"
+                ],
+                [
+                  "Operational",
+                  "Monitoring, retraining cadence, rollback time and on-call",
+                  "Often forgotten in proofs of concept"
+                ],
+                [
+                  "Compliance",
+                  "The legal basis under the Personal Data Protection Law (PDPL), the impact assessment, the ethical risk level, and sector rules",
+                  "May veto designs that are attractive in other respects"
+                ],
+                [
+                  "Cost",
+                  "≤ SAR 0.05 per document; ≤ SAR 40,000/month",
+                  "Determines the model class and where it is hosted"
+                ]
+              ]
+            },
+            {
+              "p": "Write the **acceptance criteria before building**. The statement “the assistant answers questions about HR policies” is not testable. By contrast: “On an Arabic evaluation set of 300 questions taken from real tickets, ≥ 90% of answers are rated correct and fully supported by the cited policy text; 100% of out-of-scope questions are refused or escalated; time to first token p95 ≤ 1.5 seconds; and no personal data leaves the Kingdom” — that is testable."
+            },
+            {
+              "quote": "This is exactly the form of the “specification matching” questions in the exam: a proposal or design that violates a single hard requirement fails, however well it performs in other respects."
+            }
+          ]
+        },
+        {
+          "title": "1.5 Working in Teams, Project Delivery and Roles",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Practice",
+                  "Why"
+                ],
+                [
+                  "Clear ownership (RACI) of the data, the model and the service",
+                  "The accountability principle; incident response"
+                ],
+                [
+                  "Multidisciplinary reviews (security, legal, domain experts)",
+                  "Discover risks early"
+                ],
+                [
+                  "Documentation: model cards, runbooks and architecture decision records (ADRs)",
+                  "Knowledge transfer; auditing"
+                ],
+                [
+                  "Iterative delivery with feedback",
+                  "Reduces the risk of building the wrong thing"
+                ],
+                [
+                  "Knowledge sharing and mentoring",
+                  "Team capability, and the “bus factor”"
+                ]
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Role",
+                  "Responsibility"
+                ],
+                [
+                  "Product owner / sponsor",
+                  "The problem, the value, priorities and acceptance"
+                ],
+                [
+                  "AI / machine learning engineer",
+                  "Model development, integration, serving and evaluation pipelines"
+                ],
+                [
+                  "Data engineer",
+                  "Data pipelines, data quality, the feature store and lineage"
+                ],
+                [
+                  "Data scientist",
+                  "Analysis, experimentation and statistical validity"
+                ],
+                [
+                  "Operations / platform engineer (MLOps)",
+                  "CI/CD/CT, infrastructure, monitoring and reliability"
+                ],
+                [
+                  "Domain experts",
+                  "Labels, evaluation, edge cases and acceptance"
+                ],
+                [
+                  "Security and privacy",
+                  "Threat modelling, impact assessment (DPIA) and controls"
+                ],
+                [
+                  "Compliance and AI ethics roles",
+                  "Risk level, ethics plan and approvals (Compliance Officer, AI Officer, AI System Assessor)"
+                ],
+                [
+                  "UX / content",
+                  "Disclosure, explanations, error messages and the quality of Arabic content"
+                ],
+                [
+                  "Operations and support",
+                  "Runbooks, escalation and user feedback"
+                ]
+              ]
+            },
+            {
+              "h": "A RACI matrix for a model launch"
+            },
+            {
+              "ul": [
+                "**Responsible:** the machine learning engineer (build and test).",
+                "**Accountable:** the product owner or model owner (the go/no-go launch decision).",
+                "**Consulted:** security, privacy, compliance and domain experts.",
+                "**Informed:** support, operations and leadership."
+              ]
+            },
+            {
+              "p": "In SDAIA’s ethics roles: the **AI Officer** leads operationally, the **Compliance Officer** leads strategically, and the **AI System Assessor** audits."
+            },
+            {
+              "p": "**Delivery cadence:** iterate in short cycles, with a working, evaluated slice each time: data and baseline first, then the simplest end-to-end integrated system, then improvements ordered by error analysis. Keep a decision log (ADRs) so that later reviewers understand why choices were made."
+            }
+          ]
+        },
+        {
+          "title": "1.6 Change Management and Adoption",
+          "blocks": [
+            {
+              "p": "Many technically sound AI systems fail because people do not use them, or use them wrongly. Adoption work therefore includes:"
+            },
+            {
+              "ul": [
+                "Involving end users in design and evaluation.",
+                "Training that covers what the system does, its limits, and when to override it.",
+                "Clear signals in the interface about the confidence level and the sources.",
+                "Feedback buttons that actually feed improvement.",
+                "Measuring adoption (usage, override rates and time saved) alongside the model metrics.",
+                "Monitoring **over-reliance** (automatically approving AI suggestions without scrutiny) and **under-reliance** (ignoring good suggestions)."
+              ]
+            },
+            {
+              "p": "SDAIA’s study “AI and its Impact on Productivity” (2026) frames productivity gains as depending on this institutional adoption, not on the technology alone."
+            },
+            {
+              "quote": "High accuracy with low usage = an adoption problem, not a model problem."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Decisions, Stakeholders and the Saudi Ecosystem",
+      "sections": [
+        {
+          "title": "2.1 Build, Buy or Partner",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Leans towards buying / a managed service",
+                  "Leans towards building / self-hosting"
+                ],
+                [
+                  "A commodity capability (OCR, speech-to-text, general chat)",
+                  "A core competitive advantage / a private data advantage"
+                ],
+                [
+                  "A small team and a need for speed",
+                  "A strong machine learning platform team"
+                ],
+                [
+                  "Uncertain or low volume",
+                  "High, stable volume → lower unit cost"
+                ],
+                [
+                  "Processing data at the vendor is permitted (classification and residency allow it)",
+                  "Data must not leave (classification; the PDPL’s transfer restrictions)"
+                ],
+                [
+                  "The vendor provides documentation, auditing and service level agreements (SLAs)",
+                  "A need for full control, explainability and customisation"
+                ]
+              ]
+            },
+            {
+              "p": "When buying, SDAIA’s ethics **transparency principle** and supply-chain risks require obtaining documentation before purchase: data sources, evaluation results, limitations, security posture, data handling, hosting location, and an exit plan (to avoid lock-in)."
+            },
+            {
+              "h": "What the SDAIA study says about procurement"
+            },
+            {
+              "p": "SDAIA’s study “AI Procurement in the Government Sector” (January 2026) lists five challenges:"
+            },
+            {
+              "ol": [
+                "Lack of clarity in requirements and outcomes.",
+                "Technical infrastructure and data quality (discovering after contracting that the data is insufficient or biased).",
+                "Ethical considerations and responsibility (who is accountable for a biased decision).",
+                "Difficulty evaluating solutions (a vendor may not disclose its models and algorithms, so trials and prototypes are needed).",
+                "Flexibility versus rigid procedures."
+              ]
+            },
+            {
+              "p": "Among the remedies it describes: choosing between **open competition** (when the specifications are clear) and **two-stage competition** (when the requirements are not yet clear), allocating responsibility in the contract for the system’s errors and harms, and using prototypes and challenge-based tenders."
+            },
+            {
+              "quote": "Under the risk management framework: transferring the risk to the vendor never removes the organisation’s own responsibility."
+            }
+          ]
+        },
+        {
+          "title": "2.2 Adoption Options in SDAIA’s Guide: Build, Buy or Partner",
+          "blocks": [
+            {
+              "p": "SDAIA’s executive guide “Adoption of AI Systems” (Second Edition, April 2024) identifies six factors that settle the adoption option:"
+            },
+            {
+              "ol": [
+                "Availability of commercial solutions.",
+                "Data readiness (volume, freshness, quality, and how important it is to keep it private).",
+                "Strategic value (a competitive advantage or an operational improvement).",
+                "Capability level (infrastructure and specialised skills).",
+                "The allocated budget.",
+                "The expected time to implement."
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Option",
+                  "When",
+                  "Advantages (official)",
+                  "Disadvantages (official)"
+                ],
+                [
+                  "Build",
+                  "No suitable commercial solution exists; the strategic value is a competitive advantage; internal capability exists or can be built",
+                  "Flexibility and ease of integration; data security and access control kept in-house; high value and a competitive advantage from owning the skills; fit with internal needs and policies; cost efficiency in the long term",
+                  "The real cost is hard to predict; investment in specialised competencies; longer time to value"
+                ],
+                [
+                  "Buy",
+                  "Good ready-made solutions exist for an operational need; quick results are required",
+                  "Lower cost in the short term than building capabilities; fast launch; immediate returns",
+                  "Difficulty guaranteeing data privacy and obtaining intellectual property; difficulty customising; complete dependence on the vendor for development and maintenance"
+                ],
+                [
+                  "Partner",
+                  "No suitable commercial solution exists, with a shortage of data or skills internally; a need to build capability over time",
+                  "Relatively low short-term cost and fast delivery; a tailored solution and a competitive advantage; skills development through the partner",
+                  "Giving a third party access to data; higher cost in the long term; difficulty maintaining quality over time"
+                ]
+              ]
+            },
+            {
+              "p": "**The decision logic in simplified form:** if the strategic value is a competitive advantage, lean towards building (or partnering if capabilities are lacking); if it is operational efficiency and good commercial solutions are available, buy. But **data sensitivity and hosting location** may override both — a purchase that requires sending classified or personal data abroad is not an option."
+            },
+            {
+              "h": "What comes before buying"
+            },
+            {
+              "ul": [
+                "Define the problem and requirements clearly.",
+                "Verify data readiness.",
+                "Assess the system’s impact in advance.",
+                "Evaluate vendors and their offers against quality criteria.",
+                "Choose a procurement method suited to emerging technologies instead of rigid traditional methods — consistent with the procurement study (2026) (two-stage competition when requirements are unclear) and with the transparency principle (full documentation before purchase)."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.3 Communicating with Stakeholders and Conveying Risk and Uncertainty",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Audience",
+                  "Speak in terms of"
+                ],
+                [
+                  "Executive leadership",
+                  "Business impact, cost, risk and timeline — not F1 scores"
+                ],
+                [
+                  "Product owners",
+                  "User outcomes, trade-offs (speed against quality against cost), and what is in and out of scope"
+                ],
+                [
+                  "Legal and compliance",
+                  "Data flows, purposes, retention, impact assessment (DPIA), residency and explainability"
+                ],
+                [
+                  "Operations and support",
+                  "Runbooks, escalation, failure modes and fallback behaviour"
+                ],
+                [
+                  "End users",
+                  "Clear disclosure, the limits, how to reach human help, and how to file a complaint"
+                ]
+              ]
+            },
+            {
+              "p": "**Translate the metrics:** “Precision 0.8” → “4 out of every 5 customers we classify as likely to leave actually leave.” “Recall 0.95” → “we reach 95 out of every 100 customers who would have left.” **Leadership decides the trade-off, and the engineer measures it in numbers.**"
+            },
+            {
+              "h": "Weak messages and strong messages"
+            },
+            {
+              "table": [
+                [
+                  "Situation",
+                  "Weak message",
+                  "Strong message"
+                ],
+                [
+                  "Model accuracy",
+                  "“The model is 94% accurate”",
+                  "“On last quarter’s cases it caught 9 out of 10 fraud cases; and 1 in 4 alerts is a false alarm, costing about two analyst-hours a day”"
+                ],
+                [
+                  "Uncertainty",
+                  "“It might be better”",
+                  "“The new model is better by 1–3 points at 95% confidence; and the gain is worth SAR 0.4–1.2 million a year”"
+                ],
+                [
+                  "Risk",
+                  "“There is some bias”",
+                  "“Approval rates for applicants over 60 are 18% lower at equal income; we propose a fix that closes most of the gap within two weeks before launch”"
+                ],
+                [
+                  "Trade-off",
+                  "“We need a bigger budget”",
+                  "“Option (A) meets latency and accuracy at SAR 22,000/month; option (B) is 10% more accurate at SAR 95,000 but fails on latency. We recommend (A)”"
+                ],
+                [
+                  "Limits of the language model",
+                  "“The AI knows our policies”",
+                  "“It answers from the current policy documents and cites them; and when the answer is not in them it says so and routes to HR”"
+                ]
+              ]
+            },
+            {
+              "quote": "The pattern: translate metrics into business consequences, give ranges and a confidence level instead of single figures, state what you recommend and why, and name the conditions under which your recommendation changes."
+            }
+          ]
+        },
+        {
+          "title": "2.4 Professional Ethics, Escalation and Professional Standards",
+          "blocks": [
+            {
+              "p": "The typical question text: “Your manager asks for a launch next week although the fairness test shows a large gap for one group,” or “… to use customer data for a new purpose in order to meet the deadline.”"
+            },
+            {
+              "p": "The expected answer: **documented professional escalation**:"
+            },
+            {
+              "ol": [
+                "Measure the risk in numbers.",
+                "Propose mitigations and a realistic plan.",
+                "Involve compliance / the AI Officer.",
+                "Do not launch a known violation."
+              ]
+            },
+            {
+              "quote": "Neither silent compliance nor unilateral refusal without escalation is “expert” behaviour."
+            },
+            {
+              "h": "Professional standards for data and AI roles"
+            },
+            {
+              "p": "SDAIA publishes the **National Framework for Professional Standards in Data and AI** and the **Saudi Framework for AI Qualifications** (both 2025), which define roles, competencies and qualification levels, and they are assessed by the **AI Professional Badges** at their levels (assistant, associate and expert). (The names given here follow the English titles in the source.)"
+            },
+            {
+              "p": "The expert level focuses on making and defending engineering decisions under real constraints — cost, latency, accuracy and compliance — and communicating them to non-technical stakeholders. The professional conduct expected at this level:"
+            },
+            {
+              "ul": [
+                "Honesty about uncertainty and the model’s limits.",
+                "Refusing to launch known violations.",
+                "Documenting decisions.",
+                "Protecting the data entrusted to you.",
+                "Continuous learning.",
+                "Mentoring others."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.5 The Saudi AI Ecosystem in Context",
+          "blocks": [
+            {
+              "p": "The scenarios are set in Saudi organisations, so it helps to know the institutional map that the exam assumes:"
+            },
+            {
+              "table": [
+                [
+                  "Body or programme",
+                  "Role"
+                ],
+                [
+                  "Saudi Data & AI Authority (SDAIA)",
+                  "The national reference for data and AI: strategy, regulation (supervision of the Personal Data Protection Law, AI ethics, the risk framework), national platforms, and capability building"
+                ],
+                [
+                  "National Data Management Office (NDMO)",
+                  "Data management and personal data protection standards and policies for government entities; the data governance platform"
+                ],
+                [
+                  "National Information Center (NIC)",
+                  "National data infrastructure and government cloud services — **the source marks this description “needs verification”**"
+                ],
+                [
+                  "National Center for AI (NCAI)",
+                  "AI research, development and national AI products (such as ALLaM) — **the source marks this description “needs verification”**"
+                ],
+                [
+                  "National Cybersecurity Authority (NCA)",
+                  "Cybersecurity controls (ECC, CCC and DCC) that apply to AI platforms"
+                ],
+                [
+                  "International Center for AI Research and Ethics (ICAIRE)",
+                  "Research and ethics initiatives, and international cooperation"
+                ],
+                [
+                  "Sector regulators",
+                  "Add rules specific to their sectors (finance, health, telecom, media) — the “sector regulations” pillar of the risk framework"
+                ]
+              ]
+            },
+            {
+              "p": "**The strategic frame:** AI adoption sits within Vision 2030 and the national strategy for data and AI, and SDAIA’s publications consistently frame AI as a driver of productivity, service quality and economic diversification, **conditional on** responsible, secure and compliant use."
+            },
+            {
+              "quote": "Expect answers that balance innovation and governance — rejecting both reckless deployment and blanket refusal."
+            }
+          ]
+        },
+        {
+          "title": "2.6 Sector Use Cases from SDAIA’s Studies",
+          "blocks": [
+            {
+              "p": "SDAIA’s series on AI use cases (November 2024) organises each sector into a few families of use cases, with SDAIA initiatives in each. Knowing them helps you quickly recognise the risks of a scenario’s domain."
+            },
+            {
+              "table": [
+                [
+                  "Sector",
+                  "Use-case families",
+                  "SDAIA initiatives mentioned",
+                  "Key risks to manage"
+                ],
+                [
+                  "Health",
+                  "Medical imaging and diagnosis; research and development; patient care; health administration",
+                  "An AI lab for medical images; a diabetic retinopathy detection model with clinical studies",
+                  "Sensitive data (the PDPL), clinical safety and oversight, bias across populations, and site shift"
+                ],
+                [
+                  "Energy",
+                  "Planning; operations; (predictive) maintenance; innovation",
+                  "The AI Center for Energy with the Ministry of Energy",
+                  "Safety-critical operations, OT/ICS cybersecurity, and sensor drift"
+                ],
+                [
+                  "Municipal",
+                  "Urban planning; the city digital twin; environmental management; waste-collection optimisation; visual-pollution detection",
+                  "The National Smart Cities Platform; an urban-landscape improvement platform with the municipal ministry",
+                  "Camera data privacy, purpose limitation, and fairness across neighbourhoods"
+                ],
+                [
+                  "Education",
+                  "Personalised learning, support and assessment for students; tools for teachers; educational administration",
+                  "The National Olympiad for Programming and AI (Athka) with the Ministry of Education and Mawhiba; the International AI Olympiad",
+                  "Minors’ data, academic integrity, over-reliance, and bias in assessment"
+                ],
+                [
+                  "Security",
+                  "Security surveillance (borders, public places, facial recognition); crime prevention and financial-fraud detection; public-safety management",
+                  "The National Smart Cities Platform; the Sawaher smart-camera analytics platform; the Riyadh smart operations centre",
+                  "Limits of mass surveillance (the Reliability & Safety principle), the legal basis, accuracy across groups, and oversight"
+                ],
+                [
+                  "Media",
+                  "Content personalisation; content creation and enhancement; analysis and insights; task automation",
+                  "The Centre of Excellence for AI in Media (with the Ministry of Media); the generative-AI media camp",
+                  "Deepfakes, disclosure, intellectual property, and misinformation (the Media AI Principles 2026)"
+                ]
+              ]
+            },
+            {
+              "h": "How to use the table in the exam"
+            },
+            {
+              "ul": [
+                "Health → sensitive data and clinical oversight.",
+                "Security → limits of surveillance and the legal basis.",
+                "Education → minors and integrity.",
+                "Media → disclosure and deepfakes.",
+                "Energy → safety-critical operations and the security of industrial control systems.",
+                "Municipal → camera privacy and fairness across neighbourhoods."
+              ]
+            },
+            {
+              "quote": "The technically better answer must also address the risk that is characteristic of the sector."
+            }
+          ]
+        },
+        {
+          "title": "2.7 Productivity and Its Effect on the Workforce, and the Expert’s Checklist for Any Proposal",
+          "blocks": [
+            {
+              "p": "SDAIA’s study “AI and its Impact on Productivity” (2026) and its guide to more than 100 AI tools for increasing business productivity (2025) reflect a practical position: productivity gains come from **redesigning tasks** around AI (drafting, summarising, analysis, coding assistance and customer service), and are measured by real indicators, with quality, security and skills managed. For the expert engineer, this means:"
+            },
+            {
+              "ul": [
+                "**Pick tasks, not jobs:** identify high-volume, time-consuming tasks where AI drafts and a human reviews.",
+                "**Measure honestly:** time saved, quality (error rates and rework), adoption and user satisfaction — before and after, with a comparison group if possible.",
+                "**Protect data:** tool choice follows classification and the PDPL; government employees use generative tools only with **public** data unless an approved in-house solution is available.",
+                "**Invest in skills:** training in prompt writing, verification and the limits of AI is part of the rollout; and SDAIA’s professional-standards and qualifications frameworks support the definition of roles.",
+                "**Watch for side effects:** over-reliance, skills erosion, uneven benefits across groups, and new security exposure (shadow AI — that is, use outside approved tools)."
+              ]
+            },
+            {
+              "h": "The expert engineer’s checklist for any proposal"
+            },
+            {
+              "table": [
+                [
+                  "Question",
+                  "Where you review it"
+                ],
+                [
+                  "Which business decision changes, and how do we measure the value?",
+                  "Unit 11"
+                ],
+                [
+                  "What are the hard requirements (quality, latency, data, cost)?",
+                  "Unit 01, Unit 11"
+                ],
+                [
+                  "Which data, with which classification, on what legal basis, and where is it hosted?",
+                  "Unit 08, Unit 10"
+                ],
+                [
+                  "What is the simplest technique that meets the need?",
+                  "Unit 04, Unit 05"
+                ],
+                [
+                  "How do we evaluate before and after launch?",
+                  "Unit 03, Unit 05, Unit 07"
+                ],
+                [
+                  "What risk level and oversight are required?",
+                  "Unit 07, Unit 10"
+                ],
+                [
+                  "How does it fail, and what happens then?",
+                  "Unit 06, Unit 07"
+                ],
+                [
+                  "What does it cost per unit of value, and what are the levers?",
+                  "Unit 08, Unit 11"
+                ],
+                [
+                  "Who owns it, who approves it, and how do users complain?",
+                  "Unit 10, Unit 11"
+                ],
+                [
+                  "Build, buy or partner — and what is the exit plan?",
+                  "Unit 07, Unit 11"
+                ]
+              ]
+            },
+            {
+              "p": "The second column refers you to the units of this platform; use the checklist as a final review of any proposed scenario."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Cost Workshop: Reading Invoices and Diagnosing Waste",
+      "sections": [
+        {
+          "title": "3.1 The Waste Checklist and What Must Not Be Cut",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "#",
+                  "Look for",
+                  "The signal in the table",
+                  "The usual remedy"
+                ],
+                [
+                  "1",
+                  "Idle capacity",
+                  "Instances running 24/7 at low utilisation (< 30%)",
+                  "Autoscaling, scheduled scaling, scale-to-zero, right-sizing"
+                ],
+                [
+                  "2",
+                  "Non-production environments that are always on",
+                  "GPUs for development/testing/notebooks billed for 720 hours/month",
+                  "Schedule for working hours; automatic shutdown of idle notebooks"
+                ],
+                [
+                  "3",
+                  "The wrong model class",
+                  "A frontier language model for simple classification or extraction",
+                  "A smaller model, a fine-tuned small model, classical machine learning, routing/cascading"
+                ],
+                [
+                  "4",
+                  "Unsuitable hardware",
+                  "GPUs for tree models or light workloads",
+                  "CPU, a smaller GPU, MIG/GPU sharing"
+                ],
+                [
+                  "5",
+                  "Everything on-demand",
+                  "No use of reserved capacity or Spot",
+                  "Reserved for the baseline load, Spot for batches and training with checkpoints"
+                ],
+                [
+                  "6",
+                  "Recomputing what has not changed",
+                  "A full re-embedding or retraining every night",
+                  "Incremental processing, change detection, caching"
+                ],
+                [
+                  "7",
+                  "Token bloat",
+                  "Cost per request rises while traffic stays constant",
+                  "Trim prompts, limit history, summarise context, cap outputs, cache the prefix"
+                ],
+                [
+                  "8",
+                  "No caching",
+                  "Identical or similar requests that repeat",
+                  "Response or semantic caching, prefix caching"
+                ],
+                [
+                  "9",
+                  "Unlimited retention",
+                  "Log and storage costs grow every month",
+                  "A retention policy, tiering to cold storage, data masking (which is also a requirement of the PDPL)"
+                ],
+                [
+                  "10",
+                  "Data transfer / egress",
+                  "Line items for transfer between regions or to the internet",
+                  "Co-locate compute with data; the same region; compression"
+                ],
+                [
+                  "11",
+                  "Over-redundancy",
+                  "Replicas far beyond peak + N+1",
+                  "Sizing with Little’s law + a target utilisation"
+                ],
+                [
+                  "12",
+                  "Orphaned resources",
+                  "Unattached disks, old snapshots, unused endpoints",
+                  "Tagging, periodic clean-up, budgets and alerts"
+                ]
+              ]
+            },
+            {
+              "h": "What must not be cut"
+            },
+            {
+              "ul": [
+                "Encryption and key management (KMS).",
+                "Audit logs within the required retention period.",
+                "Backup and disaster recovery (DR) as required in the service agreement.",
+                "Multi-AZ redundancy for critical services.",
+                "Security monitoring.",
+                "Evaluation and monitoring pipelines.",
+                "Hosting inside the Kingdom when classification or the PDPL requires it."
+              ]
+            },
+            {
+              "quote": "An option such as “save 30% by moving the data to a cheaper region outside the Kingdom” or “switch off audit logs” is a trap."
+            }
+          ]
+        },
+        {
+          "title": "3.2 Invoice (A): A Generative Support Assistant",
+          "blocks": [
+            {
+              "p": "A company runs an Arabic customer-support assistant (RAG + a self-hosted language model) and an automated ticket-classification step. The monthly invoice (in US dollars, 720 hours/month, GPU at $4/hour on-demand):"
+            },
+            {
+              "table": [
+                [
+                  "Item",
+                  "Detail",
+                  "Monthly $",
+                  "Share"
+                ],
+                [
+                  "Production inference serving",
+                  "8 GPUs × 24/7; average utilisation 18%; peak 4 hours/day",
+                  "23,040",
+                  "42%"
+                ],
+                [
+                  "Development and test GPUs",
+                  "4 GPUs × 24/7; used about 10 hours on working days",
+                  "11,520",
+                  "21%"
+                ],
+                [
+                  "External language-model API for ticket classification",
+                  "A frontier model, 8 categories, 600,000 tickets",
+                  "9,500",
+                  "18%"
+                ],
+                [
+                  "Log storage",
+                  "Full prompts and responses including personal data, kept without limit, +4 TB/month",
+                  "3,600",
+                  "7%"
+                ],
+                [
+                  "Recomputing embeddings",
+                  "The whole collection every night; about 1% of documents change daily",
+                  "2,800",
+                  "5%"
+                ],
+                [
+                  "Data transfer between regions",
+                  "The application in region A and the model servers in region B",
+                  "2,100",
+                  "4%"
+                ],
+                [
+                  "Vector database",
+                  "Managed, 3 replicas",
+                  "1,200",
+                  "2%"
+                ],
+                [
+                  "Monitoring and tracing",
+                  "—",
+                  "600",
+                  "1%"
+                ],
+                [
+                  "Total",
+                  "",
+                  "54,360",
+                  "100%"
+                ]
+              ]
+            },
+            {
+              "formula": "8 × 720 × 4 = 23,040 ;  4 × 720 × 4 = 11,520"
+            },
+            {
+              "h": "Actions and savings"
+            },
+            {
+              "table": [
+                [
+                  "Action",
+                  "New $",
+                  "Saving $",
+                  "Risk"
+                ],
+                [
+                  "Schedule development/testing for working hours (4 × 220 hours)",
+                  "3,520",
+                  "8,000",
+                  "None"
+                ],
+                [
+                  "Autoscale production: a minimum of 3 (≥ 2 for high availability + 1 headroom) for 20 hours, and 8 during the four peak hours; continuous batching",
+                  "≈ 11,000",
+                  "≈ 12,000",
+                  "Low — keep pre-warming before the peak"
+                ],
+                [
+                  "Replace the frontier model’s classification with a fine-tuned small classifier (additional cost; runs on the autoscaled fleet)",
+                  "≈ 800",
+                  "≈ 8,700",
+                  "Verify accuracy first"
+                ],
+                [
+                  "A retention policy (for example 90 days) + masking of personal data + cold tiering",
+                  "≈ 700",
+                  "≈ 2,900",
+                  "Also resolves a PDPL problem"
+                ],
+                [
+                  "Incremental re-embedding",
+                  "≈ 150",
+                  "≈ 2,650",
+                  "None"
+                ],
+                [
+                  "Place the application and the model in one region",
+                  "≈ 200",
+                  "≈ 1,900",
+                  "Verify residency"
+                ],
+                [
+                  "Vector database, monitoring",
+                  "Unchanged",
+                  "0",
+                  "Do not cut monitoring"
+                ],
+                [
+                  "Total",
+                  "≈ 18,170",
+                  "≈ 36,200 (−67%)",
+                  ""
+                ]
+              ]
+            },
+            {
+              "formula": "dev: 4 × 220 × 4 = 3,520 ;  prod: (3 × 20 + 8 × 4) × 30 × 4 = 92 × 120 = 11,040 ≈ 11,000"
+            },
+            {
+              "h": "How it might be asked"
+            },
+            {
+              "ul": [
+                "“Which single change gives the largest saving?” → autoscaling production (≈ 12,000).",
+                "“Which saving carries no risk to users?” → scheduling the non-production environments (8,000).",
+                "“Which item is also a compliance problem?” → the logs with personal data kept without limit (retention and data minimisation).",
+                "“Which proposal is wrong?” → for example “shrink the vector database to a single replica” (availability) or “switch off tracing” (observability) — a small saving and a real risk."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.3 Invoice (B): Cost Rising While Traffic Stays Flat",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Month",
+                  "Requests",
+                  "Average input tokens/request",
+                  "Average output tokens",
+                  "Model cost $"
+                ],
+                [
+                  "January",
+                  "1.00M",
+                  "1,200",
+                  "250",
+                  "975"
+                ],
+                [
+                  "February",
+                  "1.02M",
+                  "1,650",
+                  "255",
+                  "1,232"
+                ],
+                [
+                  "March",
+                  "0.98M",
+                  "2,300",
+                  "250",
+                  "1,495"
+                ],
+                [
+                  "April",
+                  "1.01M",
+                  "2,900",
+                  "260",
+                  "1,859"
+                ],
+                [
+                  "May",
+                  "1.00M",
+                  "3,500",
+                  "250",
+                  "2,125"
+                ],
+                [
+                  "June",
+                  "0.99M",
+                  "4,100",
+                  "255",
+                  "2,408"
+                ]
+              ]
+            },
+            {
+              "p": "The price: $0.50 per million input tokens, and $1.50 per million output tokens."
+            },
+            {
+              "formula": "Jan: 1.00M × 1,200 × 0.50/1M + 1.00M × 250 × 1.50/1M = 600 + 375 = 975"
+            },
+            {
+              "formula": "Jun: 0.99M × 4,100 × 0.50/1M + 0.99M × 255 × 1.50/1M ≈ 2,030 + 379 ≈ 2,408"
+            },
+            {
+              "p": "**Diagnosis:** traffic and outputs are flat; input tokens per request have multiplied by 3.4 (4,100 ÷ 1,200) → **the prompt is growing**. Typical causes:"
+            },
+            {
+              "ul": [
+                "Appending the full conversation history with every turn, without a limit.",
+                "Increasing the RAG passages (raising k from 3 to 15).",
+                "Bloat in the system prompt.",
+                "Pasting complete tool outputs."
+              ]
+            },
+            {
+              "p": "**The remedy:** limit/summarise the history (a sliding window + a summary), keep k small with a reranker, trim the system prompt and cache its prefix, and truncate tool outputs."
+            },
+            {
+              "quote": "Not “negotiate a bigger discount” and not “switch to a cheaper model” as a first step — remove the waste first."
+            }
+          ]
+        },
+        {
+          "title": "3.4 Invoice (C): Training Spend for a Tabular Model",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Item",
+                  "Detail",
+                  "Monthly $"
+                ],
+                [
+                  "Training cluster",
+                  "8 on-demand GPUs, 10 hours/day × 30 days, an XGBoost fraud model retrained daily on the full 5-year history",
+                  "9,600"
+                ],
+                [
+                  "Feature pipeline",
+                  "A daily Spark job",
+                  "1,100"
+                ],
+                [
+                  "Real-time serving",
+                  "6 CPU replicas, p95 = 18 ms, utilisation 55%",
+                  "1,300"
+                ],
+                [
+                  "Experiment tracking and registry",
+                  "Managed",
+                  "300"
+                ],
+                [
+                  "Total",
+                  "",
+                  "12,300"
+                ]
+              ]
+            },
+            {
+              "formula": "8 GPUs × 10 h × 30 days × $4 = 9,600"
+            },
+            {
+              "h": "Where is the waste?"
+            },
+            {
+              "ul": [
+                "**Unsuitable hardware:** gradient-boosted trees train efficiently on CPUs; GPU support exists but rarely justifies 8 GPUs.",
+                "**Recomputing what has not changed:** daily retraining on the full history is often unnecessary — drift in fraud is real, but retraining on drift or on a performance drop (or weekly) on a recent window with incremental updates is enough.",
+                "**Everything on-demand:** use Spot/preemptible capacity with checkpoints for the training job."
+              ]
+            },
+            {
+              "p": "**Serving at 55% utilisation and 18 ms is healthy — do not shrink it.** A reasonable target: training ≈ $600–1,200/month → total ≈ $3,300–3,900 (−70%)."
+            },
+            {
+              "formula": "(600 … 1,200) + 1,100 + 1,300 + 300 = 3,300 … 3,900"
+            }
+          ]
+        },
+        {
+          "title": "3.5 Invoice (E): An Enterprise RAG Platform",
+          "blocks": [
+            {
+              "p": "A ministry runs an internal RAG assistant for 18,000 employees (≈ 25,000 questions a day). The monthly costs (in US dollars):"
+            },
+            {
+              "table": [
+                [
+                  "Item",
+                  "Detail",
+                  "$/month"
+                ],
+                [
+                  "Language-model serving",
+                  "4 GPUs 24/7 for a 70B model at FP16 precision; average utilisation 22%; quality on the evaluation set 91%",
+                  "11,520"
+                ],
+                [
+                  "Embedding service",
+                  "One GPU 24/7; re-embeds the whole collection (1.5 million chunks) every night",
+                  "2,880"
+                ],
+                [
+                  "Reranker",
+                  "A cross-encoder on a GPU, reranking the top 100 for every query",
+                  "2,880"
+                ],
+                [
+                  "Vector database",
+                  "3 nodes, HNSW, 1.5 million vectors × 1,024 dimensions",
+                  "1,800"
+                ],
+                [
+                  "Optical character recognition (OCR) of documents",
+                  "Re-runs OCR on every PDF file every night, including unchanged ones",
+                  "1,400"
+                ],
+                [
+                  "Logs",
+                  "Full prompts and answers kept without limit",
+                  "900"
+                ],
+                [
+                  "Total",
+                  "",
+                  "21,380"
+                ]
+              ]
+            },
+            {
+              "h": "Analysis"
+            },
+            {
+              "ol": [
+                "**Model class:** evaluation shows that an 8–14-billion-parameter model that supports Arabic, at INT8 precision, achieves 89–90% on the same set (the requirement is ≥ 88%). Two GPUs are enough for the load with headroom → cutting the model cost roughly in half (≈ $5,760), if the quality requirement allows — **the requirement, not the leaderboard, is the judge**.",
+                "**Re-embedding and OCR of unchanged content:** switch to incremental processing with change detection; if about 1% changes daily, the embedding GPU can be switched off for most of the day (≈ $300), and OCR falls by about 95% (≈ $70).",
+                "**The breadth of reranking:** rerank the top 30 instead of 100: about a third of the work with a negligible quality loss (measure it); and share the GPU with the embedding service → ≈ $1,000.",
+                "**The vector database:** 1.5M × 1,024 × 4 bytes ≈ 6 GB raw; the three nodes are for availability, and this is reasonable for a ministry-level service — keep it (perhaps with smaller nodes).",
+                "**Logs:** a retention policy (for example 90 days), masking of personal data, and storage tiering → lower cost and a fix for the PDPL retention violation."
+              ]
+            },
+            {
+              "formula": "vectors: 1.5M × 1,024 × 4 B ≈ 6.1 GB"
+            },
+            {
+              "formula": "new total ≈ 5,760 + 300 + 1,000 + 1,800 + 70 + 200 ≈ 9,100 $ (−57%)"
+            },
+            {
+              "p": "Compliance improves at the same time. **What must not be cut:** hosting inside the Kingdom, access control in retrieval, the evaluation gates, and the availability of the vector store."
+            }
+          ]
+        },
+        {
+          "title": "3.6 Invoice (F): A Fine-Tuning Project Budget",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Item",
+                  "Plan (A): full fine-tuning of 70B",
+                  "Plan (B): QLoRA on 70B",
+                  "Plan (C): LoRA on 8B"
+                ],
+                [
+                  "GPUs required",
+                  "16 × 80 GB for 5 days",
+                  "1 × 80 GB for 4 days",
+                  "1 × 48 GB for 1 day"
+                ],
+                [
+                  "Training compute",
+                  "≈ 7,700 $",
+                  "≈ 400 $",
+                  "≈ 50 $"
+                ],
+                [
+                  "Experiments (× 6 runs)",
+                  "≈ 46,000 $",
+                  "≈ 2,400 $",
+                  "≈ 300 $"
+                ],
+                [
+                  "Serving per month",
+                  "4 GPUs ≈ $11,500",
+                  "2 GPUs (4-bit/8-bit) ≈ $5,800",
+                  "1–2 GPUs ≈ $2,900"
+                ],
+                [
+                  "Evaluation score against the requirement (≥ 85%)",
+                  "90%",
+                  "88%",
+                  "86%"
+                ]
+              ]
+            },
+            {
+              "p": "**Reading the table:** all three plans meet the quality requirement. Plan (C) is the cheapest to train and to serve, and passes by a small margin; plan (B) gives a larger margin at a moderate cost; and plan (A) spends about 20 times as much on experiments (46,000 ÷ 2,400 ≈ 19) for 4 points that the requirement does not ask for."
+            },
+            {
+              "p": "Unless the scenario points to the importance of margin (such as a strict quality audit, or a later expansion of scope), the expected answer is **(C)** — or **(B)** if a “safety margin” or a “future scope” is mentioned."
+            },
+            {
+              "quote": "Before any plan: make sure the need is behaviour/format (fine-tuning), not freshness of knowledge (RAG)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Total Cost of Ownership and How to Answer",
+      "sections": [
+        {
+          "title": "4.1 Invoice (D): The Break-Even Point Between a Managed API and Self-Hosting",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Option",
+                  "Cost model"
+                ],
+                [
+                  "Managed API",
+                  "$0.003 per request, no fixed cost"
+                ],
+                [
+                  "Self-hosting (inside the Kingdom)",
+                  "$3,600 per GPU-month (reserved); each GPU serves 2.5 million requests/month at the target utilisation; a minimum of two GPUs for high availability; + $2,000/month of operating effort"
+                ]
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Monthly requests",
+                  "API $",
+                  "Hosting GPUs",
+                  "Hosting $",
+                  "Cheapest"
+                ],
+                [
+                  "1M",
+                  "3,000",
+                  "2",
+                  "9,200",
+                  "The API"
+                ],
+                [
+                  "3M",
+                  "9,000",
+                  "2",
+                  "9,200",
+                  "≈ equal"
+                ],
+                [
+                  "5M",
+                  "15,000",
+                  "3 (2 + spare)",
+                  "12,800",
+                  "Self-hosting"
+                ],
+                [
+                  "8M",
+                  "24,000",
+                  "4",
+                  "16,400",
+                  "Self-hosting"
+                ]
+              ]
+            },
+            {
+              "formula": "self-host(n GPUs) = n × 3,600 + 2,000 ;  2 → 9,200 ; 3 → 12,800 ; 4 → 16,400"
+            },
+            {
+              "formula": "break-even ≈ 9,200 / 0.003 ≈ 3.1M requests/month"
+            },
+            {
+              "p": "At 5 million, the two-GPU minimum runs at 100% of target (2 × 2.5M) with no spare, so a third GPU is added. Below the break-even point the API wins on cost; above it self-hosting wins **if the team can run it and utilisation stays high**."
+            },
+            {
+              "quote": "Compliance can override cost: if the data must not leave the Kingdom and the API is hosted outside it, self-hosting (or a provider inside the Kingdom) is required even at one million requests."
+            }
+          ]
+        },
+        {
+          "title": "4.2 Chart (G): Usage by the Hour",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Hour",
+                  "00–06",
+                  "06–09",
+                  "09–12",
+                  "12–15",
+                  "15–18",
+                  "18–21",
+                  "21–24"
+                ],
+                [
+                  "Requests/second",
+                  "15",
+                  "60",
+                  "220",
+                  "180",
+                  "140",
+                  "260",
+                  "120"
+                ],
+                [
+                  "Running replicas",
+                  "10",
+                  "10",
+                  "10",
+                  "10",
+                  "10",
+                  "10",
+                  "10"
+                ],
+                [
+                  "Average GPU utilisation",
+                  "5%",
+                  "18%",
+                  "70%",
+                  "58%",
+                  "45%",
+                  "85%",
+                  "38%"
+                ]
+              ]
+            },
+            {
+              "p": "**What the chart says:** the fleet is sized for the 18–21 peak (85%) and runs at 5–18% for nine hours a day. With about 30 requests/second per replica at a 75% target and one spare replica:"
+            },
+            {
+              "formula": "replicas = ⌈load ÷ 30⌉ + 1"
+            },
+            {
+              "table": [
+                [
+                  "Period",
+                  "Load",
+                  "⌈load ÷ 30⌉",
+                  "+ 1 spare",
+                  "Hours",
+                  "Replica-hours"
+                ],
+                [
+                  "00–06",
+                  "15",
+                  "1",
+                  "2",
+                  "6",
+                  "12"
+                ],
+                [
+                  "06–09",
+                  "60",
+                  "2",
+                  "3",
+                  "3",
+                  "9"
+                ],
+                [
+                  "09–12",
+                  "220",
+                  "8",
+                  "9",
+                  "3",
+                  "27"
+                ],
+                [
+                  "12–15",
+                  "180",
+                  "6",
+                  "7",
+                  "3",
+                  "21"
+                ],
+                [
+                  "15–18",
+                  "140",
+                  "5",
+                  "6",
+                  "3",
+                  "18"
+                ],
+                [
+                  "18–21",
+                  "260",
+                  "9",
+                  "10",
+                  "3",
+                  "30"
+                ],
+                [
+                  "21–24",
+                  "120",
+                  "4",
+                  "5",
+                  "3",
+                  "15"
+                ]
+              ]
+            },
+            {
+              "formula": "2×6 + 3×3 + 9×3 + 7×3 + 6×3 + 10×3 + 5×3 = 132 replica-h/day  vs  10 × 24 = 240  (−45%)"
+            },
+            {
+              "quote": "The answer: autoscaling with scheduled pre-scaling before 09:00 and 18:00 — not “buy reserved capacity for ten GPUs”."
+            }
+          ]
+        },
+        {
+          "title": "4.3 Table (H): Three-Year Total Cost of Ownership",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Cost item (3 years)",
+                  "Managed API",
+                  "Managed platform inside the Kingdom",
+                  "Self-hosting on dedicated GPUs"
+                ],
+                [
+                  "Setup and integration",
+                  "60k",
+                  "120k",
+                  "250k"
+                ],
+                [
+                  "Usage / compute",
+                  "1,080k (grows with volume)",
+                  "650k",
+                  "420k (hardware + power, with depreciation)"
+                ],
+                [
+                  "Engineering and operations team",
+                  "150k",
+                  "300k",
+                  "900k"
+                ],
+                [
+                  "Security, compliance and auditing",
+                  "120k",
+                  "150k",
+                  "200k"
+                ],
+                [
+                  "Total",
+                  "1,410k",
+                  "1,220k",
+                  "1,770k"
+                ],
+                [
+                  "Residency of personal data",
+                  "✗ (provider abroad)",
+                  "✓",
+                  "✓"
+                ]
+              ]
+            },
+            {
+              "formula": "60 + 1,080 + 150 + 120 = 1,410 ;  120 + 650 + 300 + 150 = 1,220 ;  250 + 420 + 900 + 200 = 1,770"
+            },
+            {
+              "p": "**Reading it:** self-hosting has the lowest compute cost but the highest total because of people and operations — a **common blind spot**. The managed API is suitable for public data but fails the residency condition for personal data. The managed platform inside the Kingdom is compliant and the cheapest overall."
+            },
+            {
+              "p": "**The lesson:** compare total cost including people and compliance, and apply the hard constraints first. The answer does not flip towards self-hosting except at a much higher volume, or if the organisation already has an MLOps platform team whose cost is shared."
+            },
+            {
+              "quote": "Put them in order: hard constraints eliminate first, then total cost chooses among what remains."
+            }
+          ]
+        },
+        {
+          "title": "4.4 How to Answer Any Cost Question in Five Steps",
+          "blocks": [
+            {
+              "ol": [
+                "**Identify the largest items** — usually the top two or three items carry most of the saving.",
+                "**Compare utilisation with cost** — utilisation rate, hours running against hours needed, volume processed against volume changed, and tokens per request against need.",
+                "**Check the class** — is a premium model or GPU doing work that the cheaper one achieves within the requirements?",
+                "**Check compliance on every item** — retention, residency, encryption and audit logs: some items are mandatory, some savings are unlawful, and some waste is also a violation (unlimited logs).",
+                "**Rank the options by saving and risk** — “largest saving” and “no risk to users” may be two different answers; read which one the question asks for."
+              ]
+            },
+            {
+              "p": "Apply the steps to Invoice (A) from the training: the largest items are production (42%), development (21%) and the external API (18%) — together carrying about 80% of the saving (28,700 of 36,200); utilisation 18% against a 4-hour peak; the class: a frontier model for eight categories; compliance: unlimited logs with personal data; the ranking: largest saving = autoscaling, safest saving = scheduling."
+            },
+            {
+              "quote": "The exam will give you its own figures, but the method does not change: the major items, utilisation against cost, the class, compliance, then ranking by saving and risk."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Apply the waste checklist and the five steps to a new monthly invoice for an AI assistant at a Saudi bank, and rank the actions by saving, risk and compliance.",
+    "scenario": [
+      "A Saudi bank runs an internal Arabic assistant for customer-service staff (RAG + a self-hosted language model inside the Kingdom), with a step that classifies the intent of an enquiry into 5 categories through an external frontier-model API. A GPU costs $4/hour on-demand, and the month is 720 hours. (The figures are illustrative, for the purpose of the exercise.)",
+      "The monthly invoice: production serving 6 GPUs × 24/7, average utilisation 20%, peak 3 hours a day = $17,280; notebook and development GPUs 3 × 24/7 and used about 8 hours over 22 working days = 8,640; the external classification API = 7,200; full prompt-and-response logs with customer data kept without limit = 2,400; a full re-embedding every night while about 2% of documents change daily = 1,800; the vector database, 3 replicas = 900; monitoring and tracing = 500. The total is $38,720.",
+      "The finance team has put forward four further proposals: (1) move the service to a cheaper cloud region outside the Kingdom to save 30%; (2) switch off audit logs; (3) shrink the vector database to a single replica; (4) buy reserved capacity for six GPUs to lower the price. The chief financial officer asks: what is the largest single saving? Which saving does not touch users? Which item is a compliance problem?"
+    ],
+    "steps": [
+      "Step 1 — The largest items: production 17,280 (≈ 45%), development 8,640 (≈ 22%) and the API 7,200 (≈ 19%); together about 86% of the invoice, so this is where most of the saving lies.",
+      "Step 2 — Utilisation against cost: production at 20% with a peak of only 3 hours → idle capacity. Autoscale with a minimum of 3 (two for availability + 1 headroom) for 21 hours and 6 at the peak: (3 × 21 + 6 × 3) × 30 × 4 = 81 × 120 = $9,720 → a saving of 7,560, with pre-warming before the peak.",
+      "Step 2 (continued) — Non-production environments: 3 × 8 × 22 × 4 = $2,112 after scheduling and automatic shutdown of idle notebooks → a saving of 6,528 with no effect on users. Embedding: only 2% changes → incremental processing with change detection ≈ $100 → a saving of 1,700.",
+      "Step 3 — The class: a frontier model to classify 5 categories → the wrong model class. A fine-tuned small classifier running on the autoscaled fleet at an additional cost of ≈ 600 → a saving of ≈ 6,600, provided accuracy is verified on an evaluation set before the replacement.",
+      "Step 4 — Compliance: logs with customer data kept without limit are both waste and a violation (retention and data minimisation) → a 90-day retention policy + masking of personal data + cold tiering ≈ 500 → a saving of 1,900. Proposals (1) and (2) are rejected: moving customer data outside the Kingdom and switching off audit logs are on the “what must not be cut” list. Proposal (3) saves only about 600 against a real risk to availability. Proposal (4) locks in the idle capacity instead of removing it; reservation suits the baseline load (3 GPUs) after right-sizing, not before.",
+      "Step 5 — Ranking: the new total ≈ 9,720 + 2,112 + 600 + 500 + 100 + 900 + 500 = $14,432, a saving of ≈ 24,288 (−63%). Largest single saving = autoscaling (7,560); safest saving = scheduling the non-production environments (6,528); the compliance item = the logs. The vector database and monitoring stay unchanged."
+    ],
+    "traps": [
+      "“Move to a cheaper region outside the Kingdom to save 30%” — it breaches the residency required for personal or classified data; a trap however large the saving.",
+      "“Switch off audit logs or tracing” — a small saving at the price of losing observability and compliance; what is cut is the unlimited retention and the personal data in logs, not the required logs.",
+      "“Buy reserved capacity for the current fleet” — it lowers the price but locks in the waste; remove the idle capacity first, then reserve the baseline load.",
+      "“Negotiate a discount or move to a cheaper model” when token cost rises while traffic stays flat — the first step is to remove prompt bloat.",
+      "Confusing “largest saving” with “a saving with no risk to users” — they may be two different answers; read what the question asks for.",
+      "Comparing self-hosting on compute cost alone — total cost includes the team, operations and compliance, and these are what often flip the ranking."
+    ],
+    "deliverable": "An action table showing for each item the new cost, the saving and the risk, with an explicit answer to “largest saving”, “safest saving” and “the compliance item”, and a reasoned rejection of the proposals that touch what must not be cut."
+  },
+  "review": [
+    {
+      "q": "The proof of concept succeeded with excellent figures, but the project stalled for six months. What is the most likely explanation?",
+      "a": "A lack of production readiness (data pipelines, MLOps, ownership and integration), or the success metric was never tied to a business indicator. Progressing from a POC needs a pilot that proves value to users, then production criteria such as service level objectives, runbooks and owners."
+    },
+    {
+      "q": "A business case estimates 10,400 review hours saved a year, worth SAR 1.25 million. When do these hours not turn into money?",
+      "a": "When the reviewers’ time is not redeployed and no new hire is avoided; saved hours become money only when they are redeployed. The case also holds only if the error on the fast track is monitored and customers are allowed to contest."
+    },
+    {
+      "q": "Which of the two formulations is a valid acceptance criterion: “the assistant answers HR questions”, or “≥ 90% correct and supported on 300 Arabic questions, 100% of out-of-scope questions refused or escalated, and p95 time to first token ≤ 1.5 seconds”?",
+      "a": "The second, because it is testable on a defined, representative evaluation set with explicit thresholds. The first is a functional description that cannot be accepted or rejected."
+    },
+    {
+      "q": "A government body wants an operational capability (speech-to-text) for which good commercial solutions exist, but the only vendor processes the data outside the Kingdom and the data is personal. What is the decision?",
+      "a": "The guide’s logic leads to buying because the value is operational and solutions are available, but data sensitivity and hosting location override it: a purchase that sends personal data abroad is not an option, so look for a provider inside the Kingdom or an internally hosted solution."
+    },
+    {
+      "q": "The requirements are not yet clear and the body wants to contract for an AI system. Which procurement method suits, according to the 2026 procurement study?",
+      "a": "Two-stage competition, with prototypes or challenge-based tenders and an allocation of responsibility for errors in the contract. Open competition suits when the specifications are clear, and transferring the risk to the vendor does not remove the body’s own responsibility."
+    },
+    {
+      "q": "Your manager asks for a launch next week despite a large fairness gap for one group. What is the expected behaviour?",
+      "a": "Documented professional escalation: measure the gap, propose mitigations and a realistic plan, involve compliance and the AI Officer, and do not launch a known violation. Neither silent compliance nor unilateral refusal without escalation."
+    },
+    {
+      "q": "How do you present to leadership a new model that is slightly better than the current one?",
+      "a": "With a range, a confidence level and a financial impact, such as “better by 1–3 points at 95% confidence, and the gain is SAR 0.4–1.2 million a year”, together with the recommendation, its reasons and the conditions that would change it. Leadership decides the trade-off and the engineer measures it."
+    },
+    {
+      "q": "A language-model bill rises every month while requests and output tokens are flat and input tokens have multiplied by 3.4. What is the diagnosis and the first step?",
+      "a": "The prompt is growing: an unlimited conversation history, or a larger k in RAG, or a bloated system prompt, or tool outputs pasted in full. The first step is to limit and summarise the history, shrink k with a reranker, and cache the prefix — not to negotiate a discount or change the model."
+    },
+    {
+      "q": "A managed API at $0.003 per request against self-hosting with a minimum of two GPUs ($3,600 each) + $2,000 of operations a month. Where is the break-even point? When does the decision change regardless of it?",
+      "a": "The minimum self-hosting cost is $9,200, so break-even ≈ 9,200 ÷ 0.003 ≈ 3.1 million requests/month. The decision changes if the data must not leave the Kingdom and the API is abroad, in which case self-hosting or an in-country provider is required even at one million requests."
+    },
+    {
+      "q": "In a three-year total-cost comparison, self-hosting has the lowest compute (420k) but a total of 1,770k. Why? What is the right choice if the data is personal?",
+      "a": "Because the engineering and operations team (900k) and the setup raise the total, which is a common blind spot. With personal data the external API fails the residency condition, which leaves the two compliant options, and the cheaper of them is the managed platform inside the Kingdom (1,220k)."
+    }
+  ],
+  "summary": "You have mastered this unit when, faced with any business scenario, you can start with the right question (which decision changes, what the baseline is, and what the success and guardrail metrics agreed before building are); build a business case with ranges, calculate the payback period and name the conditions under which it holds; write a testable acceptance criterion; choose between build, buy and partner using the factors in SDAIA’s guide after applying the residency constraint; and escalate professionally and with documentation instead of staying silent or refusing unilaterally. On the cost side: you can open any invoice and identify the largest items, compare utilisation with cost, check the class and the hardware, spot what is both waste and a violation, reject what must not be cut, then calculate the saving figure by figure and answer precisely what is asked: the largest saving, the safest saving, or the lowest compliant total cost.",
+  "coverage": [
+    "8.1",
+    "8.2",
+    "8.3",
+    "8.4",
+    "8.5",
+    "8.6",
+    "8.7",
+    "8.8",
+    "8.9",
+    "8.10",
+    "8.11",
+    "8.12",
+    "8.13",
+    "8.14",
+    "8.15",
+    "8.16",
+    "8.17",
+    "9.1",
+    "9.2",
+    "9.3",
+    "9.4",
+    "9.5",
+    "9.6",
+    "9.7",
+    "9.8",
+    "9.9",
+    "9.10"
+  ]
+}

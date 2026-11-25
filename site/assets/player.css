@@ -104,3 +104,14 @@
 @media (prefers-reduced-motion:reduce){
   .stage *,.stage *::before,.stage *::after{animation-duration:.001s!important;animation-delay:0s!important}
 }
+
+/* ================= English edition (LTR) ================= */
+html[lang="en"] .player{--pf-display:"Source Serif 4",Georgia,serif;--pf-body:"IBM Plex Sans",system-ui,"Segoe UI",sans-serif}
+html[lang="en"] .tab small{margin-right:0;margin-left:6px}
+html[lang="en"] .strike::after{right:auto;left:0}
+html[lang="en"] .steps::before{right:12%;left:1.25em;transform-origin:left}
+html[lang="en"] .w b{text-align:left}
+html[lang="en"] .w i u{transform-origin:left}
+html[lang="en"] .brandbug{left:auto;right:calc(var(--pad)*.6)}
+html[lang="en"] .scene.active .a.slide{animation-name:slide-ltr}
+@keyframes slide-ltr{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}

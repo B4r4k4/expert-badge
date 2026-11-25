@@ -1,0 +1,996 @@
+{
+  "num": 2,
+  "title": "Data & Machine-Learning Foundations",
+  "english": "Data & Machine-Learning Foundations",
+  "subtitle": "From correct splitting and leakage detection to the right metric, data quality and drift",
+  "domain": "Domain 1 · 17.3%",
+  "deliverable": "Diagnose the data problem before touching the model: a sound split, a metric that matches the cost of error, and trustworthy data that can be monitored.",
+  "intro": "This domain carries about 26 of the 150 questions, and its scenarios all share the same shape: “The model scored 98% in evaluation, then failed in production — why?”, “Which metric should the team report?”, “The data is imbalanced, leaks, or drifts — what is the first step?”. The rule the exam rewards never changes: diagnose the data problem before you touch the model. This unit builds the foundation the rest of the domain stands on: how to split data without leaking the future into training, how to read overfitting and underfitting, how to choose the metric by the cost of error rather than by habit, how to deal with imbalance, missing values and label noise, and how to tell real drift from a fault in the data pipeline. The next unit builds on this with the algorithm map, statistics, and metrics worked through with numbers.",
+  "outcomes": [
+    "Choose the correct splitting method (stratified random, temporal, grouped, cross-validation) according to the nature of the data, and justify the choice.",
+    "Detect data leakage from its signals in the scenario and identify the correct first remedy.",
+    "Diagnose overfitting, underfitting and drift from the patterns in training, validation and production numbers, and propose the right remedy for each case.",
+    "Match the metric to the cost of error: recall, precision, F1, PR-AUC, calibration, RMSE, MAE and Macro-F1.",
+    "Apply imbalanced-data techniques in the correct order, moving the threshold before considering retraining.",
+    "Assess data quality across its eight dimensions, and design data contracts and validation at the ingestion, training and serving points.",
+    "Design labels and features: measure inter-annotator agreement, use active learning, apply standard transformations and know their traps, and respect the serving constraint."
+  ],
+  "method": "Read every decision table as a condensed exam question: the first column is the “scenario cue”, and the remaining columns are the answer and its reason. After each section, cover the table and try to rebuild it from memory, then write yourself a short scenario in which the correct answer is counter-intuitive (for example: overall accuracy of 99.5%, yet the model is useless). Focus on the “first step”: the exam usually offers options that are all useful in theory, and the correct one is the cheapest that treats the root cause — removing the leaking feature before collecting more data, moving the threshold before retraining, and fixing the data pipeline before retraining on corrupted data.",
+  "chapters": [
+    {
+      "title": "Splitting, Leakage and Generalisation",
+      "sections": [
+        {
+          "title": "1.1 The Correct Split for Each Situation",
+          "blocks": [
+            {
+              "p": "Before any metric, the split itself must be honest: the test set represents what the model will see in production, and carries no information that will be unavailable at prediction time. The splitting method is not a personal preference; it is derived from the structure of the data."
+            },
+            {
+              "table": [
+                [
+                  "Situation",
+                  "Correct split",
+                  "Reason"
+                ],
+                [
+                  "Independent and identically distributed (i.i.d.) tabular data",
+                  "Random train/validation/test split (for example 70/15/15), stratified if the classes are imbalanced",
+                  "Preserves the class proportions in every part"
+                ],
+                [
+                  "Time series, fraud, demand, customer churn",
+                  "Temporal split: train on the past, validate on a later period, and test on the most recent",
+                  "A random split leaks the future, so scores are inflated"
+                ],
+                [
+                  "Multiple rows per customer/patient/device",
+                  "Group split: all rows of an entity fall in one part",
+                  "Otherwise the model memorises the entity instead of learning the pattern"
+                ],
+                [
+                  "Small dataset",
+                  "k-fold cross-validation (stratified / grouped / for time series)",
+                  "A stable estimate that uses all the data"
+                ],
+                [
+                  "Hyper-parameter tuning",
+                  "Tune on the validation set, and touch the test set once at the end",
+                  "Reusing the test set repeatedly = overfitting to the test set itself"
+                ]
+              ]
+            },
+            {
+              "quote": "The test set is touched once. Every tuning decision made while looking at it has made it part of the training."
+            }
+          ]
+        },
+        {
+          "title": "1.2 Data Leakage: Definition and Warning Signs",
+          "blocks": [
+            {
+              "p": "**Data leakage** is information that is available at training time but will not be available at prediction time. A leaking model does not learn the problem; it learns the “answer” hidden in a feature or in the way the data was processed, so it looks excellent in evaluation and collapses in production."
+            },
+            {
+              "h": "Warning signs in the scenario text"
+            },
+            {
+              "ul": [
+                "“Suspiciously high accuracy” or “excellent in evaluation, poor in production”.",
+                "A feature computed after the outcome occurs: for example **chargeback_flag** for predicting fraud, or **discharge_date** for predicting length of hospital stay.",
+                "Normalisation, imputation or feature selection carried out on the whole dataset before the split.",
+                "Duplicate records across training and test.",
+                "Target encoding without out-of-fold computation."
+              ]
+            },
+            {
+              "p": "Note that half of these causes have nothing to do with the features themselves, but with the order of the steps: any processing that “learns” something from the data (a mean, a standard deviation, a list of selected features, the target mean per category) must learn it from the training fold alone."
+            }
+          ]
+        },
+        {
+          "title": "1.3 The First Remedy for Leakage",
+          "blocks": [
+            {
+              "ol": [
+                "Remove the leaking feature (any feature that cannot be computed at prediction time).",
+                "Refit the preprocessing inside the training fold, preferably using a pipeline that guarantees this automatically.",
+                "Re-run the evaluation on a correctly split test set (temporally or by group where needed)."
+              ]
+            },
+            {
+              "quote": "The remedy for leakage is not “collect more data” and not “use a bigger model”. The extra data carries the same leakage, and the bigger model exploits it more."
+            },
+            {
+              "p": "In the exam, the tempting wrong options here are those that treat the symptom (poor performance in production) with a generic tool: more data, a different algorithm, or more regularisation. The correct answer always starts by fixing the split or the feature."
+            }
+          ]
+        },
+        {
+          "title": "1.4 Bias and Variance: Overfitting and Underfitting",
+          "blocks": [
+            {
+              "p": "You read the state of the model by comparing three numbers: training performance, validation performance and production performance. Each pattern has a different diagnosis and remedy."
+            },
+            {
+              "table": [
+                [
+                  "Signal",
+                  "Diagnosis",
+                  "Remedy"
+                ],
+                [
+                  "High training, much lower validation",
+                  "Overfitting — high variance",
+                  "More data, augmentation, regularisation (L1/L2, dropout), a simpler model, early stopping"
+                ],
+                [
+                  "Both low",
+                  "Underfitting — high bias",
+                  "Richer features, a bigger model, longer training, less regularisation"
+                ],
+                [
+                  "Both high in evaluation, poor in production",
+                  "Leakage or distribution shift",
+                  "Fix the split/features; compare training distributions with live data"
+                ],
+                [
+                  "Validation loss rises while training loss falls",
+                  "Onset of overfitting",
+                  "Early stopping at the lowest validation loss"
+                ]
+              ]
+            },
+            {
+              "p": "The third pattern is the most frequent in the exam, because it looks like overfitting but is not: overfitting shows up as a gap between training and validation, whereas here the validation itself is high, which means the validation set “knows” something production does not."
+            },
+            {
+              "quote": "A gap between training and validation = overfitting. No gap but a collapse in production = leakage or shift."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Metrics, Threshold and Imbalance",
+      "sections": [
+        {
+          "title": "2.1 Choose the Metric by the Cost of Error",
+          "blocks": [
+            {
+              "p": "There is no metric that is “best” in absolute terms. The right question is: which error is more expensive — the false alarm (false positive) or the miss (false negative)? Do we need a decision at a threshold, a ranking, or probabilities that are used in pricing?"
+            },
+            {
+              "formula": "Precision = TP / (TP + FP)"
+            },
+            {
+              "formula": "Recall = TP / (TP + FN)"
+            },
+            {
+              "formula": "F1 = 2PR / (P + R)        Fβ : β > 1 favours recall (e.g., F2)"
+            },
+            {
+              "table": [
+                [
+                  "Scenario cue",
+                  "Metric",
+                  "Note"
+                ],
+                [
+                  "“Must not miss”: fraud, cancer, intrusion",
+                  "Recall (sensitivity), F2",
+                  "Accept more false alarms"
+                ],
+                [
+                  "“False alarms are costly/annoying”: spam, legal action, blocking accounts",
+                  "Precision",
+                  "Raise the threshold"
+                ],
+                [
+                  "Both matter, with imbalance",
+                  "F1 or PR-AUC",
+                  "PR-AUC beats ROC-AUC under heavy imbalance"
+                ],
+                [
+                  "Ranking quality independent of the threshold",
+                  "ROC-AUC (balanced data) / PR-AUC (imbalanced)",
+                  "AUC says nothing about the chosen threshold"
+                ],
+                [
+                  "Errors have a known monetary cost",
+                  "Expected cost",
+                  "It is the real business metric"
+                ],
+                [
+                  "Probabilities are used for decisions or pricing",
+                  "Calibration: Brier score, reliability curve",
+                  "Fixed with Platt scaling or isotonic calibration"
+                ],
+                [
+                  "Regression, and outliers matter",
+                  "RMSE",
+                  "Penalises large errors"
+                ],
+                [
+                  "Regression, robustness and interpretability required",
+                  "MAE; and MAPE for percentages (beware of zeros)",
+                  "MAE is in the target's own units"
+                ],
+                [
+                  "Multi-class and imbalanced",
+                  "Macro-F1 (each class weighted equally) versus Weighted-F1",
+                  "Macro exposes weak minority classes"
+                ],
+                [
+                  "Search / retrieval / recommendations",
+                  "Recall@k, Precision@k, MRR, nDCG",
+                  "Also used for RAG retrievers"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.2 The Accuracy Paradox and the Two Meanings of “Precision”",
+          "blocks": [
+            {
+              "p": "**The accuracy paradox:** if the fraud rate is 0.5%, a model that always says “no fraud” achieves 99.5% accuracy and detects nothing. Therefore any option that cites accuracy on imbalanced data as evidence of success is a distractor."
+            },
+            {
+              "formula": "Accuracy(always 'not fraud') = 99.5% , Recall = 0%"
+            },
+            {
+              "p": "**A note on wording:** the word “precision” in the exam usually means the classification metric TP/(TP+FP), not numerical precision (FP16/INT8), unless the scenario is about quantisation or GPU memory. Read the context before answering."
+            }
+          ]
+        },
+        {
+          "title": "2.3 Threshold versus Model",
+          "blocks": [
+            {
+              "p": "A trained classifier outputs a score, and the threshold is what turns it into a decision. Many scenarios of the type “too many false alarms” or “we miss too many cases” are solved by moving the threshold along the precision–recall curve: this is the cheapest solution and needs no retraining."
+            },
+            {
+              "ul": [
+                "Too many false alarms → raise the threshold (precision rises and recall falls).",
+                "Too many misses → lower the threshold (recall rises and precision falls).",
+                "Retrain only if no threshold meets both requirements together, meaning the PR curve itself is low."
+              ]
+            },
+            {
+              "quote": "Move the threshold first; retrain only when the curve itself cannot satisfy both requirements."
+            }
+          ]
+        },
+        {
+          "title": "2.4 Imbalanced-Data Techniques",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Technique",
+                  "When",
+                  "Caution"
+                ],
+                [
+                  "Class weights / cost-sensitive loss",
+                  "First choice, cheap",
+                  "Calibrate the probabilities afterwards"
+                ],
+                [
+                  "Threshold tuning",
+                  "Always, after training",
+                  "Tune it on validation, not on test"
+                ],
+                [
+                  "Undersampling the majority",
+                  "Huge data and fast training",
+                  "Loses information"
+                ],
+                [
+                  "Oversampling the minority / SMOTE",
+                  "Small minority class",
+                  "On the training fold only — never before the split (leakage)"
+                ],
+                [
+                  "Framing as anomaly detection",
+                  "Very rare or absent labels",
+                  "Isolation Forest, autoencoders"
+                ],
+                [
+                  "Additional minority labels / active learning",
+                  "Labelling is the bottleneck",
+                  "Often the highest-value solution"
+                ]
+              ]
+            },
+            {
+              "p": "Three traps recur: applying SMOTE before the split (so synthetic copies of test examples appear in training), forgetting that class weights distort the probabilities, which then need calibration and re-tuning of the threshold, and tuning the threshold on the test set."
+            }
+          ]
+        },
+        {
+          "title": "2.5 Bank Fraud: The Full Exam Picture",
+          "blocks": [
+            {
+              "p": "Bank fraud is the scenario that brings together the concepts of this domain in a single question. Expect questions that combine two or three of the following six characteristics:"
+            },
+            {
+              "ol": [
+                "**Highly imbalanced** — metrics: recall, PR-AUC, expected cost; not accuracy.",
+                "**Time-dependent** — use a temporal split.",
+                "**Adversarial** — fraudsters adapt, so concept drift occurs; monitor and retrain periodically or when drift is detected.",
+                "**Latency-constrained** — the score must arrive before the transaction is approved (tens of milliseconds), so a lightweight model such as gradient-boosted trees is served in real time, with live aggregates such as “number of transactions in the last 10 minutes” drawn from the feature store.",
+                "**Delayed labels** — chargebacks arrive weeks later; monitor proxy metrics in the meantime.",
+                "**Regulated and explainable** — reason codes for declined transactions, and fairness across customer segments."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.6 Evaluation Beyond a Single Number",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Practice",
+                  "Why"
+                ],
+                [
+                  "Evaluation by slice (region, gender, age, channel, language/dialect)",
+                  "Averages hide failures; this is the basis of fairness testing"
+                ],
+                [
+                  "Confidence intervals / statistical tests",
+                  "A 0.5% improvement on 1,000 samples may be noise"
+                ],
+                [
+                  "From offline evaluation to the live (online) experiment",
+                  "An offline metric ≠ a business outcome"
+                ],
+                [
+                  "Golden set + regression tests",
+                  "Every new release must not regress on the critical cases"
+                ],
+                [
+                  "Human evaluation of generative outputs",
+                  "Automatic metrics (BLEU/ROUGE) correlate only weakly with quality"
+                ],
+                [
+                  "Error analysis",
+                  "Read 50–100 errors before deciding what to change"
+                ]
+              ]
+            },
+            {
+              "p": "The move from offline to live evaluation goes through deployment strategies (shadow, canary, A/B) that are covered in Unit 07. The point here is that a single number on a single test set is not enough for a launch decision."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Data Quality, Lifecycle and Drift",
+      "sections": [
+        {
+          "title": "3.1 Quality Problems and Their Preferred Treatments",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Problem",
+                  "Preferred treatment"
+                ],
+                [
+                  "Missing values",
+                  "Understand the cause (MCAR/MAR/MNAR); impute inside the pipeline; add a “was missing” indicator; deleting rows can introduce bias"
+                ],
+                [
+                  "Outliers",
+                  "Check first: an error or a genuinely rare event? (In fraud, the outlier is the signal); clip/transform; robust models"
+                ],
+                [
+                  "Skewed numerical features",
+                  "Log transform or Box-Cox; tree models are unaffected by scale"
+                ],
+                [
+                  "High-cardinality categories",
+                  "Target encoding (out-of-fold), hashing, embeddings"
+                ],
+                [
+                  "Label noise",
+                  "Audit a sample, measure inter-annotator agreement, write clear labelling guidelines, relabel the ambiguous slice"
+                ],
+                [
+                  "Duplicates",
+                  "Remove duplicates before the split to prevent training/test contamination"
+                ],
+                [
+                  "Data from multiple sources",
+                  "Validate the schema, data contracts, lineage tracking; validate at ingestion (Great Expectations-style checks)"
+                ],
+                [
+                  "Personal data in features",
+                  "Minimise; use pseudonymisation; drop direct identifiers that are not needed (Personal Data Protection Law, PDPL)"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.2 The Feature Store and Training–Serving Skew",
+          "blocks": [
+            {
+              "p": "The **feature store** appears in training–serving skew scenarios: “The same feature is computed one way in the batch pipeline and another way in the real-time interface”. The problem here lies neither in the world nor in the model, but in the existence of two definitions of the feature."
+            },
+            {
+              "ul": [
+                "**One definition** of the feature, used by training and serving alike.",
+                "An **offline store** for training, with point-in-time correct joins that prevent leakage.",
+                "An **online store** for low-latency serving."
+              ]
+            },
+            {
+              "quote": "Training–serving skew is fixed by fixing the pipeline (the feature store); retraining does not help."
+            }
+          ]
+        },
+        {
+          "title": "3.3 The Data Lifecycle",
+          "blocks": [
+            {
+              "p": "Most machine-learning failures in production are data failures. A model is a compressed copy of the data it was trained on: if that data is late, incomplete, mislabelled or unrepresentative, no architecture will fix it. The expert engineer therefore treats data as a product with an owner, contracts, quality metrics and a lifecycle:"
+            },
+            {
+              "formula": "collect → ingest → validate → store → prepare → label → version → train/serve → monitor → retain or destroy"
+            },
+            {
+              "p": "As a sequence: collection → ingestion → validation → storage → preparation → labelling → versioning → use in training and serving → monitoring → retention or destruction. Each stage has its own failure modes and controls, and the exam often describes a symptom at one stage whose cause lies at an earlier stage (for example: performance drops at serving because a unit changed at the source during ingestion)."
+            }
+          ]
+        },
+        {
+          "title": "3.4 The Eight Data-Quality Dimensions",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Dimension",
+                  "Definition",
+                  "Typical check",
+                  "Impact on the model when violated"
+                ],
+                [
+                  "Accuracy",
+                  "Values match reality",
+                  "Audit samples against a trusted source",
+                  "The model learns wrong relationships"
+                ],
+                [
+                  "Completeness",
+                  "Required fields and records are present",
+                  "Missing-value rates, record counts versus expected",
+                  "Biased samples; features silently imputed"
+                ],
+                [
+                  "Consistency",
+                  "The same fact is identical across systems",
+                  "Cross-system reconciliation",
+                  "Conflicting labels; training–serving skew"
+                ],
+                [
+                  "Timeliness",
+                  "Available at the right time and recent enough",
+                  "Freshness lag, arrival-time agreements",
+                  "Stale features; real-time models running on old data"
+                ],
+                [
+                  "Validity",
+                  "Conforms to type, format, range and rules",
+                  "Schema and range checks",
+                  "Parsing errors; outliers that are in fact faults"
+                ],
+                [
+                  "Uniqueness",
+                  "No unintended duplication",
+                  "Deduplication by key",
+                  "Over-weighted records; training/test contamination"
+                ],
+                [
+                  "Representativeness",
+                  "Covers the population the model will serve",
+                  "Compare slice distributions with the target population",
+                  "Poor performance and unfairness to under-represented groups"
+                ],
+                [
+                  "Lineage / provenance",
+                  "Source and transformations are known",
+                  "Lineage metadata, data catalogue",
+                  "Cannot audit, reproduce or delete on request"
+                ]
+              ]
+            },
+            {
+              "p": "When the scenario says “the model is weak for a particular region or group”, think representativeness; when it says “a request to delete a person's data” or “an audit”, think lineage."
+            }
+          ]
+        },
+        {
+          "title": "3.5 Data Contracts and Validation at Three Points",
+          "blocks": [
+            {
+              "p": "When a source team changes a column's meaning, unit or type, every downstream model silently breaks. A **data contract** is an explicit, versioned agreement between producer and consumer that specifies: the schema, the semantics, the units, the allowed ranges, the freshness agreement, the owner, and the change process. The contract is enforced by automated validation at ingestion; violations stop the pipeline or divert the data to quarantine, instead of letting corrupted data reach training or serving."
+            },
+            {
+              "quote": "“The model degraded overnight after another team's release” → the permanent fix is a data contract plus validation, not retraining."
+            },
+            {
+              "h": "Validation in practice: three points"
+            },
+            {
+              "table": [
+                [
+                  "Point",
+                  "What is checked"
+                ],
+                [
+                  "At ingestion",
+                  "Schema, types, missing values, ranges, referential integrity"
+                ],
+                [
+                  "Before training",
+                  "Distribution comparison against the last accepted training set, label distribution, duplicates, leakage checks"
+                ],
+                [
+                  "At serving",
+                  "The same checks on live requests, with alerts"
+                ]
+              ]
+            },
+            {
+              "p": "Tools from the Great Expectations, TFX Data Validation and Deequ family express these checks as declarative expectations stored in version control next to the pipeline."
+            }
+          ]
+        },
+        {
+          "title": "3.6 Drift: What Changed?",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Type",
+                  "What changes",
+                  "Example",
+                  "Detection",
+                  "Response"
+                ],
+                [
+                  "Data / covariate drift",
+                  "P(X) — the input distribution",
+                  "A new customer segment, a new device type",
+                  "PSI, KS test, Jensen–Shannon on the features",
+                  "Verify; retrain if performance has dropped"
+                ],
+                [
+                  "Concept drift",
+                  "P(Y|X) — the relationship itself",
+                  "A new fraud technique; purchasing behaviour after COVID",
+                  "Performance drop on recent labels",
+                  "Retrain on recent data; train more frequently"
+                ],
+                [
+                  "Label / prior drift",
+                  "P(Y) — the base rate",
+                  "The fraud rate doubles during holidays",
+                  "Monitor the prediction rate and the label rate",
+                  "Recalibrate the threshold/priors"
+                ],
+                [
+                  "Training–serving skew",
+                  "A pipeline mismatch, not the world",
+                  "Different preprocessing between online and offline",
+                  "Compare the features logged at serving with the training features",
+                  "Fix the pipeline (feature store) — retraining does not help"
+                ],
+                [
+                  "Upstream break",
+                  "Schema/units/null values",
+                  "Currency changed from riyals to halalas; a field became empty",
+                  "Validation checks, null-rate alerts",
+                  "Fix the source; quarantine the corrupted data"
+                ]
+              ]
+            },
+            {
+              "h": "The exam rule"
+            },
+            {
+              "ul": [
+                "Before retraining, make sure the problem is real drift and not a fault in the data pipeline.",
+                "A sudden step-shaped change on a specific date → usually a source change or a serving skew.",
+                "Gradual degradation → drift.",
+                "With delayed labels, monitor input drift and the prediction distribution as an early warning."
+              ]
+            },
+            {
+              "p": "Note also that input drift alone does not necessarily mean retraining: the response written in the table is “verify; retrain if performance has dropped”."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Labels, Features and Choosing the Model Family",
+      "sections": [
+        {
+          "title": "4.1 The Four Label Sources",
+          "blocks": [
+            {
+              "p": "Supervised learning cannot exceed the quality of its labels. Labels come from four main sources, each with a different cost and noise level:"
+            },
+            {
+              "table": [
+                [
+                  "Source",
+                  "Description",
+                  "Strength",
+                  "Weakness"
+                ],
+                [
+                  "Human labelling",
+                  "Domain experts or trained annotators following written guidelines",
+                  "Highest quality if the guidelines are precise",
+                  "Expensive and slow"
+                ],
+                [
+                  "Implicit/behavioural labels",
+                  "Clicks, purchases, chargebacks, hospital readmission",
+                  "Cheap and plentiful",
+                  "Biased by the existing system (only what was shown gets clicked; repayment is known only for approved loans) and often delayed"
+                ],
+                [
+                  "Weak supervision",
+                  "Heuristic rules, keyword patterns and distant supervision from knowledge bases, combined through a label model",
+                  "Scales quickly",
+                  "Noisier"
+                ],
+                [
+                  "Model-assisted labelling",
+                  "A model (including large language models) proposes labels that humans confirm or correct",
+                  "A large speed-up",
+                  "Humans tend to accept the suggestion (automation bias), so auditing is required"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.2 Measuring Label Quality",
+          "blocks": [
+            {
+              "p": "Have several annotators label the same sample, and compute **inter-annotator agreement**: Cohen's kappa for two annotators, and Fleiss' kappa or Krippendorff's alpha for more than two. Kappa corrects for the agreement that occurs by chance."
+            },
+            {
+              "table": [
+                [
+                  "Kappa value",
+                  "Interpretation"
+                ],
+                [
+                  "Above about 0.8",
+                  "Strong agreement"
+                ],
+                [
+                  "0.6 – 0.8",
+                  "Substantial agreement"
+                ],
+                [
+                  "Below 0.4",
+                  "An indication that the guidelines or the task definition need work"
+                ]
+              ]
+            },
+            {
+              "quote": "Weak agreement is a specification problem before it is a modelling problem: if experts disagree, the model will not learn a consistent boundary."
+            }
+          ]
+        },
+        {
+          "title": "4.3 Active Learning, Synthetic Data and Arabic Labelling Issues",
+          "blocks": [
+            {
+              "p": "**Active learning:** instead of labelling random samples, label the examples the current model is least confident about (uncertainty sampling), or the most diverse (coverage), or those on which the members of a committee of models disagree. This often reaches the same accuracy with a fraction of the labels — and it is the correct answer when “the labelling budget is the bottleneck”."
+            },
+            {
+              "p": "**Synthetic data:** generated records (simulation, generative models, text written by large language models) that help with rare classes, privacy-preserving sharing and testing. Its risks: it reproduces the biases of the generator, it may leak the generator's training data, and it makes evaluation optimistic if it enters the test set."
+            },
+            {
+              "quote": "Synthetic data may be added to training; evaluation, however, is done on held-out real data."
+            },
+            {
+              "p": "**Labelling issues specific to Arabic:** dialect variation (Gulf, Levantine, Egyptian, Maghrebi), code-switching with English, Arabizi (Arabic written in Latin letters), and diacritisation — all of them change what the annotator sees. The guidelines must state how to handle each, and the annotator pool must cover the dialects of the target users."
+            }
+          ]
+        },
+        {
+          "title": "4.4 Feature Transformations and Their Traps",
+          "blocks": [
+            {
+              "p": "Features are the model's window on the world. In tabular problems, good features are often more important than choosing between strong algorithms. The following table lists the standard transformations and the trap each one hides — and the trap is what gets asked about."
+            },
+            {
+              "table": [
+                [
+                  "Data type",
+                  "Transformation",
+                  "Use",
+                  "Trap"
+                ],
+                [
+                  "Numerical",
+                  "Standardisation (z-score), min–max scaling",
+                  "Linear models, SVM, kNN, neural networks (scale-sensitive)",
+                  "Fit the scaler on the training data only"
+                ],
+                [
+                  "Skewed numerical",
+                  "Logarithmic / Box-Cox / Yeo-Johnson",
+                  "Income, amounts, counts",
+                  "The logarithm of zero or of negative values"
+                ],
+                [
+                  "Numerical → bins",
+                  "Bins by quantiles or by domain",
+                  "Non-linear effects for linear models; robustness",
+                  "Loses information; bin boundaries from the training data only"
+                ],
+                [
+                  "Low-cardinality categorical",
+                  "One-hot encoding",
+                  "Linear models and trees",
+                  "Categories unseen at serving → an “other” bucket"
+                ],
+                [
+                  "High-cardinality categorical",
+                  "Target encoding (out-of-fold), hashing, learned embeddings",
+                  "Merchant ID, product ID, city",
+                  "In-fold target encoding leaks the label"
+                ],
+                [
+                  "Ordinal",
+                  "Integer encoding that preserves the order",
+                  "Education level, severity grade",
+                  "Do not use one-hot when order matters for linear models"
+                ],
+                [
+                  "Date/time",
+                  "Hour, day of week, month, holiday indicators (Ramadan, Eid, payday), time since an event, cyclical sin/cos",
+                  "Demand, fraud, traffic",
+                  "Time zones; Hijri versus Gregorian calendar"
+                ],
+                [
+                  "Aggregates",
+                  "Counts, sums, averages over windows (last 10 minutes, 7 days, 90 days)",
+                  "Fraud velocity, customer activity",
+                  "Windows must end before prediction time (point-in-time correctness)"
+                ],
+                [
+                  "Text",
+                  "TF-IDF, n-grams, sentence embeddings",
+                  "Classification, search",
+                  "Arabic normalisation and tokenisation must be identical in training and serving"
+                ],
+                [
+                  "Images",
+                  "Pretrained CNN/ViT embeddings",
+                  "Visual search, defect detection",
+                  "Resolution and the colour-processing pipeline must match"
+                ],
+                [
+                  "Geographic",
+                  "Distance to points, geohash, region",
+                  "Delivery, risk",
+                  "Location can be a proxy for protected attributes"
+                ],
+                [
+                  "Interactions",
+                  "Ratios, products, differences",
+                  "Debt-to-income, price per unit",
+                  "Division by zero; explosion in the number of features"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.5 Missing Values, Feature Selection and the Serving Constraint",
+          "blocks": [
+            {
+              "h": "Types of missingness"
+            },
+            {
+              "table": [
+                [
+                  "Type",
+                  "Meaning",
+                  "Example",
+                  "Treatment"
+                ],
+                [
+                  "MCAR — missing completely at random",
+                  "The missingness is unrelated to any variable",
+                  "A sensor fault",
+                  "Simple imputation inside the training fold"
+                ],
+                [
+                  "MAR — missing at random",
+                  "The missingness is explained by other observed variables",
+                  "—",
+                  "Imputation that depends on the other variables"
+                ],
+                [
+                  "MNAR — missing not at random",
+                  "The missingness depends on the value itself",
+                  "High earners skip the income question",
+                  "The missingness itself is information: add a “was missing” indicator"
+                ]
+              ]
+            },
+            {
+              "p": "Simple imputers (median, most frequent) must be fitted inside the training fold. Model-based imputation (kNN, iterative) is more accurate but heavier. Boosted trees handle missing values natively."
+            },
+            {
+              "h": "Feature selection"
+            },
+            {
+              "p": "Removes noisy or redundant inputs to reduce overfitting, latency and maintenance burden:"
+            },
+            {
+              "ul": [
+                "**Filter methods:** correlation, mutual information, the chi-squared test.",
+                "**Wrapper methods:** recursive feature elimination (RFE).",
+                "**Embedded methods:** L1 regularisation, tree importance.",
+                "**Permutation importance** on the validation set is the most reliable general-purpose measure.",
+                "Highly correlated features share importance among themselves — removing one of them may change little."
+              ]
+            },
+            {
+              "h": "The serving constraint"
+            },
+            {
+              "p": "A feature is valid only if it can be computed **at prediction time**, **within the latency budget**, and from data the system is **permitted to use**. A feature that needs a nightly batch job cannot drive a real-time decision within 50 milliseconds unless it is precomputed and stored in an online feature store. Features derived from personal data inherit the obligations of the Personal Data Protection Law (PDPL)."
+            }
+          ]
+        },
+        {
+          "title": "4.6 Choosing the Model Family, Baseline First",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Data and need",
+                  "Strong default choice"
+                ],
+                [
+                  "Structured tabular data, fewer than millions of rows",
+                  "Boosted trees (XGBoost/LightGBM/CatBoost) — they usually outperform deep networks on tabular data"
+                ],
+                [
+                  "Must be explained to regulators",
+                  "Logistic regression / small trees / boosted trees + SHAP reason codes"
+                ],
+                [
+                  "Images",
+                  "CNN or ViT, starting from a pretrained backbone (transfer learning)"
+                ],
+                [
+                  "Text classification with little labelled data",
+                  "Fine-tune a small encoder (the BERT family and its Arabic variants) or few-shot prompting of a large language model; embeddings + logistic regression is a cheap, strong baseline"
+                ],
+                [
+                  "Sequences, time series",
+                  "Boosted trees with lag features as the baseline; then specialised models"
+                ],
+                [
+                  "Very few labels",
+                  "Transfer learning, active learning, weak supervision, LLM-assisted labelling with human review"
+                ],
+                [
+                  "Strict latency on an ordinary CPU",
+                  "Linear models / boosted trees / small distilled models"
+                ]
+              ]
+            },
+            {
+              "quote": "Baseline first. Complexity must justify its cost."
+            },
+            {
+              "p": "In a scenario where the team jumps straight to a huge deep model, the best answer is often: “Build a simple baseline and sound evaluation first.” The complex model is acceptable only when it beats the baseline by enough to be worth its cost in latency, operations and interpretability."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Apply the “diagnose the data before the model” approach to a bank fraud model that achieved excellent results in evaluation and then disappointed in production.",
+    "scenario": [
+      "A team at a Saudi bank built a card-fraud detection model on 12 months of data in which the fraud rate is 0.5%. The team split the data randomly 80/20, applied SMOTE and then normalisation to the whole dataset before the split, and used among the features the field “transaction was disputed”, which comes from the disputes system. The team reported overall accuracy of 99.6% and an AUC of 0.99.",
+      "After launch, the analytics team complained of many false alarms and, at the same time, large fraud cases were missed. Three weeks later, the model's scores suddenly dropped in a single day after the payments team changed the representation of the amount from riyals to halalas. Management asks for an ordered remediation plan with a reason for each step."
+    ],
+    "steps": [
+      "Reject overall accuracy as evidence: with 0.5% fraud, a “never fraud” model achieves 99.5%. The right metrics: recall, PR-AUC and expected cost.",
+      "Detect the leakage: the dispute field becomes known weeks after the transaction, so it is unavailable at prediction time — remove it. SMOTE and normalisation before the split are additional leakage — move them inside a pipeline that is fitted on the training fold only.",
+      "Redo the split temporally: train on the older months, validate on the following ones, and test on the most recent; because fraud is time-dependent and adversarial.",
+      "Handle the imbalance in the cheap order: class weights first, then calibrate the probabilities, then tune the threshold on the validation set according to analyst capacity and the cost of a miss.",
+      "Handle the complaint about false alarms and misses by moving the threshold first; do not retrain unless no threshold satisfies both requirements together.",
+      "Diagnose the sudden drop: a step-shaped change on a specific date after another team's release = a source fault, not drift. Fix the source, quarantine the corrupted data, and add a data contract (unit: riyal) with automated validation at ingestion.",
+      "Add post-deployment monitoring: because labels are delayed, monitor input drift and the prediction distribution as an early warning, evaluate by slice, and keep reason codes for declined transactions."
+    ],
+    "traps": [
+      "“Collect more data” or “use a deeper model” as a remedy for leakage — new data carries the same leakage.",
+      "Citing overall accuracy or ROC-AUC on highly imbalanced data instead of recall and PR-AUC.",
+      "Applying SMOTE, normalisation or feature selection before the split.",
+      "Retraining immediately on a sudden drop caused by a source change or by training–serving skew.",
+      "Tuning the threshold on the test set, or using the test set repeatedly during tuning.",
+      "A random split of temporal data, or of data with multiple rows per customer."
+    ],
+    "deliverable": "An ordered seven-step remediation plan that starts with the split and leakage, chooses the metric and threshold according to cost and capacity, and distinguishes a source fault from real drift."
+  },
+  "review": [
+    {
+      "q": "A model achieved 97% on validation and 95% on test, then 70% in production. Is this overfitting?",
+      "a": "No. Overfitting shows up as a gap between training and validation. High evaluation scores across the board with a production collapse point to leakage or distribution shift; the first step is to inspect the split and the features and to compare training distributions with live data."
+    },
+    {
+      "q": "Why is normalising the whole dataset before the split considered leakage?",
+      "a": "Because the mean and standard deviation are computed with the test data's participation, so information about it leaks into training. The fix is to fit the preprocessing inside the training fold through a pipeline."
+    },
+    {
+      "q": "Hospital data with several visits per patient. Which split?",
+      "a": "A group split by patient, so that all of a patient's visits fall in one part; otherwise the model memorises the patient instead of learning the pattern, and the scores are inflated."
+    },
+    {
+      "q": "The team complains of many false alarms. What is the cheapest fix?",
+      "a": "Raise the threshold on the precision–recall curve without retraining. Retraining is needed only if no threshold meets the precision and recall requirements together."
+    },
+    {
+      "q": "When is PR-AUC better than ROC-AUC?",
+      "a": "Under heavy imbalance; because ROC-AUC is affected by the large number of true negatives and so looks high. Neither says anything about the threshold chosen for operation."
+    },
+    {
+      "q": "A team used class weights, and the probabilities are used to price loans. What is the missing step?",
+      "a": "Calibration: class weights inflate the probabilities, so they must be calibrated (Platt or isotonic), the Brier score and reliability curve monitored, and then the threshold re-tuned."
+    },
+    {
+      "q": "The model's performance suddenly dropped in a single day after the payments team's release. What is the diagnosis and the permanent fix?",
+      "a": "A sudden step-shaped change on a specific date indicates a source fault, not drift. The fix: repair the source and quarantine the corrupted data; the permanent fix is a data contract with automated validation at ingestion, not retraining."
+    },
+    {
+      "q": "The same feature is computed one way in the batch pipeline and another way in the real-time interface. What is the fix?",
+      "a": "This is training–serving skew; it is fixed with a single definition of the feature through a feature store (an offline store for training with point-in-time correct joins, and an online store for serving). Retraining does not help."
+    },
+    {
+      "q": "Cohen's kappa between two annotators is 0.35. What do you do before training?",
+      "a": "The value is below 0.4, which indicates that the guidelines or the task definition need work. Fix the specification and relabel the ambiguous slice; the model will not learn a consistent boundary if the experts disagree."
+    },
+    {
+      "q": "Can synthetic data be used in the test set?",
+      "a": "No. Synthetic data may be added to training, but it reproduces the generator's biases and makes evaluation optimistic; evaluation is done on held-out real data."
+    }
+  ],
+  "summary": "You have mastered this unit when, facing any data scenario, you can name the correct first step and its reason: a split that matches the structure of the data (temporal, grouped, stratified), leakage removed inside a pipeline, overfitting diagnosed against leakage from the pattern of the numbers, a metric that reflects which error is more expensive, a threshold that is moved before any retraining, source faults and serving skew told apart from real drift, and then data managed as a product with contracts, validation, labels of measured quality, and features that can be computed at prediction time.",
+  "coverage": [
+    "2.1",
+    "2.2",
+    "2.3",
+    "2.4",
+    "2.5",
+    "2.6",
+    "2.7",
+    "2.8",
+    "2.9",
+    "2.10",
+    "2.11"
+  ]
+}

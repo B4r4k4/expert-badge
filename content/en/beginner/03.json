@@ -1,0 +1,796 @@
+{
+  "before": [
+    "Unit 02 taught you how to handle data. This unit completes Domain 1 with three things: the **algorithm map** (what kinds of model exist and when each one fits), **practical statistics** (how to tell that the difference between two models is real and not chance), and **metrics with numbers** (calculating precision, recall, forecasting errors and ranking quality step by step).",
+    "Do not be afraid of the word “statistics”. What you need here is small and practical: how to read a number computed on a sample, and when to trust it. All the calculations in Chapter 3 are multiplication and division.",
+    "You need these first: Unit 00 (Chapter 3: Metrics) and Unit 02 (metrics, the threshold and imbalance)."
+  ],
+  "sections": {
+    "1.1": {
+      "simple": [
+        "This section is a “catalogue” of the best-known supervised learning models. Do not try to memorise the details of every model. For each one, remember three words: its **idea**, its **strength** and its **weakness**. The exam usually builds the wrong option from a model's weakness.",
+        "The summary that is enough for most questions: **a table of numbers** → boosted trees. **Interpretability is a legal requirement** → logistic regression. **Images, audio or text in huge quantities** → neural networks."
+      ],
+      "example": "Imagine each model as a different way of making a hiring decision. **Logistic regression**: you give each criterion a score (experience +3, degree +2) and add them up, so it is clear and easy to explain. **Decision tree**: successive questions (“Does he have more than 5 years of experience? Yes → Does he speak English?”). **Random forest**: a hundred committees, each of which saw part of the information, then a vote. **Boosted trees**: committee after committee, each focusing on the mistakes of the one before. **Nearest neighbours**: “Hire him if he resembles our best employees.”",
+      "terms": [
+        {
+          "ar": "الانحدار الخطي",
+          "en": "Linear regression",
+          "def": "A model that predicts a number by adding up the features after multiplying each by a weight. For example: price = 2,000 × area + 50,000 × number of rooms."
+        },
+        {
+          "ar": "دالة sigmoid",
+          "en": "Sigmoid function",
+          "def": "A function that turns any number into a value between 0 and 1, so it is suitable for representing a probability. Logistic regression uses it."
+        },
+        {
+          "ar": "الارتباط الخطي المتعدد",
+          "en": "Multicollinearity",
+          "def": "When two or more features are very strongly correlated, such as weight in kilograms and weight in pounds. It makes the model's weights unstable and hard to interpret."
+        },
+        {
+          "ar": "Bagging وBootstrap",
+          "en": "Bootstrap aggregating",
+          "def": "Training many models, each on a random sample drawn from the data with replacement (bootstrap), then averaging their opinions (bagging). It reduces fluctuation."
+        },
+        {
+          "ar": "التعزيز",
+          "en": "Boosting",
+          "def": "Building small models in sequence, each one learning from the errors of the one before, then combining them all into one strong model."
+        },
+        {
+          "ar": "آلات المتجهات الداعمة",
+          "en": "Support Vector Machine — SVM",
+          "def": "A model that looks for a dividing line between the two classes with the widest possible distance from the nearest examples. Strong on small data, and does not scale to huge data."
+        },
+        {
+          "ar": "أقرب الجيران",
+          "en": "k-Nearest Neighbours — k-NN",
+          "def": "It learns nothing in advance: for each question it looks up the k nearest stored examples and takes the majority opinion. Simple, but slow at prediction time."
+        },
+        {
+          "ar": "بايز الساذج",
+          "en": "Naive Bayes",
+          "def": "A very fast probabilistic model that assumes every feature is independent of the others. Often an unrealistic assumption, but a good baseline for text."
+        }
+      ]
+    },
+    "1.2": {
+      "simple": [
+        "In unsupervised learning **there are no correct answers**. The model searches by itself for groups of similar items, summarises the data, or detects what is abnormal.",
+        "There are three families here: **clustering** (dividing things into groups of similar items), **dimensionality reduction** (summarising dozens of columns into fewer), and **anomaly detection** (learning what “normal” looks like and alerting on what departs from it). A recurring trap: plotting tools such as t-SNE and UMAP are for looking only; their outputs are not used as features for a model."
+      ],
+      "example": "A shop has 100,000 customers and knows nothing about them except their purchase history. Clustering might reveal four groups: “buy only around end-of-month pay day”, “buy regularly every week”, “buy in the seasons”, and “a few big customers”. Nobody told the model about these groups; it discovered them itself.",
+      "terms": [
+        {
+          "ar": "العنقدة",
+          "en": "Clustering",
+          "def": "Dividing the data into groups (clusters) whose members are similar, without prior answers."
+        },
+        {
+          "ar": "k-means",
+          "en": "k-means",
+          "def": "A clustering method that divides the data into k groups, each point belonging to the nearest centre. You must set k in advance."
+        },
+        {
+          "ar": "العنقدة بالكثافة",
+          "en": "DBSCAN / HDBSCAN",
+          "def": "Methods that treat a cluster as a crowded region of points and treat isolated points as noise. They discover irregular shapes."
+        },
+        {
+          "ar": "تحليل المكونات الرئيسية",
+          "en": "Principal Component Analysis — PCA",
+          "def": "A method that summarises many columns into a smaller number of “components” that preserve most of the variance in the data. Useful for compression and for speeding up models."
+        },
+        {
+          "ar": "t-SNE وUMAP",
+          "en": "Visualisation embeddings",
+          "def": "Tools that draw high-dimensional data on a two-dimensional plane so that we can look at it. Distances in the plot are not accurate, so it is for looking only."
+        },
+        {
+          "ar": "Isolation Forest",
+          "en": "Isolation Forest",
+          "def": "An anomaly-detection method based on the idea that a strange case is easy to isolate from the others with few questions."
+        },
+        {
+          "ar": "المشفّر التلقائي",
+          "en": "Autoencoder",
+          "def": "A neural network that learns to compress the data and then rebuild it. If it fails to rebuild a case, that case is probably abnormal."
+        }
+      ]
+    },
+    "1.3": {
+      "simple": [
+        "Some problems have a special nature: **recommendations** (“you may also like”), **time-series forecasting** (next week's sales), **ranking and search**, **computer vision**, and **speech**.",
+        "Two ideas recur. The first: large systems work **in stages**, a fast, cheap stage that picks a few hundred from millions of options, then a more precise stage that ranks them. The second: the **Saudi calendar** (Ramadan, the Eids and salary day) must enter forecasting models explicitly, because each Gregorian year Ramadan arrives about 11 days earlier than it did in the previous one."
+      ],
+      "example": "A video platform with a million clips. You cannot run a heavy model over a million clips for every user every time. So you first quickly pick 500 clips close to their interests, then a precise model ranks them, then you apply rules such as “do not show three consecutive clips from the same channel”. A new user with no history? That is the **cold start**, so we show them the most popular in their region.",
+      "terms": [
+        {
+          "ar": "الترشيح التعاوني",
+          "en": "Collaborative filtering",
+          "def": "A recommendation based on similarity of behaviour: “people who bought what you bought also bought…”."
+        },
+        {
+          "ar": "البداية الباردة (في التوصيات)",
+          "en": "Cold start",
+          "def": "A new user or new product with no interaction history, so the system has nothing to base the recommendation on."
+        },
+        {
+          "ar": "التمهيد الأسّي وARIMA",
+          "en": "Classical forecasting",
+          "def": "Traditional statistical models that forecast a time series from its past values, trend and seasonality."
+        },
+        {
+          "ar": "التنبؤ الموسمي الساذج",
+          "en": "Seasonal naive forecast",
+          "def": "The simplest forecast: “next week is the same as last week”. A strong baseline that any model must beat."
+        },
+        {
+          "ar": "تعلّم الترتيب",
+          "en": "Learning-to-rank",
+          "def": "Models that learn to order the results (the most suitable first) instead of classifying each result on its own."
+        },
+        {
+          "ar": "الكشف والتقطيع",
+          "en": "Detection / segmentation",
+          "def": "Computer vision tasks. Detection: drawing a box around everything in the image with its name. Segmentation: determining which thing each pixel belongs to."
+        },
+        {
+          "ar": "التعرف الآلي على الكلام",
+          "en": "Automatic Speech Recognition — ASR",
+          "def": "Converting spoken speech into written text."
+        },
+        {
+          "ar": "تمييز المتحدثين",
+          "en": "Diarisation",
+          "def": "Determining who spoke and when in a recording that has more than one person."
+        }
+      ]
+    },
+    "1.4": {
+      "simple": [
+        "This table is a set of “identity cards” for the domains that recur most often in scenarios: fraud, credit, churn, demand forecasting, maintenance, documents, customer service, and health. Each domain has four cells: **the nature of its data**, **the suitable model and metric**, and **what must be done operationally**.",
+        "Use it like this: when the question mentions “loans”, immediately remember “selection bias” and “interpretability”. When it mentions “equipment maintenance”, remember “failures are rare” and “the edge”. The correct option is usually the one that respects this specificity."
+      ],
+      "example": "**Selection bias in credit**: the bank knows whether the customer repaid or not only for those whose financing it **approved**. For those who were rejected it knows nothing; many of them might have repaid. So a model trained on the historical record sees an incomplete picture, and it may repeat the mistakes of old rejections.",
+      "terms": [
+        {
+          "ar": "انحياز الاختيار",
+          "en": "Selection bias",
+          "def": "When the available data is unrepresentative because the way it was collected selected a particular group, such as knowing the outcomes of approved loans only."
+        },
+        {
+          "ar": "القيود الرتيبة",
+          "en": "Monotonic constraints",
+          "def": "Forcing the model so that the effect of a feature is always in one direction. For example: an increase in income cannot raise the risk of default. It makes the model logical and justifiable."
+        },
+        {
+          "ar": "نمذجة الأثر الصافي",
+          "en": "Uplift modelling",
+          "def": "Predicting who **will change their behaviour because of** the campaign, not who would stay anyway. It prevents wasting incentives on customers who would have stayed regardless."
+        },
+        {
+          "ar": "WAPE",
+          "en": "Weighted Absolute Percentage Error",
+          "def": "The sum of absolute errors divided by the sum of actual values. A robust error percentage that is easy to explain."
+        },
+        {
+          "ar": "البيانات المبتورة",
+          "en": "Censored data",
+          "def": "Data whose story is not yet complete. For example, a machine that has not failed so far: we do not know when it will fail, only that it has held up to today."
+        },
+        {
+          "ar": "الحافة",
+          "en": "Edge",
+          "def": "Running the model on a device close to where the data is (a camera, a machine or a phone) instead of sending it to the cloud."
+        },
+        {
+          "ar": "النية",
+          "en": "Intent",
+          "def": "What the user wants from their message: an enquiry about an invoice, a complaint, or a cancellation request. Classifying intents is a common task in customer service."
+        },
+        {
+          "ar": "تقييم أثر حماية البيانات",
+          "en": "Data Protection Impact Assessment — DPIA",
+          "def": "A study carried out before processing high-risk personal data, to identify the risks to individuals and ways of reducing them."
+        }
+      ]
+    },
+    "2.1": {
+      "simple": [
+        "If you measure a model's accuracy on only 100 examples, the number you get is “approximate”. If you tried another 100 examples you might get a slightly different number. Statistics tells you **how much the number may change**, and this is the **margin of error**.",
+        "The simple rule: the larger the sample, the smaller the margin of error and the greater the confidence. The practical consequence: if the difference between two models is smaller than the margin of error, you cannot say that one of them is better."
+      ],
+      "example": "An opinion poll asked only 100 people, and 90 of them said “satisfied”. The true proportion might be between 84% and 96%, that is ±6 points. If it had asked 1,000 people the margin would have been only ±2. By calculation: standard error = √(0.9 × 0.1 ÷ 100) = √0.0009 = 0.03. Then 1.96 × 0.03 ≈ 0.059, that is about ±6 points.",
+      "terms": [
+        {
+          "ar": "العينة",
+          "en": "Sample",
+          "def": "A part of the whole that we measure, because measuring the whole is impossible or costly. The test set is a sample of all future cases."
+        },
+        {
+          "ar": "الخطأ المعياري",
+          "en": "Standard error — SE",
+          "def": "A measure of how much the computed number would fluctuate if we repeated the measurement on different samples. It shrinks as the sample grows."
+        },
+        {
+          "ar": "فترة الثقة 95%",
+          "en": "95% confidence interval",
+          "def": "A range around the measured number in which we expect, with 95% confidence, the true value to fall. Calculated approximately as: the number ± 1.96 × the standard error."
+        },
+        {
+          "ar": "إعادة المعاينة",
+          "en": "Bootstrap",
+          "def": "A way of estimating uncertainty: we draw many random samples with replacement from the test set, compute the metric on each, and see how much it varies."
+        },
+        {
+          "ar": "اختبار ماكنيمار",
+          "en": "McNemar's test",
+          "def": "A statistical test for comparing two classifiers on the same examples: do their errors really differ?"
+        }
+      ]
+    },
+    "2.2": {
+      "simple": [
+        "**A/B test**: we split users randomly into two groups. Group A sees the old system and B sees the new one. Then we compare the results. But even if the two versions were exactly identical, the results would differ slightly by chance. So how do we know that the difference is real?",
+        "We start from the assumption of “no difference” (the **null hypothesis**), then ask: if there really were no difference, what is the probability of seeing a difference this large by chance? That probability is the **p-value**. If it is small (less than 5%) we say: “It is hard for this to be chance.” Note: p is **not** the probability that the new version is better."
+      ],
+      "example": "You toss a coin 10 times and heads comes up 8 times. Is the coin biased? We first assume it is fair (the null hypothesis), and calculate: what is the probability of 8 heads or more from a fair coin? About 5.5%. That is p. It does not mean “a 94.5% probability that the coin is biased”; it means “if it were fair, this result is somewhat rare”.",
+      "terms": [
+        {
+          "ar": "تجربة A/B",
+          "en": "A/B test",
+          "def": "A randomised experiment that compares two versions on real users: half of them see A and half see B, and then we compare a metric agreed in advance."
+        },
+        {
+          "ar": "الفرضية الصفرية",
+          "en": "Null hypothesis",
+          "def": "The initial assumption that “there is no difference”. We try to see whether the data contradicts it strongly enough."
+        },
+        {
+          "ar": "القيمة الاحتمالية",
+          "en": "p-value",
+          "def": "The probability of seeing a result this large or larger if the null hypothesis were true. It is not the probability that the hypothesis is true, nor the probability that the new version is better."
+        },
+        {
+          "ar": "مستوى الدلالة",
+          "en": "Significance level (α)",
+          "def": "The limit at which we decide that the result is “statistically significant”, usually 0.05. It means we accept being wrong by declaring a non-existent difference in 5% of experiments."
+        },
+        {
+          "ar": "القوة الإحصائية",
+          "en": "Statistical power",
+          "def": "The probability that the experiment detects a difference that really exists. Usually set at 80%, and it determines how many users we need."
+        },
+        {
+          "ar": "الذراع",
+          "en": "Arm",
+          "def": "Each group in the experiment. A is one arm and B is one arm."
+        }
+      ]
+    },
+    "2.3": {
+      "simple": [
+        "A/B tests are easy to spoil. This table lists the best-known mistakes.",
+        "The most important: **peeking**, that is, looking at the results every day and stopping when they “look” good. This is like tossing a coin until you get the result you want. **multiple comparisons**: if you measure 20 things, one of them will seem to “succeed” by chance. **sample ratio mismatch**: you designed the split as 50/50 and it came out 52/48, so the splitting mechanism itself is broken, and the result cannot be trusted."
+      ],
+      "example": "**Multiple comparisons**: if you toss 20 fair coins 10 times each, you will probably find that one of them gave 8 heads or more, and you think it is biased. It is not biased; you simply tried many times and chance appeared. The **novelty effect**: the colour of the buy button changes and people press it more in the first days out of curiosity, then return to their habit. That is why the experiment is run for at least one full week.",
+      "terms": [
+        {
+          "ar": "التلصص",
+          "en": "Peeking",
+          "def": "Checking the results of the experiment repeatedly while it runs and stopping it at the first “significant” result. It multiplies the probability of announcing a false win."
+        },
+        {
+          "ar": "الاختبار المتتابع",
+          "en": "Sequential testing",
+          "def": "Statistical methods designed to allow repeated checking during the experiment without inflating errors."
+        },
+        {
+          "ar": "تصحيح بونفيروني",
+          "en": "Bonferroni correction",
+          "def": "Tightening the significance threshold when testing many things: with 20 metrics we use 0.05 ÷ 20 = 0.0025 instead of 0.05."
+        },
+        {
+          "ar": "عدم تطابق نسبة العينة",
+          "en": "Sample Ratio Mismatch — SRM",
+          "def": "When the actual split between the arms differs from the designed one (such as 52/48 instead of 50/50). A sign of a fault in the assignment mechanism."
+        },
+        {
+          "ar": "أثر الجِدّة",
+          "en": "Novelty effect",
+          "def": "Users' interaction with the new thing merely because it is new, after which the effect fades over time."
+        },
+        {
+          "ar": "التداخل",
+          "en": "Interference",
+          "def": "When users in one arm affect those in the other, as in marketplaces or social networks, so the results get mixed."
+        }
+      ]
+    },
+    "2.4": {
+      "simple": [
+        "**Correlation is not causation.** Two things rising together does not mean one causes the other. There may be a third cause driving both. To find the cause we need a randomised experiment or special methods, not just a predictive model.",
+        "The second idea is the **base rate**: when something is very rare, even a very accurate test will produce mostly false positive results. This surprises everyone, but it is exactly the reason precision is low in fraud detection."
+      ],
+      "example": "A disease affects 1 person in 100, and the test is 95% accurate. We test 10,000 people. There are 100 sick people, and the test detects 95 of them. There are 9,900 healthy people, but the test errs on 5% of them, that is 495 false positive results. So the total number of positive results is 95 + 495 = 590, and only 95 of them are actually sick. The probability that someone with a positive result is sick = 95 ÷ 590 ≈ 16%.",
+      "terms": [
+        {
+          "ar": "الارتباط",
+          "en": "Correlation",
+          "def": "Two variables changing together (rising together, or one rising while the other falls). It does not prove that one causes the other."
+        },
+        {
+          "ar": "السببية",
+          "en": "Causation",
+          "def": "Changing one thing is what actually brings about the change in the other. Usually established by a randomised experiment."
+        },
+        {
+          "ar": "المتغير المُربك",
+          "en": "Confounder",
+          "def": "A third factor that affects both at once and so creates a correlation between them. Summer raises ice-cream sales and raises drowning cases."
+        },
+        {
+          "ar": "مفارقة سيمبسون",
+          "en": "Simpson's paradox",
+          "def": "A trend that appears in each subgroup separately, then reverses when they are combined, because the sizes of the groups differ."
+        },
+        {
+          "ar": "المعدل الأساسي",
+          "en": "Base rate",
+          "def": "The proportion of the case in the population before any test, such as a 1% disease prevalence. Ignoring it leads to a wrong interpretation of the results."
+        },
+        {
+          "ar": "الحساسية والنوعية",
+          "en": "Sensitivity / specificity",
+          "def": "Sensitivity: the proportion of sick people the test detects, which is the same as recall. Specificity: the proportion of healthy people of whom the test says “healthy”."
+        },
+        {
+          "ar": "فرق الفروق",
+          "en": "Difference-in-differences",
+          "def": "A method of estimating the causal effect: we compare the change in a group to which the intervention was applied with the change in a similar group to which it was not applied, over the same period."
+        }
+      ]
+    },
+    "2.5": {
+      "simple": [
+        "Hyper-parameters are settings we choose before training, such as tree depth or learning rate. How do we find the best ones? We try. The question is: how do we try intelligently without wasting time?",
+        "**Grid search** tries every combination, and is suitable only if there are few. **Random search** tries random combinations, and it is a good default choice. **Bayesian optimisation** learns from previous trials where to try next, and suits costly training. **Hyperband** starts with many short trials and continues only the promising ones."
+      ],
+      "example": "You are searching for the best biscuit recipe. Grid search: you try every amount of sugar (5 amounts) with every temperature (5 temperatures) with every time (5 times), that is 125 biscuits. Random search: 25 biscuits with random combinations, and you will probably find a good recipe. Bayesian: after each biscuit you taste and decide intelligently what to try next. Hyperband: you bake 30 small biscuits for a few minutes, and carry on baking only the best 5.",
+      "terms": [
+        {
+          "ar": "البحث الشبكي",
+          "en": "Grid search",
+          "def": "Trying every possible combination of values specified in advance. Exhaustive, but it grows very quickly."
+        },
+        {
+          "ar": "البحث العشوائي",
+          "en": "Random search",
+          "def": "Trying random combinations within ranges. It usually finds good settings faster than grid search."
+        },
+        {
+          "ar": "التحسين البايزي",
+          "en": "Bayesian optimisation",
+          "def": "A method that builds an estimate of where the good settings lie from the previous trials, and chooses the next trial intelligently."
+        },
+        {
+          "ar": "Hyperband",
+          "en": "Successive halving / Hyperband",
+          "def": "It starts with many settings on a small budget, keeps the best and gives them a larger budget, and repeats."
+        },
+        {
+          "ar": "التحقق المتقاطع المتداخل",
+          "en": "Nested cross-validation",
+          "def": "Two loops: an inner one to choose the settings, and an outer one to estimate performance honestly. It prevents estimating performance with excessive optimism."
+        }
+      ]
+    },
+    "2.6": {
+      "simple": [
+        "A **leaderboard** is a table that ranks models by their score alone. But the highest score is not always the right choice. The expert engineer compares on eight points: performance on the important classes, correctness of the probabilities, speed, cost, robustness, interpretability, maintenance, and fairness.",
+        "Remember the same logic from Unit 01: a model that is half a point better but ten times more expensive and does not achieve the required response time is **the wrong choice**."
+      ],
+      "example": "You are choosing an employee. Candidate A scored 95 on the test, but asks for double the salary, cannot explain how he works, and needs 3 months to start. Candidate B scored 94, has a reasonable salary, starts tomorrow, and explains every decision. In most cases B is the better choice.",
+      "terms": [
+        {
+          "ar": "لوحة الصدارة",
+          "en": "Leaderboard",
+          "def": "A table that ranks models by their score on a single metric. Useful as a start, but not enough for a production decision."
+        },
+        {
+          "ar": "المتانة",
+          "en": "Robustness",
+          "def": "The model's ability to keep its performance in the face of noise or small changes in the data."
+        },
+        {
+          "ar": "المجمّعات",
+          "en": "Ensembles",
+          "def": "Combining several models into one by averaging their opinions or by a model that learns how to combine them (stacking). They add a little accuracy at the expense of speed and complexity."
+        }
+      ]
+    },
+    "2.7": {
+      "simple": [
+        "**Interpretability** is being able to answer “why did the model say this?” There are two kinds: **global explanation** (what the model depends on in general) and **local explanation** (why it made this particular decision for this particular person).",
+        "For whom do we explain? For three audiences: **developers** to discover errors (a suspiciously dominant feature is often leakage), **regulators** for auditing, and **the person affected by the decision** so that they know the reason and can object."
+      ],
+      "example": "Mohammed's financing application was rejected. Global explanation: “The model generally depends on income, debt ratio and repayment history.” Local explanation (SHAP) for Mohammed: “Your current debt ratio of 65% lowered the score a great deal.” Counterfactual explanation: “Had your debt ratio been 40% or less, your application would have been accepted.” The last is very useful to Mohammed because it tells him what to do.",
+      "terms": [
+        {
+          "ar": "قابلية التفسير",
+          "en": "Interpretability / explainability",
+          "def": "Our ability to understand why the model produced its outputs and to explain it to others."
+        },
+        {
+          "ar": "التفسير الشامل والمحلي",
+          "en": "Global / local explanation",
+          "def": "Global describes the behaviour of the whole model. Local explains a single decision for a single case."
+        },
+        {
+          "ar": "الاعتماد الجزئي / ICE",
+          "en": "Partial dependence / ICE",
+          "def": "Plots showing how the prediction changes when we change one feature and hold the rest fixed."
+        },
+        {
+          "ar": "LIME",
+          "en": "Local Interpretable Model-agnostic Explanations",
+          "def": "A local explanation method that builds a simple model imitating the large model around a single case only. Its results may change from one run to another."
+        },
+        {
+          "ar": "التفسير المضاد",
+          "en": "Counterfactual explanation",
+          "def": "The smallest change in the inputs that flips the decision: “Had your income been 9,000 instead of 8,000, the application would have been accepted.” It must suggest a change that is possible and realistic."
+        },
+        {
+          "ar": "قيم شابلي",
+          "en": "Shapley values",
+          "def": "A method from game theory for distributing the “credit” for the outcome among the features fairly. The basis of the SHAP method."
+        }
+      ]
+    },
+    "3.1": {
+      "simple": [
+        "This section revisits what you learnt in Unit 00 with bigger numbers, closer to the exam. What is required is to fill in the confusion matrix from the question's data, then calculate all the metrics from it.",
+        "The method: start from the three given facts (the total number, the number of truly positive cases, and how many the model flagged and how many of those were correct), then fill in the four cells by subtraction."
+      ],
+      "example": "The data: 100,000 transactions, of which 500 are fraud. The model flagged 1,250, of which 400 are real fraud. So: TP = 400. FP = 1,250 − 400 = 850. FN = 500 − 400 = 100. TN = 100,000 − 400 − 850 − 100 = 98,650. Then: precision = 400 ÷ 1,250 = 32%, and recall = 400 ÷ 500 = 80%.",
+      "terms": [
+        {
+          "ar": "النوعية",
+          "en": "Specificity",
+          "def": "Of the truly negative cases, the proportion that the model correctly called “negative”. TN ÷ (TN + FP)."
+        },
+        {
+          "ar": "معدل الإيجابي الكاذب",
+          "en": "False Positive Rate — FPR",
+          "def": "The proportion of healthy cases that the model wrongly flagged. FP ÷ (FP + TN). Equals 1 − specificity."
+        }
+      ]
+    },
+    "3.2": {
+      "simple": [
+        "This table shows the same model at five different thresholds. Notice the pattern: the lower you set the threshold, the more alerts there are, so recall rises (we catch more fraud) and precision falls (more false alarms).",
+        "The exam question is usually: “The review team can handle X alerts; which threshold?” The method: delete every threshold that produces more alerts than the capacity, then choose the **lowest** of those that remain, because it gives the highest recall."
+      ],
+      "example": "The capacity is 700 alerts. Threshold 0.50 produces 1,250 alerts, more than the capacity, so it is deleted. Thresholds 0.70 (600 alerts) and 0.90 (300 alerts) are within capacity. We choose 0.70 because it catches 66% of the fraud instead of 48%, and does not exceed the capacity.",
+      "terms": [
+        {
+          "ar": "نقطة التشغيل",
+          "en": "Operating point",
+          "def": "The threshold actually chosen to run the model, and the precision, recall and number of alerts that result from it."
+        }
+      ]
+    },
+    "3.3": {
+      "simple": [
+        "When the model classifies into more than two classes (billing, network, legal threat, safety incident), we calculate F1 for each class. But how do we combine them into a single number? There are two ways, and they give two very different pictures.",
+        "**Macro**: a simple average; every class has the same weight however small it is, so it exposes small, weak classes. **Weighted**: an average weighted by the size of each class, so large classes dominate and the problems of the small ones disappear. If the rare classes are the most dangerous, Macro is the honest one."
+      ],
+      "example": "Macro: we add the scores of the four classes and divide by 4: (0.955 + 0.910 + 0.400 + 0.286) ÷ 4 ≈ 0.64. Weighted: we multiply each score by the number of its cases: the billing class has 6,000 cases and the safety incident only 50, so the weakness of the small class drowns in the strength of the large one, and it comes out ≈ 0.93. By the second the model looks excellent, and it misses 80% of the safety incidents!",
+      "terms": [
+        {
+          "ar": "Support",
+          "en": "Support",
+          "def": "The number of true cases of each class in the test set."
+        },
+        {
+          "ar": "Micro-F1",
+          "en": "Micro averaging",
+          "def": "Pooling all the decisions from all the classes into one matrix and then calculating. It behaves like overall accuracy, so large classes dominate it."
+        }
+      ]
+    },
+    "3.4": {
+      "simple": [
+        "When the model predicts **a number** (such as sales), we measure the error in different ways, and each way reveals something. **MAE** is the average of the errors regardless of their sign. **RMSE** magnifies large errors. **WAPE** is the error as a proportion of the total. **Bias** is whether the model tends to over-estimate or under-estimate.",
+        "**MAPE** calculates the error as a percentage for each day, so it fails when actual sales are zero (division by zero). That is why it is not suitable for products that go days without sales."
+      ],
+      "example": "The five errors: 10, 5, 5, 60, 5. **MAE** = their sum ÷ 5 = 85 ÷ 5 = 17. **RMSE**: we square each error (100, 25, 25, 3,600, 25), take the mean (755), then the root ≈ 27.5. Larger than MAE because the error of 60 was magnified by squaring. **Bias**: we add the errors with their signs (−10 + 5 + 5 − 60 + 5 = −55) and divide by 5 = −11, meaning the model under-estimates, and this means stock-outs.",
+      "terms": [
+        {
+          "ar": "MAE",
+          "en": "Mean Absolute Error",
+          "def": "The mean of the absolute error values (without sign). In the same units as the target, and easy to understand."
+        },
+        {
+          "ar": "RMSE",
+          "en": "Root Mean Squared Error",
+          "def": "The square root of the mean of the squared errors. It penalises large errors far more than small ones."
+        },
+        {
+          "ar": "MAPE",
+          "en": "Mean Absolute Percentage Error",
+          "def": "The mean error as a percentage of the actual value. Undefined when the actual value is zero."
+        },
+        {
+          "ar": "الانحياز (في التنبؤ)",
+          "en": "Forecast bias",
+          "def": "The mean of the errors with their signs. Negative means the model consistently under-estimates, and positive means it over-estimates."
+        },
+        {
+          "ar": "الطلب المتقطع",
+          "en": "Intermittent demand",
+          "def": "Demand for a product that goes many days without sales, such as rare spare parts."
+        }
+      ]
+    },
+    "3.5": {
+      "simple": [
+        "In search (and in a RAG system) it is not enough to find the right documents; their **ranking** matters. These metrics measure both.",
+        "**Precision@5**: of the first 5 results, how many are correct? **Recall@5**: of all the correct documents, how many appeared in the first 5? **MRR**: does the first correct result appear early? **nDCG**: a score that rewards correct results more the higher they are in the list."
+      ],
+      "example": "You searched for “leave policy”, and there are 3 correct documents. 5 results appeared, and the correct ones are in positions 2 and 4. Precision@5 = 2 ÷ 5 = 0.40. Recall@5 = 2 ÷ 3 ≈ 0.67, meaning we missed one document. MRR = 1 ÷ 2 = 0.5, because the first correct result came in second position. Had it come first it would have been 1.",
+      "terms": [
+        {
+          "ar": "Precision@k",
+          "en": "Precision at k",
+          "def": "The proportion of correct results among the first k results."
+        },
+        {
+          "ar": "MRR",
+          "en": "Mean Reciprocal Rank",
+          "def": "The mean of (1 ÷ the rank of the first correct result) across many queries. 1 means the correct one always comes first."
+        },
+        {
+          "ar": "nDCG",
+          "en": "normalised Discounted Cumulative Gain",
+          "def": "A score between 0 and 1 for the quality of the ranking. It gives a correct result fewer points the further down the list it falls, then compares with the ideal ranking."
+        },
+        {
+          "ar": "المسترجع",
+          "en": "Retriever",
+          "def": "The part of a RAG system that searches for passages relevant to the question before sending them to the model."
+        }
+      ]
+    },
+    "3.6": {
+      "simple": [
+        "A model that ranks customers correctly (the riskiest at the top) may nevertheless give **wrong probabilities**. It says of a customer “40% probability of default” when the reality is 20%. The ranking is right, and the numbers are exaggerated.",
+        "Does this matter? If we use only the ranking (we review the 100 riskiest customers), no. But if we use **the probability itself** to set the interest rate or financial provisions, wrong probabilities mean wrong prices. The remedy is to “calibrate” the probabilities without retraining."
+      ],
+      "example": "A weather presenter says “70% chance of rain” every day. If it really rains on 70% of those days, he is “calibrated”. If it rains on only 35%, he exaggerates, even though he may be right that “today is more likely to rain than yesterday”. The table here is like that: of the “40%+” bin, only 31% actually defaulted.",
+      "terms": [
+        {
+          "ar": "منحنى الموثوقية",
+          "en": "Reliability diagram",
+          "def": "A plot comparing the predicted probabilities with the actual proportions for each probability bin. A calibrated model lies on the diagonal line."
+        },
+        {
+          "ar": "معايرة Platt والمعايرة المتساوية",
+          "en": "Platt scaling / isotonic regression",
+          "def": "Two methods for correcting a model's probabilities after training, by learning a transformation that matches them to the actual proportions on held-out data."
+        },
+        {
+          "ar": "المخصصات",
+          "en": "Provisions",
+          "def": "Amounts a bank sets aside in anticipation of debts that may not be repaid. They are calculated from default probabilities, so they must be correct."
+        }
+      ]
+    },
+    "3.7": {
+      "simple": [
+        "The evaluation set is the “exam” by which we judge the model. If the exam is badly designed, we will judge wrongly. This section gives six qualities of a good evaluation set: **representative** of reality, **stratified** with enough examples of the rare important cases, **clean labels**, **isolated** and never used in training, **versioned**, and **linked to a decision** (each metric has a release threshold).",
+        "For LLM systems: we do not write “the correct literal answer”, because a good answer can be phrased in many ways. Instead we write **expected properties**: “must cite document X”, “must refuse”, “must ask a clarifying question”."
+      ],
+      "example": "A school designs a final exam. **Representative**: it covers all the chapters of the syllabus. **Stratified**: it guarantees enough questions from the hard chapter even if it is small. **Clean**: the model answer was reviewed by more than one teacher. **Isolated**: students do not see it before the exam. **Versioned**: “Exam 2026 version B”, so we do not compare the score of one version with another. **Linked to a decision**: 60 and above is a pass.",
+      "terms": [
+        {
+          "ar": "بوابة الإطلاق",
+          "en": "Release gate",
+          "def": "A condition set in advance that the model must pass before release, such as “recall ≥ 90% on the golden set”."
+        },
+        {
+          "ar": "مجموعة التطوير",
+          "en": "Development set",
+          "def": "A set the team uses often during improvement, separate from the test set, which is used rarely."
+        },
+        {
+          "ar": "المحادثة متعددة الأدوار",
+          "en": "Multi-turn conversation",
+          "def": "A conversation with more than one consecutive question and answer, where the later question depends on what came before."
+        },
+        {
+          "ar": "الأمر العدائي",
+          "en": "Adversarial prompt",
+          "def": "A message designed to deceive the model or push it into violating its instructions."
+        }
+      ]
+    },
+    "4.1": {
+      "simple": [
+        "Before any model can learn, the data must be gathered, organised and clean. **Data engineering** is the “plumbing” that carries data from its sources to the models.",
+        "The main places: the **data lake** (cheap storage for any raw file: text, images, PDFs), the **data warehouse** (organised tables for reporting), and the **lakehouse** (combines the two and keeps dated copies). The ways of moving data: **batch** (every night) or **streaming** (instantly)."
+      ],
+      "example": "A library: **the lake** is a huge store where all the books, papers and photographs are thrown as they arrive. **The warehouse** is tidy, indexed shelves for what we need often. **The catalogue** is a guide that says where everything is and who owns it. **time travel** in a lakehouse means you can ask: “Show me the shelves as they were on 1 March”, which is essential for retraining a model on the same data.",
+      "terms": [
+        {
+          "ar": "بحيرة البيانات",
+          "en": "Data lake",
+          "def": "A cheap, huge store for files in their original format (tables, text, images, PDFs)."
+        },
+        {
+          "ar": "مستودع البيانات",
+          "en": "Data warehouse",
+          "def": "An analytical database of organised, clean tables, used for reporting and analysis."
+        },
+        {
+          "ar": "Lakehouse",
+          "en": "Lakehouse",
+          "def": "A layer on top of the data lake that adds the warehouse's strengths to it: organised tables, safe updates, and the ability to return to a previous version (time travel)."
+        },
+        {
+          "ar": "ETL / ELT",
+          "en": "Extract–Transform–Load",
+          "def": "Operations that extract data from its sources, transform it, and load it into the store, usually running on a schedule."
+        },
+        {
+          "ar": "التدفق",
+          "en": "Streaming",
+          "def": "Processing the data event by event the moment it arrives, instead of waiting for a batch. Tools such as Kafka and Flink."
+        },
+        {
+          "ar": "التقاط تغييرات البيانات",
+          "en": "Change Data Capture — CDC",
+          "def": "Capturing every modification in a database and sending it immediately to other systems, such as updating a search index."
+        },
+        {
+          "ar": "الإخفاء",
+          "en": "Masking",
+          "def": "Showing sensitive data in a hidden form, such as “05XXXXXX12”, to those who do not need to see it in full."
+        }
+      ]
+    },
+    "4.2": {
+      "simple": [
+        "**Batch or streaming?** Streaming gives data that is fresh to the second, but it is harder and more expensive to build and maintain. So we use it only when **freshness changes the decision**, as in fraud. As for “the customer's sales over the last 90 days”, nightly processing is enough.",
+        "**reproducibility**: we must always be able to say “this model was trained on exactly this version of the data, with this code, with these settings”. Without that there can be no auditing, no investigation of an incident, and no carrying out of a request to delete a person's data."
+      ],
+      "example": "A restaurant kitchen: some ingredients are prepared once in the morning (batch), such as sauces. Some are prepared at the moment of the order (streaming), such as fried eggs. Preparing everything at the moment of the order is costly and slow for no benefit. Reproducibility: if a customer complains about yesterday's dish, you must know which batch of sauce and which recipe were used.",
+      "terms": [
+        {
+          "ar": "إعادة الملء",
+          "en": "Backfill",
+          "def": "Recomputing a feature or data for past periods, for example when we add a new feature and need its historical values for training."
+        },
+        {
+          "ar": "قابلية إعادة الإنتاج",
+          "en": "Reproducibility",
+          "def": "The ability to rebuild exactly the same model, by knowing the data, code and settings that were used."
+        },
+        {
+          "ar": "Commit",
+          "en": "Code commit",
+          "def": "A saved, numbered version of the source code in a version-control system such as Git."
+        }
+      ]
+    },
+    "4.3": {
+      "simple": [
+        "Search and recommendation work like a **funnel**: from millions of items we quickly pick a few hundred (candidate generation), then rank them with a more precise model (ranking), then apply business rules (re-ranking), and log everything.",
+        "Each stage has a time budget: the first stage does not exceed 10–30 ms because it works on millions of items, and ranking takes 20–50 ms because it works on only a few hundred."
+      ],
+      "example": "Hiring at a large company that received 10,000 applications. Stage 1: a fast automated screening by keywords selects 300 CVs. Stage 2: an HR employee reads the 300 carefully and ranks the best 20. Stage 3: rules such as “diversity of specialisations” and “priority for Saudi nationals in certain jobs”. It is not possible to read 10,000 CVs carefully.",
+      "terms": [
+        {
+          "ar": "توليد المرشحين",
+          "en": "Candidate generation",
+          "def": "The fast, cheap first stage that picks a few hundred out of millions of items."
+        },
+        {
+          "ar": "BM25",
+          "en": "BM25",
+          "def": "A classical word-based search algorithm that gives each document a score according to how often the query's words occur in it and how rare they are. The basis of lexical search."
+        },
+        {
+          "ar": "المشفّر المتقاطع",
+          "en": "Cross-encoder",
+          "def": "A model that reads the question and the document together and gives a precise score for how relevant they are to each other. Precise but slow, so it is used to re-rank a small number."
+        },
+        {
+          "ar": "مرات الظهور",
+          "en": "Impressions",
+          "def": "The number of times an item was shown to users, whether or not they clicked on it."
+        }
+      ]
+    },
+    "4.4": {
+      "simple": [
+        "Recommendation systems fall into a circular trap: they show something and people click on it, so they learn that it is liked, so they show it more. Items that were not shown get no chance. Likewise, people click the first result more because it is first, not because it is the best (**position bias**).",
+        "The remedy: log where you showed everything, set aside a small share of the display for exploration, and measure success by real business outcomes (purchase and satisfaction), not by clicks alone. Arabic search has special challenges: the forms of alef, yaa and taa marbuta, diacritics, and product names that differ between regions."
+      ],
+      "example": "[[ar:أحمد]] and [[ar:احمد]] (the name “Ahmad” with and without the hamza), [[ar:مستشفى]] and [[ar:مستشفي]] (“hospital”, spelled with alef maqsura or with yaa), [[ar:المدرسة]] and [[ar:المدرسه]] (“the school”, spelled with taa marbuta or with haa): people write them in different forms. If the search system does not unify these forms (**normalisation**), the user will find results for some and not others. An example of dialects: [[ar:جوال]], [[ar:موبايل]] and [[ar:هاتف]] (“mobile phone” in Saudi usage, the transliterated “mobile”, and the formal “phone”) may mean the same product.",
+      "terms": [
+        {
+          "ar": "حلقة التغذية الراجعة",
+          "en": "Feedback loop",
+          "def": "When the system's decisions affect the data it will learn from later, so that it reinforces its earlier choices."
+        },
+        {
+          "ar": "انحياز الموضع",
+          "en": "Position bias",
+          "def": "Users' tendency to click on the higher results because of their position, not because of their quality."
+        },
+        {
+          "ar": "الاستكشاف",
+          "en": "Exploration",
+          "def": "Setting aside a small part of the display for untried items, to collect information about them."
+        },
+        {
+          "ar": "التطبيع (في النصوص العربية)",
+          "en": "Arabic text normalisation",
+          "def": "Unifying the forms of similar letters ([[ar:أ/إ/آ]] → [[ar:ا]], [[ar:ى]] → [[ar:ي]], [[ar:ة]] → [[ar:ه]]) and removing diacritics, so that the search matches despite differences in spelling."
+        },
+        {
+          "ar": "التجذيع",
+          "en": "Stemming",
+          "def": "Returning a word to a common root ([[ar:المعلمون]] “the teachers” and [[ar:معلم]] “teacher” → [[ar:علم]]), so that the search finds the different forms of the word."
+        },
+        {
+          "ar": "نسبة البحث بلا نتائج",
+          "en": "Zero-result rate",
+          "def": "The proportion of searches that returned no result. A rise in it is an indicator of a problem in the index or in normalisation."
+        }
+      ]
+    },
+    "4.5": {
+      "simple": [
+        "Time-series forecasting in production has special rules. The most important are three. **Hierarchical consistency**: the forecasts for the products must sum to the store forecast, and the store forecasts to the region forecast. **Uncertainty**: we do not give a single number but a range. **forward testing**: we test as if we were in the past and did not know the future.",
+        "The most important idea for the exam: **safety stock is built on the quantile, not on the mean**. If you expect to sell 100 on average and prepare only 100, you will run out of goods on roughly half the days."
+      ],
+      "example": "You expect your shop to sell 100 cartons of milk tomorrow on average, but actual sales may be between 80 and 130. If you prepare 100 you may run out. But if you say “I want the milk not to run out on 95% of days”, you prepare the 95% quantile, say 125 cartons. This is using the quantile instead of the mean.",
+      "terms": [
+        {
+          "ar": "الكمّية",
+          "en": "Quantile",
+          "def": "The value below which a given proportion of the possible outcomes fall. The 95% quantile is a value that sales do not exceed in 95% of expected cases. Like the 95th percentile."
+        },
+        {
+          "ar": "فترة التنبؤ",
+          "en": "Prediction interval",
+          "def": "A range in which we expect the actual value to fall with a stated probability, such as “between 80 and 130 with 90% probability”."
+        },
+        {
+          "ar": "الاختبار الرجعي",
+          "en": "Backtesting",
+          "def": "Evaluating the model by replaying the past: at each date we forecast using only what was known up to that date, then compare with what happened."
+        },
+        {
+          "ar": "العلامات المائية",
+          "en": "Watermarks",
+          "def": "A mechanism in streaming systems that determines how long we wait for late events before closing a time window and computing it."
+        },
+        {
+          "ar": "مرة واحدة بالضبط",
+          "en": "Exactly-once",
+          "def": "A guarantee that every event is processed once only, neither lost nor repeated, even during failures."
+        },
+        {
+          "ar": "إرهاق التنبيهات",
+          "en": "Alert fatigue",
+          "def": "When alerts become so frequent that the team starts ignoring them, including the important ones."
+        }
+      ]
+    }
+  }
+}

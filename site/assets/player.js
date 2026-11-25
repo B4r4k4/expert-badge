@@ -1,6 +1,7 @@
 /* player: chapters -> scenes, rAF clock, speed, keyboard (RTL-mirrored arrows) */
 (function(){
   const stage=document.getElementById('stage'); if(!stage) return;
+  const EN=document.documentElement.lang==='en';
   const scenes=[...stage.querySelectorAll('.scene')];
   const segs=document.getElementById('segs'), now=document.getElementById('now'), tabs=document.getElementById('tabs'), playBtn=document.getElementById('play');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -14,7 +15,7 @@
   function buildSegs(ch){
     segs.innerHTML=''; segEls=[];
     scenes.forEach((s,k)=>{ if(s.dataset.ch!==ch) return;
-      const b=document.createElement('button'); b.className='seg'; b.setAttribute('aria-label','المشهد '+(k+1)+': '+s.dataset.label);
+      const b=document.createElement('button'); b.className='seg'; b.setAttribute('aria-label',(EN?'Scene ':'المشهد ')+(k+1)+': '+s.dataset.label);
       b.innerHTML='<i><b></b></i>'; b.onclick=()=>show(k,!playing); segs.appendChild(b); segEls.push([k,b.querySelector('b')]);
     });
   }
@@ -24,10 +25,10 @@
       el.textContent=Math.round(+el.dataset.from+(+el.dataset.to-+el.dataset.from)*p);
     });
   }
-  const SPEEDS=[['بطيء',2],['عادي',1.4],['سريع',1]]; let sp=1;
+  const SPEEDS=EN?[['Slow',2],['Normal',1.4],['Fast',1]]:[['بطيء',2],['عادي',1.4],['سريع',1]]; let sp=1;
   try{const v=localStorage.getItem('sdaia-speed'); if(v!==null&&SPEEDS[+v]) sp=+v}catch(e){}
   const speedBtn=document.getElementById('speed');
-  const paintSpeed=()=>speedBtn.textContent='السرعة: '+SPEEDS[sp][0];
+  const paintSpeed=()=>speedBtn.textContent=(EN?'Speed: ':'السرعة: ')+SPEEDS[sp][0];
   const dur=k=>+scenes[k].dataset.dur*SPEEDS[sp][1];
   speedBtn.onclick=()=>{const old=dur(i); sp=(sp+1)%SPEEDS.length; t=t*dur(i)/old; paintSpeed(); try{localStorage.setItem('sdaia-speed',sp)}catch(e){}};
   paintSpeed();
@@ -43,7 +44,7 @@
   }
   function setPlaying(p){
     playing=p; stage.classList.toggle('paused',!p);
-    playBtn.textContent=p?'إيقاف':(i===scenes.length-1&&t>=dur(i)?'إعادة':'تشغيل');
+    playBtn.textContent=p?(EN?'Pause':'إيقاف'):(i===scenes.length-1&&t>=dur(i)?(EN?'Replay':'إعادة'):(EN?'Play':'تشغيل'));
   }
   function ui(){
     segEls.forEach(([k,b])=>{b.style.width=(k<i?100:k>i?0:Math.min(100,(full&&!playing?100:t/dur(i)*100)))+'%'});
@@ -67,8 +68,8 @@
     if(!stage.closest('.player').contains(document.activeElement)) return;
     if(e.target.closest&&e.target.closest('button')&&(e.key===' '||e.key==='Enter')) return;
     if(e.key===' '){e.preventDefault(); playBtn.click()}
-    if(e.key==='ArrowLeft') show(i+1,!playing);
-    if(e.key==='ArrowRight') show(i-1,!playing);
+    if(e.key==='ArrowLeft') show(EN?i-1:i+1,!playing);
+    if(e.key==='ArrowRight') show(EN?i+1:i-1,!playing);
   });
   // #tour-N opens scene N (1-based)
   const deep=(location.hash.match(/^#tour-(\d+)$/)||[])[1];

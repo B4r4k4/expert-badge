@@ -1,0 +1,623 @@
+{
+  "before": [
+    "The questions in this exam are not memorisation questions. Almost every question is a story from a workplace: a company or a government entity with a problem, followed by four proposed solutions. At least two of them look reasonable. Your task is to choose the solution that is **the most suitable for this particular story**.",
+    "This unit teaches you a fixed way of answering that you apply to every question, plus three kinds of simple calculation that recur in the exam: calculating response time, calculating the number of machines required, and calculating cost. All of them are only multiplication, division and addition.",
+    "If you have not read the preparatory Unit 00, read at least its Chapter 3 (Metrics) and Sections 5.2 and 5.5 (speed and cost), because this unit builds directly on them."
+  ],
+  "sections": {
+    "1.1": {
+      "simple": [
+        "Imagine you are buying a car and you have conditions: its price must not exceed 100K, it must have 7 seats, and it must be suitable for off-road driving. If you start by visiting showrooms before you write down your conditions, you will fall for a beautiful sports car and forget that you need 7 seats. The solution: **write your conditions first**, then eliminate every car that does not meet all of them, then choose the cheapest of those left.",
+        "This is exactly the way of answering in the exam. The wrong options are designed to be attractive: much cheaper, much faster, or the “most powerful”. If you read them before you understand what is being asked, you will be drawn to them."
+      ],
+      "example": "A question says: “A system for classifying customer complaints… what is the most suitable **first step**?”. The words “first step” mean that the answer is usually something like “measure”, “diagnose” or “collect the data”, not “buy a new model”. If you read the options first, you might have chosen the best final solution, which is not what is asked.",
+      "terms": [
+        {
+          "ar": "السيناريو",
+          "en": "Scenario",
+          "def": "The story the question starts with: who the entity is, what the problem is, and what the conditions are. Almost all of this exam's questions are scenarios."
+        },
+        {
+          "ar": "المشتّت",
+          "en": "Distractor",
+          "def": "A wrong option designed to look correct. It often meets most of the conditions and violates one important condition."
+        },
+        {
+          "ar": "المبالغة الهندسية",
+          "en": "Over-engineering",
+          "def": "A solution bigger, more complex and more expensive than the problem needs. The exam treats it as a mistake, because it rewards the sufficient solution."
+        },
+        {
+          "ar": "السبب الجذري",
+          "en": "Root cause",
+          "def": "The origin of the problem, not its symptom. Like the cause of a high temperature, not the temperature itself. Treating the symptom without the cause makes the problem come back."
+        },
+        {
+          "ar": "منظَّم",
+          "en": "Regulated",
+          "def": "A sector or data subject to regulations and oversight, such as banks, health and government data. The presence of this word means that compliance with regulations is a non-negotiable condition."
+        }
+      ]
+    },
+    "1.2": {
+      "simple": [
+        "This is a “card” of eight boxes that you fill in from the question text before you look at the options. Each box asks a question: how much speed is required? How many requests are there? What level of quality? Is the data personal? What is the budget? How often does the information change? Who is on the team? What exactly is asked?",
+        "Not every question fills all the boxes. **An empty box is useful information**: if the question mentions no budget, then cost is not the deciding factor here, so do not spend time on it."
+      ],
+      "example": "“A bank wants a system that responds to customers within one second, serves 500 customers at the same time, and the data must stay in the Kingdom.” The card: speed ≤ 1 second, load 500 concurrent, data personal, banking and inside the Kingdom. The budget was not mentioned, so the cost box is empty. Only now do you look at the options.",
+      "terms": [
+        {
+          "ar": "المئين p95 / p99",
+          "en": "95th / 99th percentile",
+          "def": "The time within which 95% (or 99%) of requests finish. “p95 ≤ 300 ms” means that 95 requests out of every 100 finish in 300 milliseconds or less. See Section 3.5 in Unit 00."
+        },
+        {
+          "ar": "زمن أول رمز",
+          "en": "Time To First Token — TTFT",
+          "def": "The time from sending the question until the first word of the language model's answer appears. It is what makes the user feel the system is fast or slow."
+        },
+        {
+          "ar": "الطلبات في الثانية",
+          "en": "Queries Per Second — QPS",
+          "def": "The number of requests that reach the system every second. A measure of the size of the load."
+        },
+        {
+          "ar": "الأمانة للمصدر",
+          "en": "Faithfulness",
+          "def": "That the model's answer is based on the documents it was given, not on its own invention. An important measure in RAG systems."
+        },
+        {
+          "ar": "إقامة البيانات",
+          "en": "Data residency",
+          "def": "The geographical place where data is stored and processed. “Inside the Kingdom” means servers physically located in Saudi Arabia."
+        },
+        {
+          "ar": "الانجراف",
+          "en": "Drift",
+          "def": "The data in the real world changes compared with what the model was trained on, so its performance declines over time without the model itself changing."
+        }
+      ]
+    },
+    "1.3": {
+      "simple": [
+        "Not all conditions have the same weight. Some are **hard**: if not met, the whole solution fails, such as “the data must stay in the Kingdom”. Some are **soft**: we prefer them but they do not make the solution fail, such as “preferably easy to operate”.",
+        "The rule: a hard condition **eliminates**, and a soft condition only **ranks**. A soft condition cannot make up for a broken hard condition, however cheap the option is."
+      ],
+      "example": "You are looking for an apartment: “the rent must not exceed 4,000 SAR” is a hard condition, and “preferably close to work” is a soft condition. A wonderful apartment next to your work with rent of 5,000 SAR is eliminated. Between two apartments with rent of 3,500, you choose the one closer to work.",
+      "terms": [
+        {
+          "ar": "متطلب صارم",
+          "en": "Hard requirement",
+          "def": "A mandatory condition that eliminates any solution that does not meet it. It is signalled by words such as: must, required, no more than, the system requires."
+        },
+        {
+          "ar": "متطلب مرن",
+          "en": "Soft requirement",
+          "def": "A preference used to choose between the surviving solutions only. It is signalled by words such as: preferably, we would like, if possible."
+        },
+        {
+          "ar": "اتفاقية مستوى الخدمة",
+          "en": "Service Level Agreement — SLA",
+          "def": "A written commitment, often in a contract, to a level of performance: an availability percentage or a response time. Whatever it states is a hard condition."
+        }
+      ]
+    },
+    "1.4": {
+      "simple": [
+        "Across hundreds of questions, certain “characters” of the correct answer recur. For example: the correct answer usually **diagnoses before it treats**, **fixes the problem at its source** rather than at its result, and **chooses the smallest change that is enough**.",
+        "In contrast, certain “characters” of the wrong answer recur: “retrain the model immediately”, “buy bigger machines”, and “let the AI act on its own without human approval”. This table collects them, so when you hesitate between two options ask: which of them resembles the correct pattern?"
+      ],
+      "example": "Your car makes a strange noise. The first option: “buy a new car”. The second option: “have it checked at the mechanic to find the source of the noise”. The second is “measure before you change” and “the smallest sufficient change”. In the exam: for a model whose performance has dropped, the option “retrain it with a bigger model” is usually less correct than “check whether the incoming data has changed”.",
+      "terms": [
+        {
+          "ar": "عقد البيانات",
+          "en": "Data contract",
+          "def": "A written agreement between the team that sends the data and the team that uses it on its shape: column names, types and the range of values. It prevents something from changing suddenly and breaking the model."
+        },
+        {
+          "ar": "قوائم التحكم في الوصول",
+          "en": "Access Control List — ACL",
+          "def": "A list that specifies who has the right to see each document or resource. In retrieval it means that the user is not shown a document that they have no right to see."
+        },
+        {
+          "ar": "التدرّج / التوجيه",
+          "en": "Cascade / Routing",
+          "def": "Sending the easy cases to a cheap method, and only the hard cases to an expensive method. Like a receptionist who answers the simple questions and transfers the complicated ones to the specialist."
+        },
+        {
+          "ar": "الطابور",
+          "en": "Queue",
+          "def": "A waiting list in which tasks are placed to be processed later in order, instead of the user waiting until they finish. It suits long jobs."
+        },
+        {
+          "ar": "المعالجة غير المتزامنة",
+          "en": "Asynchronous processing",
+          "def": "That the user submits their request and goes on their way, then is notified of the result when it is ready. Like leaving your clothes at the laundry and collecting them later."
+        },
+        {
+          "ar": "نطاق الفشل",
+          "en": "Failure domain",
+          "def": "A part of the architecture that, if it fails, takes down everything inside it, such as one data centre or one cloud region. Redundancy across two domains means that the failure of one of them does not stop the service."
+        },
+        {
+          "ar": "التشغيل الظلّي والإطلاق الكناري",
+          "en": "Shadow / Canary",
+          "def": "Two ways to try a new model safely. Shadow: the new one runs in the background without the user seeing its results. Canary: the new one serves a small percentage of users first. You will see them in detail in Unit 07."
+        }
+      ]
+    },
+    "2.1": {
+      "simple": [
+        "This is the hardest kind of question: the question gives you a table with four options and their numbers (speed, quality, location and price), and asks for the best of them. The tool is very simple: **a grid of ✓ and ✗ marks**.",
+        "You write the hard conditions as columns and the options as rows, and put ✓ if the option meets the condition and ✗ if it does not. Any row with a single ✗ is deleted. From the complete rows (✓✓✓) you choose the cheapest. Do not look at the price at all before the deletion."
+      ],
+      "example": "The condition: speed ≤ 1.5 seconds. Option B has a speed of 2.4 seconds, so we write ✗. It no longer matters that it is a huge model with 90% quality. A single ✗ is enough to delete it. This is what makes the method fast: you do not need to think about all the numbers, it is enough to find the first ✗.",
+      "terms": [
+        {
+          "ar": "مطابقة المواصفات",
+          "en": "Spec matching",
+          "def": "A pattern of questions that gives you requirements and a specification table for several options, and the required answer is the option that meets all the requirements at the lowest cost."
+        },
+        {
+          "ar": "حجم النموذج 70B / 8B / 1B",
+          "en": "Parameters in billions",
+          "def": "The number of the model's parameters in billions. 70B means 70 billion parameters. The bigger is usually stronger but slower and more expensive and needs bigger machines."
+        },
+        {
+          "ar": "FP16 وINT8",
+          "en": "Number precision",
+          "def": "The way each number is stored inside the model. FP16 uses 2 bytes per number, and INT8 uses 1 byte. The smaller makes the model lighter and faster, usually with a slight loss of quality. The conversion to the smaller is called **quantisation**."
+        },
+        {
+          "ar": "التجميع المستمر",
+          "en": "Continuous batching",
+          "def": "A way of serving several users together on one machine, by admitting new requests whenever a request finishes, instead of waiting for a whole group to finish. It increases the number of people the machine serves."
+        },
+        {
+          "ar": "مُضبوط للعربية",
+          "en": "Fine-tuned for Arabic",
+          "def": "A model that was retrained with additional training on Arabic texts, so its performance in Arabic improved."
+        },
+        {
+          "ar": "الارتهان لمزوّد",
+          "en": "Vendor lock-in",
+          "def": "That moving to another provider becomes difficult and costly after you have built your system on the services of a particular provider."
+        }
+      ]
+    },
+    "2.2": {
+      "simple": [
+        "Before a RAG system searches the documents, it converts the question and the documents into numbers (vector representations) using a model called an **embedding model**. This example is about choosing that model.",
+        "The most important lesson: the table has two quality columns, one on Arabic data and the other on an English benchmark. What is required is Arabic, so **the English column does not matter to you**, even if its numbers are higher. The exam puts in shiny numbers that have nothing to do with the question to test whether you know which ones matter."
+      ],
+      "example": "You are looking for a translator for an Arabic–English contract. A translator who has won a prize in French translation is no use to you. What matters to you is performance in Arabic and English. The same goes for model E3: weaker in English, but the best in Arabic, and it is the one required.",
+      "terms": [
+        {
+          "ar": "نموذج التضمين",
+          "en": "Embedding model",
+          "def": "A model that converts text into a list of numbers (a vector) so that texts close in meaning are close in numbers. The basis of semantic search."
+        },
+        {
+          "ar": "الاستدعاء عند k",
+          "en": "Recall@5",
+          "def": "Of the correct documents for a given question, how many appeared among the top 5 search results? 0.85 means that 85% of the correct documents appear in the top five results."
+        },
+        {
+          "ar": "المعيار المرجعي",
+          "en": "Benchmark",
+          "def": "A well-known general test set used to compare models. Useful as a start, but it may not represent your real data."
+        },
+        {
+          "ar": "الأبعاد",
+          "en": "Dimensions",
+          "def": "The number of numbers in a single vector, such as 768 or 1,024. More dimensions mean more storage space and memory. For example 768 instead of 1,024 saves 25%."
+        },
+        {
+          "ar": "الاستضافة الذاتية",
+          "en": "Self-hosting",
+          "def": "Running the model on your own servers or servers you rent and control, instead of sending requests to an external provider."
+        }
+      ]
+    },
+    "2.3": {
+      "simple": [
+        "Vectors need a place to be stored and searched quickly. This is the **vector store**. The options here: a small add-on to an existing database, or a managed service run by a provider, or a system you run yourself, or a library inside the application.",
+        "Note a special condition: **deletion within 24 hours**. The Personal Data Protection Law gives a person the right to request deletion of their data, so the system must be able to delete a document quickly. There is also a soft condition: the team is only three people. A system that needs daily maintenance will consume their time, and the team's time is a real cost."
+      ],
+      "example": "You are choosing between a cheap small refrigerator that will not be enough for your family after a year, a large refrigerator that needs weekly maintenance by yourself, and a large refrigerator with a maintenance contract. If your time is tight, the third is in fact cheaper, even though its price is higher. This is V2.",
+      "terms": [
+        {
+          "ar": "مخزن المتجهات",
+          "en": "Vector store / database",
+          "def": "A specialised database that stores vectors and quickly finds the closest ones to a given question."
+        },
+        {
+          "ar": "البيانات الوصفية",
+          "en": "Metadata",
+          "def": "Information about the document, not from its content: who owns it, what its classification is, when it was created, and who has the right to see it. It is used to filter search results."
+        },
+        {
+          "ar": "البحث المُصفّى",
+          "en": "Filtered search",
+          "def": "A search that returns only the documents that meet a condition, such as “the documents this user has the right to see”."
+        },
+        {
+          "ar": "خدمة مُدارة",
+          "en": "Managed service",
+          "def": "A service the provider runs on your behalf: updates, backup and repair are on them. You pay a little more and save your team's time."
+        },
+        {
+          "ar": "العنقود",
+          "en": "Cluster",
+          "def": "A group of servers working together as one system. Each server in it is called a **node**."
+        },
+        {
+          "ar": "العبء التشغيلي",
+          "en": "Operational burden",
+          "def": "The continuous human effort to run the system: updates, monitoring, backups and fixing faults."
+        }
+      ]
+    },
+    "2.4": {
+      "simple": [
+        "Here there are three conditions: the service is available 99.9% of the time, fast, and its cost is predictable. A challenge is added: in Hajj and Ramadan the load quadruples.",
+        "The lesson: **one machine, however strong, is a single point of failure**. If it fails, the service stops. To achieve 99.9% you need replicas in more than one location. For peaks known in advance, such as Ramadan, capacity is prepared before them on a schedule; you do not wait until the system gets crowded."
+      ],
+      "example": "A restaurant knows that Ramadan nights are busy. The smart restaurant schedules extra staff from the start of the month, and does not wait until the queues get long and then call staff who arrive an hour later. If the restaurant has only one branch, a power cut there stops the whole service, whereas two branches in two different neighbourhoods ensure continuity.",
+      "terms": [
+        {
+          "ar": "التوفّر",
+          "en": "Availability",
+          "def": "The percentage of time that the service is working. 99.9% monthly means that the permitted downtime is only about 43 minutes a month."
+        },
+        {
+          "ar": "نقطة الفشل الواحدة",
+          "en": "Single point of failure",
+          "def": "A single component that, if it fails, stops the whole system, because there is no alternative."
+        },
+        {
+          "ar": "منطقة التوفر",
+          "en": "Availability zone / region",
+          "def": "A data centre or a group of centres separated in power and network. Spreading replicas across two regions means that the failure of one does not stop the service."
+        },
+        {
+          "ar": "التوسع التلقائي والمجدول",
+          "en": "Autoscaling / scheduled scaling",
+          "def": "Automatic: the system adds replicas when the load actually rises. Scheduled: we add the replicas in advance at times we know will be busy."
+        },
+        {
+          "ar": "بلا خادم",
+          "en": "Serverless",
+          "def": "A service in which you manage no server. It runs only when a request arrives and you pay per use. Its drawback with large models is the cold start."
+        },
+        {
+          "ar": "البدء البارد",
+          "en": "Cold start",
+          "def": "The delay when starting a new replica from zero, because it needs to load the model into memory. It can reach tens of seconds or minutes with large models."
+        }
+      ]
+    },
+    "2.5": {
+      "simple": [
+        "A company wants to extract data (name, amount and date) from 50,000 invoices every night. The conditions: high accuracy, finishing the work within 6 hours, and a low cost per invoice.",
+        "The winning solution does not use the strongest model on all the invoices. It uses a cheap method for the clear invoices (about 90%), and sends only the hard invoices to the strong, expensive model. This is the **cascade**, and one of the most frequently winning patterns in the exam."
+      ],
+      "example": "The calculation step by step: option O1 processes 4,000 invoices per hour. 50,000 ÷ 4,000 = 12.5 hours, and only 6 hours are available, so it is eliminated. Option O2 processes 12,000 per hour: 50,000 ÷ 12,000 ≈ 4.2 hours, and that is less than 6. Its cost is $0.006 per invoice, which is below the limit of $0.01. So O2.",
+      "terms": [
+        {
+          "ar": "التعرف الضوئي على الحروف",
+          "en": "Optical Character Recognition — OCR",
+          "def": "A technology that reads text from an image or a scanned document, converting the image of the words into text that can be searched and processed."
+        },
+        {
+          "ar": "النموذج اللغوي البصري",
+          "en": "Vision-Language Model — VLM",
+          "def": "A model that understands images and text together. It can read an invoice as an image and understand where each field is. Powerful but expensive."
+        },
+        {
+          "ar": "دقة الحقول",
+          "en": "Field-level accuracy",
+          "def": "The percentage of fields extracted correctly, such as the amount, date and name, out of the total fields."
+        },
+        {
+          "ar": "التعابير النمطية",
+          "en": "Regular expressions — Regex",
+          "def": "Text rules that look for fixed patterns, such as “a 10-digit number starting with 05”. Fast and very cheap, but they fail with any difference in shape."
+        },
+        {
+          "ar": "الثقة",
+          "en": "Confidence",
+          "def": "A number the system gives for how sure it is of its result. Low-confidence cases are diverted to a stronger method or to a human."
+        }
+      ]
+    },
+    "3.1": {
+      "simple": [
+        "The “mean” deceives you in response times. If 99 requests are very fast and one request is very slow, the mean looks good, but the owner of the slow request is angry. Companies care about the angry user.",
+        "That is why speed is measured by percentiles: **p50** is the typical user (half of the requests are faster than it), and **p95 / p99** represent the slowest requests. Specialists call the slowest requests “**the tail**”."
+      ],
+      "example": "In a clinic, the mean wait is 15 minutes. But 5 patients out of every 100 wait two hours. The mean does not reveal this problem, and p95 reveals it immediately. If the question says “**some** users complain of **intermittent** slowness”, it is talking about the tail.",
+      "terms": [
+        {
+          "ar": "الوسيط p50",
+          "en": "Median / p50",
+          "def": "The value that half of the requests are faster than and half slower than. It represents the typical experience."
+        },
+        {
+          "ar": "كمون الذيل",
+          "en": "Tail latency",
+          "def": "The response time of the slowest requests (p95, p99). It is what the affected users feel, and agreements are written on it."
+        }
+      ]
+    },
+    "3.2": {
+      "simple": [
+        "A user's request in a RAG system passes through several stations: it arrives over the network, then the question is converted into a vector, then the documents are searched, then the results are ranked, then the model starts writing, then completes the answer. Each station takes part of the time, and the total time is their sum.",
+        "When the system is slow, do not buy machines for all the stations. **Find the station that takes the most time** and treat it alone. Often the biggest station is the model's generation."
+      ],
+      "example": "Your trip from home to the airport is 90 minutes: 10 minutes to leave, 70 minutes on the road, and 10 minutes to park. Speeding up leaving home will not change much. What matters is changing the road. Likewise, the formula says: model time ≈ time to first token + (number of answer tokens × time per token). An answer of 250 tokens at 25 ms per token = 6.25 seconds, and that is much larger than any other station.",
+      "terms": [
+        {
+          "ar": "ميزانية الكمون",
+          "en": "Latency budget",
+          "def": "Distributing the entire permitted time (such as 1.5 seconds) over the stages of the request, so that each team knows its stage's share."
+        },
+        {
+          "ar": "المصادقة",
+          "en": "Authentication",
+          "def": "Verifying the identity of the user or system sending the request, such as logging in."
+        },
+        {
+          "ar": "الفهرس التقريبي لأقرب جار",
+          "en": "Approximate Nearest Neighbor — ANN",
+          "def": "A search method that finds vectors very close to the question very quickly without comparing all the vectors, in return for a small chance of missing the exact closest. HNSW and IVF are names of methods of this kind."
+        },
+        {
+          "ar": "إعادة الترتيب",
+          "en": "Reranking",
+          "def": "A second step after the search: a more accurate model reorders the best results (such as the top 20) to put the most suitable at the top. More accurate but slower, which is why it works on a small number."
+        },
+        {
+          "ar": "زمن الرمز الواحد",
+          "en": "Time Per Output Token — TPOT",
+          "def": "The time the model takes to write each token of the answer after the first token."
+        },
+        {
+          "ar": "فك الترميز التخميني",
+          "en": "Speculative decoding",
+          "def": "A trick to speed up generation: a small, fast model guesses several tokens, and the large model checks them in one go."
+        },
+        {
+          "ar": "التخزين المؤقت للموجّه",
+          "en": "Prompt caching",
+          "def": "Saving the processing of the fixed part of the prompt, such as long system instructions, to reuse in every request instead of computing it every time. It saves time and cost."
+        }
+      ]
+    },
+    "3.3": {
+      "simple": [
+        "**Streaming** means that the answer appears to the user word by word as it is being written, instead of the user waiting until it is complete. The user sees something in less than half a second, so they feel the system is fast.",
+        "But note: streaming **does not make the answer complete faster**, and does not reduce the cost. It changes only the feeling. If the consumer is another programme waiting for the complete answer, streaming does not help it at all."
+      ],
+      "example": "You are in a restaurant and the waiter brings the salad first and then the main dish. You feel that the service is faster, although the whole meal took the same time. But if you were ordering takeaway food, there is no use in bringing the salad first: you will wait until everything is ready.",
+      "terms": [
+        {
+          "ar": "البث التدريجي",
+          "en": "Streaming",
+          "def": "Sending the answer to the user part by part while it is being generated. It reduces the time the user feels, and does not reduce the total time or the cost."
+        },
+        {
+          "ar": "الزمن المُدرَك",
+          "en": "Perceived latency",
+          "def": "The time the user feels until they see a response, as opposed to the actual time until the work is complete."
+        }
+      ]
+    },
+    "3.4": {
+      "simple": [
+        "When the system is busy 60% of the time, requests pass smoothly. But as it approaches 100%, queues begin to form, and the waiting increases **much faster** than the increase in load. This is called “non-linear” behaviour: the last increase in load has the greatest effect.",
+        "That is why nobody designs a system to run at 100% of its capacity. Systems are set to add new replicas when utilisation reaches 60–75%."
+      ],
+      "example": "A motorway at half capacity: cars move fast. At 90% it is enough for one driver to press the brakes and a jam forms that stretches for kilometres. The extra cars are few, but their effect on the waiting is huge.",
+      "terms": [
+        {
+          "ar": "نسبة الاستخدام",
+          "en": "Utilisation",
+          "def": "The percentage of time or capacity in which the machine is actually working. 70% means it is busy at 70% of its capacity."
+        },
+        {
+          "ar": "غير خطي",
+          "en": "Non-linear",
+          "def": "A relationship in which the result is not proportional to the cause at a fixed ratio. A small increase in load near the maximum causes a large increase in waiting."
+        }
+      ]
+    },
+    "3.5": {
+      "simple": [
+        "How many machines (replicas) do we need to serve the peak? The method is three steps: (1) calculate how many requests per second one replica serves, (2) do not calculate it at full capacity but at a safe percentage such as 70%, (3) divide the total load by this capacity, and add a spare replica.",
+        "The spare replica is called **N+1**: if you need N replicas, you run N+1, so that if one fails the capacity remains sufficient."
+      ],
+      "example": "A kitchen with 8 cooks, each of whom finishes a dish in 0.2 hours. So the kitchen produces 8 ÷ 0.2 = 40 dishes per hour. We do not want it pushed to 100%, so we calculate 70%: 40 × 0.7 = 28 dishes. The demand at peak is 600 dishes, so we need 600 ÷ 28 = 21.4, and we always round up: 22 kitchens. We add a spare kitchen: 23. The symbol ⌈ ⌉ means “round up”.",
+      "terms": [
+        {
+          "ar": "قانون ليتل",
+          "en": "Little's Law",
+          "def": "The number of requests in flight = the arrival rate of requests × the time a request stays in the system. For example: 10 requests/second × 2 seconds = 20 requests at any moment."
+        },
+        {
+          "ar": "النسخة",
+          "en": "Replica",
+          "def": "An identical copy of the service running on a separate machine. Increasing the replicas increases the number of requests the system can bear."
+        },
+        {
+          "ar": "التوفر العالي",
+          "en": "High Availability — HA",
+          "def": "A design that ensures the service continues when part of it fails, usually through the presence of spare replicas."
+        },
+        {
+          "ar": "N+1",
+          "en": "N+1 redundancy",
+          "def": "Running one extra replica above what the load needs, so that the service can withstand the failure of a replica without being affected."
+        },
+        {
+          "ar": "التقريب للأعلى",
+          "en": "Ceiling ⌈x⌉",
+          "def": "Rounding the number up to the higher whole number. 21.4 becomes 22, because we cannot run 0.4 of a machine."
+        }
+      ]
+    },
+    "3.6": {
+      "simple": [
+        "“Problem → solution” questions describe a symptom in a working system, and the required answer is the first suitable treatment. This table is like a doctor's guide: each symptom has its most likely cause and its first treatment.",
+        "Note the third row: the machine is working at only 15% and the speed is good. Here there is no performance problem; the problem is **wasted money**. The solution is to reduce the machines, not to increase them."
+      ],
+      "example": "A restaurant has 10 cashiers, and the customers are few, so 8 cashiers stand idle. The problem is not the service but the salaries. The solution is to reduce the cashiers. But if the queue is long and all the cashiers are 100% busy, the solution is more cashiers or serving more than one customer at a time.",
+      "terms": [
+        {
+          "ar": "التشبّع",
+          "en": "Saturation",
+          "def": "A resource reaching its maximum limit, so requests begin to wait in a queue."
+        },
+        {
+          "ar": "النموذج المُكمَّم",
+          "en": "Quantized model",
+          "def": "A model whose numbers were converted to a smaller format (from 2 bytes to 1 byte, for example), so it became smaller in size and faster."
+        },
+        {
+          "ar": "التجهيز الزائد",
+          "en": "Over-provisioning",
+          "def": "Reserving machines or capacity much larger than the actual need. It means paying money for idle machines."
+        },
+        {
+          "ar": "تقسيم GPU",
+          "en": "Multi-Instance GPU — MIG",
+          "def": "A technology that divides a large GPU into several independent parts, each part serving a model or a user, so that its capacity is not wasted."
+        },
+        {
+          "ar": "فحص الصحة",
+          "en": "Health check",
+          "def": "A periodic automatic test that asks each replica “are you working?”, and if it does not answer, requests stop being sent to it."
+        }
+      ]
+    },
+    "4.1": {
+      "simple": [
+        "Not all errors have the same price. In a bank, for the system to stop a legitimate transaction (a false alarm) costs little: an employee reviews it and a customer is annoyed. But to miss real fraud may cost thousands of riyals.",
+        "That is why we do not compare models by the number of their errors, but by **the price of their errors**. We multiply the number of each type of error by its price and add up. The best model is the one with the lowest total."
+      ],
+      "example": "Model A makes 100 errors, all false alarms at 10 SAR: 100 × 10 = 1,000 SAR. Model B makes only 5 errors, all missed fraud at 5,000 SAR: 5 × 5,000 = 25,000 SAR. Model B's errors are fewer in number, but it is much more expensive.",
+      "terms": [
+        {
+          "ar": "التكلفة المتوقعة",
+          "en": "Expected cost",
+          "def": "The sum of (the number of each type of error × the price of a single error). The correct way to compare when the prices of errors differ."
+        },
+        {
+          "ar": "الإيجابي الكاذب والسلبي الكاذب",
+          "en": "False Positive (FP) / False Negative (FN)",
+          "def": "FP: the model said “yes” and reality is “no”, that is, a false alarm. FN: the model said “no” and reality is “yes”, that is, a missed case. See Section 3.1 in Unit 00."
+        }
+      ]
+    },
+    "4.2": {
+      "simple": [
+        "This is a real question relayed by test-takers: three models for detecting fraud, each with different precision and recall. The required answer is the most suitable.",
+        "The trick is that the table does not give you the number of errors directly. You calculate it from the ratios, then multiply each error by its price. You will find that the model with the **worst precision** is the cheapest, because it catches most of the fraud, and missing fraud is the expensive error."
+      ],
+      "example": "The calculation for model Z step by step. The number of real fraud cases is 2,000. Recall is 0.97, so it caught 0.97 × 2,000 = 1,940, and missed 2,000 − 1,940 = 60. Its precision is 0.20, that is, only 20% of what it flagged is real fraud, so it flagged 1,940 ÷ 0.20 = 9,700 transactions, of which 9,700 − 1,940 = 7,760 were false alarms. The cost: 60 × 7,000 = 420,000, and 7,760 × 10 = 77,600, and the total ≈ 0.50 million dollars. That is less than Y (1.42 million) and X (4.20 million).",
+      "terms": [
+        {
+          "ar": "نسبة الاحتيال",
+          "en": "Fraud rate / prevalence",
+          "def": "The percentage of real positive cases in the data. 0.2% of a million = 2,000 cases."
+        },
+        {
+          "ar": "المحلل",
+          "en": "Analyst",
+          "def": "The employee who manually reviews suspicious transactions. Their time is the cost of a false alarm."
+        }
+      ]
+    },
+    "4.3": {
+      "simple": [
+        "The same question may come with a small addition that flips the answer: “the review team can handle only 3,000 alerts per month”. Now we have a new **hard condition**: every model that fires more than 3,000 alerts is eliminated, however low its expected cost.",
+        "The order is always: **hard conditions first, then preference**. Exactly as you learned in Section 1.3."
+      ],
+      "example": "Model Z fires 9,700 alerts per month. If the review team can handle only 3,000, then 6,700 cases will pile up unreviewed every month. That is, the “best” model on paper cannot be run in reality. The smarter solution in the question: take model Y and raise its threshold until its number of alerts drops to 3,000.",
+      "terms": [
+        {
+          "ar": "قيد السعة",
+          "en": "Capacity constraint",
+          "def": "An upper limit on what a team or a system can handle, such as the number of alerts the employees review per month."
+        },
+        {
+          "ar": "التنبيهات",
+          "en": "Alerts",
+          "def": "Every case the model flags as suspicious. Their number = true positives + false positives (TP + FP)."
+        }
+      ]
+    },
+    "4.4": {
+      "simple": [
+        "The model gives each transaction a probability of being fraud. When do we stop it? There is no reason for the threshold to be 50%. We stop it when **the price of leaving it is greater than the price of reviewing it**.",
+        "If missing fraud is 700 times more expensive than a review, a very small probability is enough for us to decide to review. That is why the optimal threshold here falls to about 0.14%."
+      ],
+      "example": "Everyday thinking: if forgetting to lock the house door costs 100,000 SAR if it is burgled, and checking the lock costs you two seconds, you will check it even if the probability of having forgotten it is only 1%. With the numbers here: the price of a review is 10, and the price of a miss is 7,000. We stop the transaction if the probability of fraud is greater than 10 ÷ (10 + 7,000) = 10 ÷ 7,010 ≈ 0.0014, that is, 0.14%.",
+      "terms": [
+        {
+          "ar": "نقطة التعادل",
+          "en": "Break-even",
+          "def": "The value at which the costs of two options are equal. Above it one becomes cheaper, and below it the other."
+        },
+        {
+          "ar": "العتبة المثلى",
+          "en": "Optimal threshold",
+          "def": "The probability value above which the model treats the case as positive, chosen to make the total cost as low as possible."
+        }
+      ]
+    },
+    "4.5": {
+      "simple": [
+        "Almost all cost questions depend on two formulas. The first is for machines: **hourly price × number of hours × number of machines**. The second is for language models via an API: **number of requests × (question tokens × their price + answer tokens × their price)**.",
+        "Two important pieces of information: answer tokens are usually three to five times more expensive than question tokens. Arabic text often needs more tokens than English for the same meaning, so it costs more."
+      ],
+      "example": "A machine priced at 3 dollars per hour running 24 hours for 30 days: 3 × 24 × 30 = 2,160 dollars per month. If it were scheduled to run only 12 hours a day: 3 × 12 × 30 = 1,080 dollars. Half the cost just by changing the running schedule.",
+      "terms": [
+        {
+          "ar": "خصوبة المُرمِّز",
+          "en": "Tokenizer fertility",
+          "def": "The average number of tokens that a single word needs. The higher this number is for a language, the higher the cost of its texts and the time to process them."
+        },
+        {
+          "ar": "المثيل",
+          "en": "Instance",
+          "def": "A virtual machine you rent in the cloud with specified specifications (processor, memory and GPU), usually charged by the hour."
+        },
+        {
+          "ar": "المثيلات الفورية والمحجوزة",
+          "en": "Spot / Reserved instances",
+          "def": "Pricing options in the cloud. Reserved: you commit to a long period in return for a discount. Spot: spare capacity that is very cheap, but the provider may take it back at any moment."
+        }
+      ]
+    },
+    "4.6": {
+      "simple": [
+        "Every request sent to the model carries with it the full **system prompt**: the long text that explains to the model its role and rules. If it is 1,000 tokens, and a million requests come, you pay for a billion instruction tokens, most of it repeated text.",
+        "That is why shortening the instructions or caching them is one of the fastest ways to cut the bill, and it does not require changing the model."
+      ],
+      "example": "The calculation step by step. Question tokens: a million requests × 1,500 tokens = 1,500 million tokens. At a price of $0.50 per million tokens: 1,500 × 0.50 = $750. Answer tokens: a million × 300 = 300 million tokens × 1.50 = $450. The total is $1,200. Shortening the instructions by 500 tokens saves 500 million tokens × 0.50 = $250, that is, about 21% of the bill.",
+      "terms": [
+        {
+          "ar": "تعليمات النظام",
+          "en": "System prompt",
+          "def": "Fixed text that the developer writes and that is sent with every request, defining for the model its role, style and limits."
+        },
+        {
+          "ar": "رمز المدخل والمخرج",
+          "en": "Input / output tokens",
+          "def": "Input tokens: everything we send to the model (the instructions, the question and the documents). Output tokens: what the model writes. Each is charged at a different price."
+        }
+      ]
+    }
+  }
+}

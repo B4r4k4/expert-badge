@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preparing for the SDAIA Expert AI Engineer Badge — Mohamed Elmubarak</title>
+<meta name="description" content="This platform is preparation material for SDAIA’s Expert AI Engineer badge exam, built on the seven published exam domains and their weights. It consists of 12 units: Unit 01 gives you the solving method and the calculations that serve every question, Units 02–11 cover the seven domains, and Unit 12 brings together the case studies and the final review. Each unit ends with an applied scenario that imitates the exam questions and with review questions with explained answers. It is preparation material drawn from candidates’ reports and published SDAIA releases, and it is not an official curriculum issued by SDAIA.">
+<link rel="alternate" hreflang="ar" href="../index.html">
+<link rel="alternate" hreflang="en" href="../en/index.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="../fonts/thmanyah.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link href="../assets/site.css" rel="stylesheet">
+<link href="../assets/exam.css" rel="stylesheet">
+<link href="../assets/player.css" rel="stylesheet">
+</head>
+<body class="home">
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-head"><div class="in">
+  <a class="logo rv" href="index.html">Expert AI Engineer Badge<small>SDAIA · EXPERT AI ENGINEER</small></a>
+  <nav class="nav rv" style="--rd:.4s" id="nav" aria-label="Main menu">
+    <a href="index.html#units">Units</a><a href="index.html#tour">Platform tour</a><a href="guide.html">Exam guide</a><a href="glossary.html">Glossary</a><a href="simulator.html">Simulator</a>
+    <a class="lang-switch" href="../index.html" hreflang="ar" lang="ar">العربية</a>
+    <a class="pill-outline nav-pill" href="units/00.html">Start from zero</a>
+  </nav>
+  <a class="pill-outline rv head-pill" style="--rd:.4s" href="units/00.html">Start from zero</a>
+  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav" aria-label="Menu"><i></i><i></i></button>
+</div></header>
+<main id="main">
+
+<section class="hero"><div class="in">
+  <p class="eyebrow-g rv">A prep platform by Mohamed Elmubarak</p>
+  <h1 class="rv" style="--rd:.1s">The exam does not ask for the definition.<br>It asks for the right decision under constraints.</h1>
+  <p class="lead rv" style="--rd:.2s">This platform is preparation material for SDAIA’s Expert AI Engineer badge exam, built on the seven published exam domains and their weights. It consists of 12 units: Unit 01 gives you the solving method and the calculations that serve every question, Units 02–11 cover the seven domains, and Unit 12 brings together the case studies and the final review. Each unit ends with an applied scenario that imitates the exam questions and with review questions with explained answers. It is preparation material drawn from candidates’ reports and published SDAIA releases, and it is not an official curriculum issued by SDAIA.</p>
+  <a class="cta rv" style="--rd:.3s" href="units/00.html"><i aria-hidden="true">↗</i>Start from zero</a>
+  <p class="hero-meta rv" style="--rd:.4s"><span>A beginner primer + 12 units covering all seven domains</span><span>A plain-language explanation and definitions before the detail, in every section</span><span>An applied scenario and questions in every unit</span><span>A 1000-question simulator</span></p>
+</div></section>
+
+<section class="values"><div class="in">
+  <h2 class="rv">From reading the scenario to choosing the cheapest sufficient solution.</h2>
+  <p class="sub rv" style="--rd:.1s">The platform is designed for candidates for SDAIA’s Expert AI Engineer badge: engineers who work, or are preparing to work, on building, deploying and operating AI systems, and who need to make technical decisions that weigh cost, latency, accuracy and compliance together. The material assumes basic working knowledge of machine learning and software, and focuses on choosing between reasonable solutions more than on definitions.</p>
+  <div class="cards">
+    <article class="vcard rv" style="--rd:0.1s"><span class="vnum">1</span><h3>Understand and decide with numbers</h3><ul><li>Extract the hard and soft requirements from the scenario text before reading the options.</li><li>Calculate latency, capacity, replica count and the expected cost of a threshold.</li><li>Choose the metric that fits the cost of error, not overall accuracy.</li></ul></article>
+    <article class="vcard rv" style="--rd:0.2s"><span class="vnum">2</span><h3>Build and operate</h3><ul><li>Design RAG that stays fresh, and serving interfaces that are resilient and secure.</li><li>Choose the right deployment, monitoring and retraining strategy.</li><li>Scale a service on GPUs inside the Kingdom.</li></ul></article>
+    <article class="vcard rv" style="--rd:0.3s"><span class="vnum">3</span><h3>Govern and comply</h3><ul><li>Name precisely the SDAIA principle or PDPL obligation that was violated.</li><li>Spot the waste in a bill and propose the cheapest sufficient alternative.</li><li>Reach an integrated decision in case studies drawn from the Saudi workplace.</li></ul></article>
+  </div>
+</div></section>
+
+<section class="units" id="units"><div class="in">
+  <div class="units-head">
+    <div>
+      <h2 class="rv">Start from zero, then twelve units across the exam domains.</h2>
+      <p class="sub rv" style="--rd:.1s">Every section opens with the idea in plain terms, a real-world example and the definitions of its terms, then the detail the exam tests. Every unit ends with an applied scenario, the exam traps, and questions with worked answers.</p>
+    </div>
+    <div class="progress rv" style="--rd:.2s" id="progress" hidden>
+      <span id="progressText"></span><i><u id="progressBar"></u></i>
+    </div>
+  </div>
+  <ol class="ledger">
+    <li class="rv" data-unit="0"><a href="units/00.html">
+      <span class="lnum">00</span>
+      <span class="ltitle"><b>Beginner's Introduction: AI from Zero</b><small lang="ar" dir="rtl">مدخل للمبتدئين: الذكاء الاصطناعي من الصفر</small></span>
+      <span class="ldel"><em>Preface — before Unit 01</em>Read any scenario in the following units and understand its core terms: data, model, metric, latency, cost and privacy.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="1"><a href="units/01.html">
+      <span class="lnum">01</span>
+      <span class="ltitle"><b>Exam Method &amp; Decision Arithmetic</b><small lang="ar" dir="rtl">منهجية الحل وحسابات الامتحان</small></span>
+      <span class="ldel"><em>Serves all domains</em>Solve any scenario question with a fixed procedure: extract the requirements, eliminate with a ✓/✗ grid, then do the quick arithmetic for latency, capacity and cost.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="2"><a href="units/02.html">
+      <span class="lnum">02</span>
+      <span class="ltitle"><b>Data &amp; Machine-Learning Foundations</b><small lang="ar" dir="rtl">البيانات وأسس تعلّم الآلة</small></span>
+      <span class="ldel"><em>Domain 1 · <span dir="ltr">17.3%</span></em>Diagnose the data problem before touching the model: a sound split, a metric that matches the cost of error, and trustworthy data that can be monitored.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="3"><a href="units/03.html">
+      <span class="lnum">03</span>
+      <span class="ltitle"><b>Algorithms, Statistics &amp; Model Evaluation</b><small lang="ar" dir="rtl">الخوارزميات والإحصاء وتقييم النماذج</small></span>
+      <span class="ldel"><em>Domain 1 · <span dir="ltr">17.3%</span></em>Choose the right algorithm family, calculate metrics from a confusion matrix and error tables, and judge whether the difference between two models is real.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="4"><a href="units/04.html">
+      <span class="lnum">04</span>
+      <span class="ltitle"><b>Deep Learning, Transformers &amp; LLMs</b><small lang="ar" dir="rtl">التعلّم العميق والمحوّلات والنماذج اللغوية</small></span>
+      <span class="ldel"><em>Domain 2 · <span dir="ltr">16.7%</span></em>Diagnose a training run, calculate model memory and KV cache memory, and choose between prompting, RAG and fine-tuning, together with suitable generation settings, for a given scenario.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="5"><a href="units/05.html">
+      <span class="lnum">05</span>
+      <span class="ltitle"><b>Context Engineering, Agents &amp; GenAI Evaluation</b><small lang="ar" dir="rtl">هندسة السياق والوكلاء وتقييم النماذج التوليدية</small></span>
+      <span class="ldel"><em>Domain 2 · <span dir="ltr">16.7%</span></em>Design a disciplined context and agent for an Arabic use case, select a language model through evaluation and red-teaming, and choose the right technique with the decision tree.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="6"><a href="units/06.html">
+      <span class="lnum">06</span>
+      <span class="ltitle"><b>AI Software Engineering &amp; Integration</b><small lang="ar" dir="rtl">هندسة برمجيات الذكاء الاصطناعي والتكامل</small></span>
+      <span class="ldel"><em>Domain 3 · <span dir="ltr">14.0%</span></em>Design a RAG assistant that stays up to date as documents change, and deliver it through a resilient, secure interface that can be tested, monitored and integrated with enterprise systems.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="7"><a href="units/07.html">
+      <span class="lnum">07</span>
+      <span class="ltitle"><b>MLOps, LLMOps, Deployment &amp; Reliability</b><small lang="ar" dir="rtl">MLOps وLLMOps والاعتمادية</small></span>
+      <span class="ldel"><em>Domain 4 · <span dir="ltr">18.0%</span></em>Choose the right rollout, monitoring, retraining and recovery strategy for any operational scenario, calculate an error budget and read drift indicators.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="8"><a href="units/08.html">
+      <span class="lnum">08</span>
+      <span class="ltitle"><b>Architecture, Infrastructure, Performance &amp; Scalability</b><small lang="ar" dir="rtl">المعمارية والبنية التحتية والأداء</small></span>
+      <span class="ldel"><em>Domain 5 · <span dir="ltr">12.7%</span></em>Design a right-sized architecture for an AI service — inference mode, GPU count, scaling policy and hosting location — that meets the service target at peak without over-provisioning.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="9"><a href="units/09.html">
+      <span class="lnum">09</span>
+      <span class="ltitle"><b>Responsible AI &amp; Security</b><small lang="ar" dir="rtl">الذكاء الاصطناعي المسؤول والأمن</small></span>
+      <span class="ldel"><em>Domain 6 · <span dir="ltr">14.7%</span></em>Diagnose the security or fairness risk in a scenario and choose the most suitable control for it, with a verifiable reason.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="10"><a href="units/10.html">
+      <span class="lnum">10</span>
+      <span class="ltitle"><b>SDAIA Governance &amp; the PDPL</b><small lang="ar" dir="rtl">حوكمة سدايا وحماية البيانات الشخصية</small></span>
+      <span class="ldel"><em>Domain 6 · <span dir="ltr">14.7%</span></em>Identify, in a scenario, the principle or obligation that was breached by its exact official name, together with the deadline, figure or control that addresses it.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="11"><a href="units/11.html">
+      <span class="lnum">11</span>
+      <span class="ltitle"><b>Business, Professional Practice &amp; Cost Analysis</b><small lang="ar" dir="rtl">الأعمال والممارسة المهنية وتحليل التكاليف</small></span>
+      <span class="ldel"><em>Domain 7 · <span dir="ltr">6.7%</span> + cost questions</em>To read an AI proposal or invoice, identify the value, the waste and the risk, and recommend a documented decision that non-technical people can understand.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+    <li class="rv" data-unit="12"><a href="units/12.html">
+      <span class="lnum">12</span>
+      <span class="ltitle"><b>Case Studies &amp; Final Review</b><small lang="ar" dir="rtl">دراسات الحالة والمراجعة النهائية</small></span>
+      <span class="ldel"><em>Serves all domains</em>Analyse a long exam scenario, extract its hard requirements, choose the appropriate design, governance and operations, then review quickly with the reflex sheet, the numbers and the names.</span>
+      <span class="lgo"><span class="done-badge">Completed</span><i aria-hidden="true">↗</i></span>
+    </a></li>
+  </ol>
+</div></section>
+
+<section class="band" id="tour"><div class="in">
+  <h2 class="rv">Platform tour</h2>
+  <p class="sub rv" style="--rd:.1s">Play the tour, or move between scenes at your own pace.</p>
+  <div class="player" dir="ltr">
+    <header class="topbar"><span class="mark" aria-hidden="true"></span><div><b>Preparing for the SDAIA Expert AI Engineer Badge</b><a href="#units">Primer + 12 units · Mohamed Elmubarak</a></div></header>
+    <nav class="tabs" id="tabs" aria-label="Tour parts"></nav>
+    <div class="stage" id="stage" aria-live="polite">
+      <div class="brandbug" aria-hidden="true">SDAIA · Expert AI Engineer</div>
+
+      <section class="scene chap" data-ch="Platform" data-dur="8000" data-label="Cover">
+        <p class="eyebrow a" style="--d:.3s">Prep platform · Primer + 12 units · 7 domains</p>
+        <h1 class="a" style="--d:.5s">The exam does not ask for the definition. It asks for <mark>the right decision</mark>.</h1>
+        <p class="lead a" style="--d:1.2s">This platform is preparation material for SDAIA’s Expert AI Engineer badge exam, built on the seven published exam domains and their weights.</p>
+      </section>
+
+      <section class="scene" data-ch="Platform" data-dur="10000" data-label="What is measured">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">What is measured</p><h2 class="a" style="--d:.25s">Choosing between two reasonable solutions under <mark>four constraints at once</mark>.</h2></div>
+        <ol class="steps">
+          <li class="a" style="--d:.8s"><span class="num">1</span><b>Cost</b><small>The cheapest sufficient solution.</small></li>
+          <li class="a" style="--d:1.9s"><span class="num">2</span><b>Latency</b><small>p95, p99 and the response timeout.</small></li>
+          <li class="a" style="--d:3s"><span class="num">3</span><b>Accuracy</b><small>The metric that fits the cost of error.</small></li>
+          <li class="a" style="--d:4.1s"><span class="num">4</span><b>Compliance</b><small>The PDPL and SDAIA’s principles.</small></li>
+        </ol>
+      </section>
+
+      <section class="scene" data-ch="Platform" data-dur="9000" data-label="Question patterns">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Question patterns</p><h2 class="a" style="--d:.25s">Four patterns recur across most questions.</h2></div>
+        <div class="grid g3">
+          <div class="card a" style="--d:.8s"><span class="tagline">Largest</span><h3>Problem → best fix</h3></div>
+          <div class="card hi a pop" style="--d:1.8s"><span class="tagline">Hardest</span><h3>Matching requirements to specs</h3></div>
+          <div class="card a" style="--d:2.8s"><span class="tagline">Recurring</span><h3>Cost analysis & governance</h3></div>
+        </div>
+        <p class="lead a" style="--d:4s">Unit 01 teaches you one procedure to apply to every question.</p>
+      </section>
+
+      <section class="scene" data-ch="Platform" data-dur="12000" data-label="Domain weights">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Domain weights</p><h2 class="a" style="--d:.25s">The <mark>operational</mark> block is heavier than you expect.</h2></div>
+        <div class="weights">
+          <div class="w a" style="--d:0.8s;--p:90"><b><span data-from="0" data-to="18" data-at="800" data-ms="1200">0</span>%</b><i><u></u></i><small>Domain 4 · MLOps, LLMOps, Deployment &amp; Reliability</small></div>
+          <div class="w a" style="--d:1.9s;--p:87"><b><span data-from="0" data-to="17" data-at="1900" data-ms="1200">0</span>%</b><i><u></u></i><small>Domain 1 · Data, ML Foundations &amp; Model Evaluation</small></div>
+          <div class="w a" style="--d:3.0s;--p:84"><b><span data-from="0" data-to="17" data-at="3000" data-ms="1200">0</span>%</b><i><u></u></i><small>Domain 2 · Core AI, Deep Learning &amp; Generative AI</small></div>
+          <div class="w a" style="--d:4.1s;--p:74"><b><span data-from="0" data-to="15" data-at="4100" data-ms="1200">0</span>%</b><i><u></u></i><small>Domain 6 · Responsible AI, Security &amp; Governance</small></div>
+        </div>
+      </section>
+
+      <section class="scene chap" data-ch="Primer" data-dur="6000" data-label="Part 1">
+        <p class="daynum a pop" style="--d:.2s">Part <span>1</span></p>
+        <h2 class="a" style="--d:.8s">Primer</h2>
+        <p class="lead a" style="--d:1.2s">For beginners: data, models, metrics, language models and systems, from zero.</p>
+        <div class="pillars a" style="--d:1.8s"><span>Unit 00</span></div>
+      </section>
+
+      <section class="scene" data-ch="Primer" data-dur="11600" data-label="Beginner's Introduction: AI from Zero">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">00</span></p><h2 class="a" style="--d:.25s">Beginner's Introduction: AI from Zero</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>What Is Artificial Intelligence?</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Data and How a Model Learns</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>How We Judge a Model</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Language Models and Generative AI</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Preface — before Unit 01</span><p>Read any scenario in the following units and understand its core terms: data, model, metric, latency, cost and privacy.</p></div>
+      </section>
+
+      <section class="scene chap" data-ch="Method" data-dur="6000" data-label="Part 2">
+        <p class="daynum a pop" style="--d:.2s">Part <span>2</span></p>
+        <h2 class="a" style="--d:.8s">Method</h2>
+        <p class="lead a" style="--d:1.2s">The answering procedure, requirement extraction, and latency, capacity and cost calculations.</p>
+        <div class="pillars a" style="--d:1.8s"><span>Unit 01</span></div>
+      </section>
+
+      <section class="scene" data-ch="Method" data-dur="11600" data-label="Exam Method &amp; Decision Arithmetic">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">01</span></p><h2 class="a" style="--d:.25s">Exam Method &amp; Decision Arithmetic</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>The Answering Procedure and Reading the Requirements</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>The Spec-Matching Grid</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>Latency and Capacity Arithmetic</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Expected-Cost and Running-Cost Arithmetic</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Serves all domains</span><p>Solve any scenario question with a fixed procedure: extract the requirements, eliminate with a ✓/✗ grid, then do the quick arithmetic for latency, capacity and cost.</p></div>
+      </section>
+
+      <section class="scene chap" data-ch="Data & Models" data-dur="6000" data-label="Part 3">
+        <p class="daynum a pop" style="--d:.2s">Part <span>3</span></p>
+        <h2 class="a" style="--d:.8s">Data &amp; Models</h2>
+        <p class="lead a" style="--d:1.2s">From splits, metrics and drift to transformers, agents and the evaluation of generative models.</p>
+        <div class="pillars a" style="--d:1.8s"><span>Unit 02</span><span>Unit 03</span><span>Unit 04</span><span>Unit 05</span></div>
+      </section>
+
+      <section class="scene" data-ch="Data & Models" data-dur="11600" data-label="Data &amp; Machine-Learning Foundations">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">02</span></p><h2 class="a" style="--d:.25s">Data &amp; Machine-Learning Foundations</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>Splitting, Leakage and Generalisation</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Metrics, Threshold and Imbalance</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>Data Quality, Lifecycle and Drift</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Labels, Features and Choosing the Model Family</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 1 · <span dir="ltr">17.3%</span></span><p>Diagnose the data problem before touching the model: a sound split, a metric that matches the cost of error, and trustworthy data that can be monitored.</p></div>
+      </section>
+
+      <section class="scene" data-ch="Data & Models" data-dur="11600" data-label="Algorithms, Statistics &amp; Model Evaluation">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">03</span></p><h2 class="a" style="--d:.25s">Algorithms, Statistics &amp; Model Evaluation</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>The Algorithm Map and Domain Patterns</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Statistics, Tuning, Model Selection and Interpretability</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>Metrics Worked Through with Numbers and Evaluation-Set Design</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Data Engineering, Search, Recommendation and Time-Series Systems</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 1 · <span dir="ltr">17.3%</span></span><p>Choose the right algorithm family, calculate metrics from a confusion matrix and error tables, and judge whether the difference between two models is real.</p></div>
+      </section>
+
+      <section class="scene" data-ch="Data & Models" data-dur="11600" data-label="Deep Learning, Transformers &amp; LLMs">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">04</span></p><h2 class="a" style="--d:.25s">Deep Learning, Transformers &amp; LLMs</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>How Neural Networks Learn and How to Diagnose Them</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Architectures: From Convolution to the Transformer</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>How Language Models Are Built and How They Represent Text</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Adaptation, Serving and Evaluation: The Engineer's Decisions</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 2 · <span dir="ltr">16.7%</span></span><p>Diagnose a training run, calculate model memory and KV cache memory, and choose between prompting, RAG and fine-tuning, together with suitable generation settings, for a given scenario.</p></div>
+      </section>
+
+      <section class="scene" data-ch="Data & Models" data-dur="11600" data-label="Context Engineering, Agents &amp; GenAI Evaluation">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">05</span></p><h2 class="a" style="--d:.25s">Context Engineering, Agents &amp; GenAI Evaluation</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>Prompt Engineering and Context Engineering</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Agents and AI-Assisted Programming</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>Multimodal AI, Arabic, Adaptation and Compression</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Evaluating and Selecting Models, Red-Teaming and Choosing the Technique</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 2 · <span dir="ltr">16.7%</span></span><p>Design a disciplined context and agent for an Arabic use case, select a language model through evaluation and red-teaming, and choose the right technique with the decision tree.</p></div>
+      </section>
+
+      <section class="scene chap" data-ch="Engineering & Operations" data-dur="6000" data-label="Part 4">
+        <p class="daynum a pop" style="--d:.2s">Part <span>4</span></p>
+        <h2 class="a" style="--d:.8s">Engineering &amp; Operations</h2>
+        <p class="lead a" style="--d:1.2s">RAG and integration, then deployment and monitoring, then infrastructure and scaling.</p>
+        <div class="pillars a" style="--d:1.8s"><span>Unit 06</span><span>Unit 07</span><span>Unit 08</span></div>
+      </section>
+
+      <section class="scene" data-ch="Engineering & Operations" data-dur="11600" data-label="AI Software Engineering &amp; Integration">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">06</span></p><h2 class="a" style="--d:.25s">AI Software Engineering &amp; Integration</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>RAG Architecture and Keeping It Up to Date</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Model-Serving Interfaces and Their Resilience</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>Integration Architecture, the Model Gateway and Packaging</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Quality, Reliability and Security: From Practices to Agents</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 3 · <span dir="ltr">14.0%</span></span><p>Design a RAG assistant that stays up to date as documents change, and deliver it through a resilient, secure interface that can be tested, monitored and integrated with enterprise systems.</p></div>
+      </section>
+
+      <section class="scene" data-ch="Engineering & Operations" data-dur="11600" data-label="MLOps, LLMOps, Deployment &amp; Reliability">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">07</span></p><h2 class="a" style="--d:.25s">MLOps, LLMOps, Deployment &amp; Reliability</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>Lifecycle, Automation and Model Governance</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Deployment, Monitoring, Drift and Retraining Strategies</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>Reliability, Incidents and Resilience</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>LLM Operations (LLMOps), Platform, Vendors and Ethics</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 4 · <span dir="ltr">18.0%</span></span><p>Choose the right rollout, monitoring, retraining and recovery strategy for any operational scenario, calculate an error budget and read drift indicators.</p></div>
+      </section>
+
+      <section class="scene" data-ch="Engineering & Operations" data-dur="11600" data-label="Architecture, Infrastructure, Performance &amp; Scalability">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">08</span></p><h2 class="a" style="--d:.25s">Architecture, Infrastructure, Performance &amp; Scalability</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>Deployment Patterns, Hosting and Reference Architectures</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Hardware, Sizing and LLM Serving</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>Distributed Training, Kubernetes and Vector Databases</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Latency Engineering, Caching, Cost and Energy</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 5 · <span dir="ltr">12.7%</span></span><p>Design a right-sized architecture for an AI service — inference mode, GPU count, scaling policy and hosting location — that meets the service target at peak without over-provisioning.</p></div>
+      </section>
+
+      <section class="scene chap" data-ch="Responsibility & Decisions" data-dur="6000" data-label="Part 5">
+        <p class="daynum a pop" style="--d:.2s">Part <span>5</span></p>
+        <h2 class="a" style="--d:.8s">Responsibility &amp; Decisions</h2>
+        <p class="lead a" style="--d:1.2s">Security, Saudi governance, business and costs, then the case studies.</p>
+        <div class="pillars a" style="--d:1.8s"><span>Unit 09</span><span>Unit 10</span><span>Unit 11</span><span>Unit 12</span></div>
+      </section>
+
+      <section class="scene" data-ch="Responsibility & Decisions" data-dur="11600" data-label="Responsible AI &amp; Security">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">09</span></p><h2 class="a" style="--d:.25s">Responsible AI &amp; Security</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>Cybersecurity and the Attack Surface of AI Systems</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Risks of LLM Applications and Adversarial Machine Learning</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>Encryption and Privacy-Enhancing Technologies</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Fairness, Explainability and Incident Response</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 6 · <span dir="ltr">14.7%</span></span><p>Diagnose the security or fairness risk in a scenario and choose the most suitable control for it, with a verifiable reason.</p></div>
+      </section>
+
+      <section class="scene" data-ch="Responsibility & Decisions" data-dur="11600" data-label="SDAIA Governance &amp; the PDPL">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">10</span></p><h2 class="a" style="--d:.25s">SDAIA Governance &amp; the PDPL</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>SDAIA’s AI Ethics Principles and Risk Frameworks</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>The Seven Principles Stage by Stage, and from Scenario to Control</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>The Personal Data Protection Law: From Text to Operation</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>The National Data Governance System, Generative AI, Deepfakes and the Media</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 6 · <span dir="ltr">14.7%</span></span><p>Identify, in a scenario, the principle or obligation that was breached by its exact official name, together with the deadline, figure or control that addresses it.</p></div>
+      </section>
+
+      <section class="scene" data-ch="Responsibility & Decisions" data-dur="11600" data-label="Business, Professional Practice &amp; Cost Analysis">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">11</span></p><h2 class="a" style="--d:.25s">Business, Professional Practice &amp; Cost Analysis</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>Framing and Delivering a Project: From Idea to Production</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Decisions, Stakeholders and the Saudi Ecosystem</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>The Cost Workshop: Reading Invoices and Diagnosing Waste</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>Total Cost of Ownership and How to Answer</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Domain 7 · <span dir="ltr">6.7%</span> + cost questions</span><p>To read an AI proposal or invoice, identify the value, the waste and the risk, and recommend a documented decision that non-technical people can understand.</p></div>
+      </section>
+
+      <section class="scene" data-ch="Responsibility & Decisions" data-dur="11600" data-label="Case Studies &amp; Final Review">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Unit <span class="unum">12</span></p><h2 class="a" style="--d:.25s">Case Studies &amp; Final Review</h2></div>
+        <ol class="nlist">
+          <li class="a slide" style="--d:0.8s"><span class="n">1</span><span>Cases 1–4: Fraud, Changing Knowledge, Arabic Chat, Healthcare</span></li>
+          <li class="a slide" style="--d:1.9s"><span class="n">2</span><span>Cases 5–8: Forecasting, Credit, Scanned Documents, the Approval-Gated Agent</span></li>
+          <li class="a slide" style="--d:3.0s"><span class="n">3</span><span>Cases 9–12: Edge, the Enterprise Gateway, Causal Impact, Switching between Models</span></li>
+          <li class="a slide" style="--d:4.1s"><span class="n">4</span><span>The Final Review Sheet</span></li>
+        </ol>
+        <div class="deliv a" style="--d:5.4s"><span class="lab">Serves all domains</span><p>Analyse a long exam scenario, extract its hard requirements, choose the appropriate design, governance and operations, then review quickly with the reflex sheet, the numbers and the names.</p></div>
+      </section>
+
+      <section class="scene chap" data-ch="Exam day" data-dur="5500" data-label="Exam day">
+        <p class="daynum a pop" style="--d:.2s">140<span>–</span>150</p>
+        <h2 class="a" style="--d:.8s">Long scenarios, multiple choice</h2>
+      </section>
+
+      <section class="scene" data-ch="Exam day" data-dur="10000" data-label="Three passes">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Time management</p><h2 class="a" style="--d:.25s">Three passes, not one.</h2></div>
+        <div class="weights">
+          <div class="w a" style="--d:0.8s;--p:60"><b><span data-from="0" data-to="60" data-at="800" data-ms="1200">0</span>%</b><i><u></u></i><small>Pass 1: everything you can decide in 90 seconds</small></div>
+          <div class="w a" style="--d:1.9s;--p:30"><b><span data-from="0" data-to="30" data-at="1900" data-ms="1200">0</span>%</b><i><u></u></i><small>Pass 2: spec-matching tables and costs</small></div>
+          <div class="w a" style="--d:3.0s;--p:10"><b><span data-from="0" data-to="10" data-at="3000" data-ms="1200">0</span>%</b><i><u></u></i><small>Pass 3: flagged items only</small></div>
+        </div>
+      </section>
+
+      <section class="scene" data-ch="Exam day" data-dur="10000" data-label="Distractors">
+        <div class="head"><p class="eyebrow a" style="--d:.1s">Distractor families</p><h2 class="a" style="--d:.25s">The biggest option is not the right one.</h2></div>
+        <div class="exrow weak a" style="--d:1s"><span class="lab">Distractor</span><p><span class="strike" style="--s:2s">Retrain, or use a bigger model and more GPUs</span></p></div>
+        <div class="exrow weak a" style="--d:2.6s"><span class="lab">Distractor</span><p><span class="strike" style="--s:3.6s">A technically correct solution that violates the PDPL</span></p></div>
+        <div class="exrow strong a" style="--d:4.8s"><span class="lab">Correct</span><p>Root cause first, then the <mark>minimal sufficient solution</mark> that meets every hard requirement</p></div>
+      </section>
+
+      <section class="scene" data-ch="Exam day" data-dur="8000" data-label="Summary">
+        <p class="eyebrow a" style="--d:.1s">Summary</p>
+        <p class="big a pop" style="--d:.4s"><span data-from="0" data-to="1000" data-at="600" data-ms="1800">0</span></p>
+        <h2 class="a" style="--d:1.4s">reviewed questions in the simulator, distributed across the domains by weight.</h2>
+      </section>
+
+    </div>
+    <div class="bar-ui">
+      <button class="btn" id="prev" aria-label="Previous">‹</button>
+      <button class="btn primary" id="play">Pause</button>
+      <button class="btn" id="next" aria-label="Next">›</button>
+      <button class="btn" id="speed"></button>
+      <div class="segs" id="segs"></div>
+      <div class="now" id="now"></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="assess" id="assessment"><div class="in">
+  <h2 class="rv">Seven domains, each with its own units.</h2>
+  <div class="weights-row domains">
+    <div class="wt rv" style="--rd:0s"><b>17.3%</b><p><span class="dn">Domain 1</span>Data, ML Foundations &amp; Model Evaluation</p><p class="du"><a href="units/02.html">Unit 02</a> · <a href="units/03.html">Unit 03</a></p></div>
+    <div class="wt rv" style="--rd:0.05s"><b>16.7%</b><p><span class="dn">Domain 2</span>Core AI, Deep Learning &amp; Generative AI</p><p class="du"><a href="units/04.html">Unit 04</a> · <a href="units/05.html">Unit 05</a></p></div>
+    <div class="wt rv" style="--rd:0.1s"><b>14.0%</b><p><span class="dn">Domain 3</span>AI Software Engineering &amp; Integration</p><p class="du"><a href="units/06.html">Unit 06</a></p></div>
+    <div class="wt rv" style="--rd:0.15s"><b>18.0%</b><p><span class="dn">Domain 4</span>MLOps, LLMOps, Deployment &amp; Reliability</p><p class="du"><a href="units/07.html">Unit 07</a></p></div>
+    <div class="wt rv" style="--rd:0.2s"><b>12.7%</b><p><span class="dn">Domain 5</span>Architecture, Infrastructure, Performance &amp; Scalability</p><p class="du"><a href="units/08.html">Unit 08</a></p></div>
+    <div class="wt rv" style="--rd:0.25s"><b>14.7%</b><p><span class="dn">Domain 6</span>Responsible AI, Security &amp; Governance</p><p class="du"><a href="units/09.html">Unit 09</a> · <a href="units/10.html">Unit 10</a></p></div>
+    <div class="wt rv" style="--rd:0.3s"><b>6.7%</b><p><span class="dn">Domain 7</span>Business, Professional Practice &amp; Collaboration</p><p class="du"><a href="units/11.html">Unit 11</a></p></div>
+  </div>
+  <p class="note rv">The weights fit a 150-question blueprint. Domains 3, 4 and 5 together account for 44.7%, and much of Domain 6 is operational too. Units 01 and 12 serve every domain.</p>
+
+  <div class="two">
+    <article class="rv">
+      <h3>Exam simulator</h3>
+      <p>1000 multiple-choice questions in Arabic and English, all reviewed and distributed across the seven domains by their official weights, at varying levels of difficulty. Every question comes with an explanation of the correct answer and of why each option is ruled out.</p>
+      <a class="text-link" href="simulator.html">Open the simulator</a>
+    </article>
+    <article class="rv" style="--rd:.1s">
+      <h3>Exam guide</h3>
+      <p>The exam format, the four question patterns, the distractor families, time management in three passes, and a study plan based on the days you have left.</p>
+      <a class="text-link" href="guide.html">Read the guide</a>
+    </article>
+  </div>
+</div></section>
+
+<section class="closing"><div class="in">
+  <h2 class="rv">Don’t just read. Solve the scenario.</h2>
+  <p class="rv" style="--rd:.1s">If you are a beginner, start with the primer, Unit 00. In every section, read “In Plain Terms” and the definitions first, then the detail. Work through the units in order, then cover the decision in the applied scenario and rebuild it from the requirements. After that, open the exam-style questions, and do not move on until you know why each wrong option fails.</p>
+  <p class="small rv" style="--rd:.2s">This is preparation material, not an official curriculum issued by SDAIA. Information on the exam structure comes from candidates’ reports, so verify it on the official SDAIA badge portal before you apply.</p>
+  <div class="act rv" style="--rd:.25s"><a class="cta" href="units/00.html"><i aria-hidden="true">↗</i>Start from zero</a></div>
+  <p class="downloads rv" style="--rd:.3s">Prefer reading a PDF? <a href="../downloads/%D8%A7%D9%84%D9%85%D8%B0%D9%83%D8%B1%D8%A9_%D8%A7%D9%84%D8%B4%D8%A7%D9%85%D9%84%D8%A9_%D8%AB%D9%86%D8%A7%D8%A6%D9%8A%D8%A9_%D8%A7%D9%84%D9%84%D8%BA%D8%A9_%D9%85%D9%87%D9%86%D8%AF%D8%B3_%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1_%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A_%D8%A7%D9%84%D8%AE%D8%A8%D9%8A%D8%B1_v4.pdf" download>Download the comprehensive memo</a> or <a href="../downloads/%D9%85%D8%B0%D9%83%D8%B1%D8%A9_%D8%A7%D9%84%D8%B3%D9%8A%D9%86%D8%A7%D8%B1%D9%8A%D9%88%D9%87%D8%A7%D8%AA_%D8%AB%D9%86%D8%A7%D8%A6%D9%8A%D8%A9_%D8%A7%D9%84%D9%84%D8%BA%D8%A9_%D9%85%D9%87%D9%86%D8%AF%D8%B3_%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1_%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A_%D8%A7%D9%84%D8%AE%D8%A8%D9%8A%D8%B1_v3.pdf" download>the scenarios memo</a> (both bilingual).</p>
+</div></section>
+</main>
+<footer class="site-foot">
+  <b>Mohamed Elmubarak</b>
+  <p>Preparing for the SDAIA Expert AI Engineer Badge</p>
+  <small>© 2026 Mohamed Elmubarak. All rights reserved.</small>
+</footer>
+<script src="../assets/site.js"></script>
+<script src="../assets/player.js"></script>
+</body>
+</html>

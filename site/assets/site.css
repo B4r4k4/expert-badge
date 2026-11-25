@@ -296,3 +296,16 @@ details[open] .ans{animation:fadeUp .4s var(--ease)}
   .sec-lab p,.sec-lab li,.sec-lab .sec-title,.safety h3{color:var(--navy)}
   details .ans{display:block}
 }
+
+/* ================= English edition (LTR) ================= */
+html[lang="en"]{--f-display:"Source Serif 4",Georgia,"Times New Roman",serif;--f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+html[lang="en"] body{font-size:16.5px}
+html[lang="en"] .ltitle small,html[lang="en"] .unit-hero .en,html[lang="en"] .gi dt span{text-align:left}
+html[lang="en"] .pn.next{text-align:right}
+html[lang="en"] .unit-hero .en{font-family:var(--f-body);font-size:15px}
+@media (max-width:600px){html[lang="en"] .pn.next{text-align:left}}
+/* language switch (both editions) */
+.lang-switch{font:600 14px var(--f-body);border:1px solid var(--hair,#d9d2c3);border-radius:999px;padding:6px 14px;white-space:nowrap;text-decoration:none;color:inherit}
+.lang-switch:hover{border-color:var(--navy)}
+html[lang="ar"] .lang-switch{font-family:"IBM Plex Sans",system-ui,sans-serif}
+html[lang="en"] .lang-switch{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif}

@@ -1,0 +1,576 @@
+{
+  "before": [
+    "This unit is about the **non-technical side** of an expert engineer’s work, and about **money**. Its first half: is AI the solution at all? How do you build a business case? How do you write testable requirements? How do you decide between building and buying? How do you talk to management? What do you do when your manager asks you for something wrong? This is Domain 7 (about 10 questions).",
+    "Its second half is the **invoice workshop**: cost tables that look like the real thing, where you must find the waste and calculate the saving. This is a fixed question pattern in the exam (3 to 4 questions). All the calculations are multiplication and addition, and we will walk through them figure by figure.",
+    "You need these first: Unit 00 (Section 5.5: cost per hour and per token), Unit 01 (Sections 4.5 and 4.6), and Unit 08 (Sections 2.3 and 4.5: utilisation as a cost multiplier, and FinOps)."
+  ],
+  "sections": {
+    "1.1": {
+      "simple": [
+        "Before any model, ask the business questions. **Which decision will change?** (“Reduce fraud losses by 20%”, not “build a smart model”.) **What happens today without AI?** Would a simple rule be enough? **Is there data** that is labelled and lawful? **How do we measure success?** **What is the risk level?** **Is the value worth the cost?**",
+        "The common exam trap: a proposal that looks profitable because its cost was calculated from the **price of the hardware only**. The real cost includes everything: data labelling, engineering, infrastructure, monitoring, retraining, compliance and support. This is called the **total cost of ownership**."
+      ],
+      "example": "Buying a car. The price is SAR 100,000. But the total cost of ownership over five years is: the price + insurance (15,000) + fuel (40,000) + maintenance (20,000) + registration and inspection (5,000) = SAR 180,000. Comparing two cars on purchase price alone can lead you to the wrong decision. The calculation: **return = (benefit − cost) ÷ cost**. If the benefit is 300,000 and the total cost is 200,000: (300 − 200) ÷ 200 = 50%.",
+      "terms": [
+        {
+          "ar": "هدف الأعمال",
+          "en": "Business objective",
+          "def": "The concrete result the organisation wants, such as reducing cost, increasing revenue or reducing errors, expressed in numbers."
+        },
+        {
+          "ar": "مقاييس الحماية",
+          "en": "Guardrail metrics",
+          "def": "Metrics that must not get worse while you improve the main metric, such as fairness, latency and cost."
+        },
+        {
+          "ar": "العائد على الاستثمار",
+          "en": "Return on Investment — ROI",
+          "def": "(Benefit − cost) ÷ cost. How much you earn for every riyal you spend."
+        },
+        {
+          "ar": "التكلفة الكلية للملكية",
+          "en": "Total Cost of Ownership — TCO",
+          "def": "All the project’s costs over its whole life: build, operation, people, monitoring, retraining, compliance and support, not the price of the hardware alone."
+        },
+        {
+          "ar": "الاستدلال البسيط",
+          "en": "Heuristic",
+          "def": "A simple rule of thumb that gives a reasonable result without a model, such as “a transaction over SAR 10,000 from a new, suspicious country”."
+        }
+      ]
+    },
+    "1.2": {
+      "simple": [
+        "A project passes through three stages, and each stage asks a different question. **Proof of concept**: is the idea technically possible on real data? **Minimum product or pilot**: does it deliver value to real users within a small scope? **Production**: is it reliable, monitored and governed at scale?",
+        "The signal that recurs in the exam: “**the proof of concept succeeded but the project stalled**”. The reason is usually: it was not ready for production (no data pipelines, no MLOps, no owner, no integration with the systems), or “success” was never tied to a business indicator in the first place."
+      ],
+      "example": "A restaurant wants to add a new dish. **Proof of concept**: the chef tries the recipe in the kitchen: can it be made? Does it taste good? **Pilot**: he serves it to twenty selected customers: do they like it? Do they order it again? **Production**: he adds it to the menu in every branch, with a standard recipe, fixed suppliers, training for the chefs, and quality monitoring. Succeeding at the first does not mean being ready for the third.",
+      "terms": [
+        {
+          "ar": "إثبات المفهوم",
+          "en": "Proof of Concept — POC",
+          "def": "A small experiment to prove that the idea is technically possible on real data."
+        },
+        {
+          "ar": "المنتج الأدنى",
+          "en": "Minimum Viable Product — MVP / Pilot",
+          "def": "The simplest version that delivers real value to real users within a limited scope, so as to learn what they actually need."
+        },
+        {
+          "ar": "معيار الانتقال",
+          "en": "Exit criteria",
+          "def": "The conditions that must be met to move from one stage to the next."
+        }
+      ]
+    },
+    "1.3": {
+      "simple": [
+        "A **business case** answers five questions with numbers: (1) Which process will change, and what does it cost today? (2) What is the realistic improvement? **As a range** (“30 to 45%”), not a single figure. (3) What does it cost to build and run? (4) What are the risks and what do they cost? (5) When is the investment recovered?",
+        "Two pieces of advice. **Do not count a benefit twice.** And **“hours saved” are not money** unless the time is actually used for something else, or you avoid a new hire. If the system saves each employee two hours a day, and the employees spend them idle, there is no financial saving."
+      ],
+      "example": "The calculation in the example, step by step. **Today**: 120,000 claims × 18 minutes = 2,160,000 minutes ÷ 60 = 36,000 hours. × SAR 120 an hour = SAR 4.32 million a year. **After the model**: 40% of claims (48,000) take 5 minutes instead of 18, a saving of 13 minutes each: 48,000 × 13 = 624,000 minutes = 10,400 hours × 120 ≈ SAR 1.25 million. **Payback**: the build cost of 1.4 million ÷ an annual net benefit of between 1.4 and 1.8 million ≈ 9 to 12 months.",
+      "terms": [
+        {
+          "ar": "دراسة الجدوى",
+          "en": "Business case",
+          "def": "A document that shows in numbers the project’s value, cost, risks and the date the investment is recovered, in order to decide on funding."
+        },
+        {
+          "ar": "فترة الاسترداد",
+          "en": "Payback period",
+          "def": "The time the benefits need to cover the initial investment cost. Build cost ÷ annual net benefit."
+        },
+        {
+          "ar": "صافي القيمة الحالية",
+          "en": "Net Present Value — NPV",
+          "def": "The value of all future benefits and costs, calculated at the value of money today. If it is positive, the project is profitable."
+        },
+        {
+          "ar": "التكاليف لمرة واحدة والمتكررة",
+          "en": "One-off vs recurring costs",
+          "def": "One-off: build, integration and data preparation. Recurring: compute, licences, monitoring, retraining and support, every month or year."
+        }
+      ]
+    },
+    "1.4": {
+      "simple": [
+        "The requirements of AI systems are more than “what the system does”. They cover ten types: **functional**, **quality** (in numbers: “recall ≥ 0.9”), **performance** (“p95 ≤ 300 ms”), **data** (source, classification and residency), **explainability**, **fairness**, **human oversight**, **operations**, **compliance** and **cost**. The reason: the system is **probabilistic** and sometimes makes mistakes, so you must define how many errors are acceptable.",
+        "The golden rule: **write the acceptance criteria before building, and in a testable form**. “The assistant answers HR questions” is not testable. But “90% of answers are correct on 300 real questions” is testable."
+      ],
+      "example": "**An untestable requirement**: “We want a fast, accurate system that respects privacy.” When do we say it has succeeded? Nobody knows. **A testable requirement**: “On an evaluation set of 300 Arabic questions from real tickets: ≥ 90% of answers correct and supported by the source, 100% of out-of-scope questions refused or redirected, time to first word p95 ≤ 1.5 seconds, and no personal data leaves the Kingdom.” Now you can test every sentence and say yes or no.",
+      "terms": [
+        {
+          "ar": "هندسة المتطلبات",
+          "en": "Requirements engineering",
+          "def": "Gathering what the system must achieve and writing it down precisely and testably before building."
+        },
+        {
+          "ar": "معايير القبول",
+          "en": "Acceptance criteria",
+          "def": "Measurable conditions the system must meet to be accepted, such as “accuracy ≥ 90% on such-and-such a set”."
+        },
+        {
+          "ar": "المتطلب الوظيفي",
+          "en": "Functional requirement",
+          "def": "What the system must do, such as “classifies complaints into 12 types”."
+        },
+        {
+          "ar": "المتطلب غير الوظيفي",
+          "en": "Non-functional requirement",
+          "def": "How the system must work: speed, availability, security, cost and compliance."
+        }
+      ]
+    },
+    "1.5": {
+      "simple": [
+        "AI projects are **teamwork**. Good working practices: **clear ownership** (RACI), **multidisciplinary reviews** (security, legal and domain experts), **documentation**, **iterative delivery** and **knowledge transfer**. The team roles: product owner, AI engineer, data engineer, data scientist, MLOps engineer, domain experts, security, compliance and ethics, user experience, and operations.",
+        "The **RACI matrix** for a model launch: **R** (Responsible): the machine learning engineer builds and tests. **A** (Accountable): the product owner decides on the launch. **C** (Consulted): security, privacy and compliance. **I** (Informed): support, operations and leadership. The delivery cadence: short cycles, data and baseline first, then the simplest complete system, then improvement."
+      ],
+      "example": "**The bus factor**: how many people, if “hit by a bus” (or if they suddenly left the company), would bring the project to a halt? If one person is the only one who understands the data pipeline, the bus factor = 1, and that is a big risk. The remedy: documentation, knowledge transfer and pair working, until the number rises.",
+      "terms": [
+        {
+          "ar": "مصفوفة RACI",
+          "en": "Responsible / Accountable / Consulted / Informed",
+          "def": "A table that specifies for each task who carries it out, who is ultimately accountable (one person), who is consulted, and who is informed."
+        },
+        {
+          "ar": "سجل القرارات المعمارية",
+          "en": "Architecture Decision Record — ADR",
+          "def": "A short document for each important design decision: what the decision is, why, what the alternatives are, and what the consequences are."
+        },
+        {
+          "ar": "عامل الحافلة",
+          "en": "Bus factor",
+          "def": "The smallest number of team members whose absence would halt the project. Higher is better."
+        },
+        {
+          "ar": "مالك المنتج",
+          "en": "Product owner",
+          "def": "The person responsible for defining the problem, the value and the priorities, and for the acceptance and launch decision."
+        }
+      ]
+    },
+    "1.6": {
+      "simple": [
+        "Many technically excellent systems **fail because people do not use them**, or use them wrongly. That is why **adoption is a separate piece of work**: involve users in the design, train them on what the system does and its limits, show the confidence level and the sources in the interface, collect their feedback and act on it, and measure actual usage.",
+        "Watch for two opposite risks. **Over-reliance**: the employee approves every suggestion without thinking. **under-reliance**: the employee ignores even the good suggestions. The exam signal: **high accuracy with low usage = an adoption problem, not a model problem**."
+      ],
+      "example": "A hospital launched a system with 95% accuracy that suggests diagnoses to doctors. After three months: the doctors use it in only 8% of cases. Is the solution “a more accurate model”? No. On investigation: the system requires opening a separate screen and typing the patient number by hand, it does not explain why it makes a suggestion, and nobody was trained on it. The solution: integrate it into the medical records system, show the reasons, and train the doctors.",
+      "terms": [
+        {
+          "ar": "إدارة التغيير",
+          "en": "Change management",
+          "def": "A plan to help people accept and use a new way of working: communication, training, support and collecting feedback."
+        },
+        {
+          "ar": "التبني",
+          "en": "Adoption",
+          "def": "The extent to which users actually use the system in their daily work."
+        },
+        {
+          "ar": "الاعتماد الناقص",
+          "en": "Under-reliance",
+          "def": "Users ignoring the system’s suggestions even when they are right, so its benefit is lost."
+        }
+      ]
+    },
+    "2.1": {
+      "simple": [
+        "**Do we build or buy?** The decision leans towards **buying** when the capability is generic and commercially available (such as speech-to-text), the team is small and time is short, the volume is uncertain, and the classification allows the data to be processed at the vendor. It leans towards **building** when the capability is a core competitive advantage, the team is strong, the volume is large and stable, and the data must not leave.",
+        "When buying: the **transparency principle** requires obtaining documentation before purchase. SDAIA’s study “AI Procurement in the Government Sector” lists five challenges, and among its solutions is **two-stage competition** when the requirements are not yet clear. A rule: **transferring the risk to the vendor does not remove the organisation’s responsibility**."
+      ],
+      "example": "**Two-stage competition**: a body wants “a smart system that improves service for citizens visiting its offices” but does not know exactly which technology is suitable. If it issued an ordinary tender with detailed specifications now, it would write the wrong specifications. Better: in **the first stage** vendors present their ideas and prototypes, and the body learns what is possible. In **the second stage** the body writes clear specifications and issues the competition on them.",
+      "terms": [
+        {
+          "ar": "القدرة السلعية",
+          "en": "Commodity capability",
+          "def": "A capability available at similar quality from many vendors, such as optical character recognition, so it gives no competitive advantage if built in-house."
+        },
+        {
+          "ar": "المزية التنافسية",
+          "en": "Competitive advantage",
+          "def": "A capability that distinguishes the organisation from others and is hard to imitate, so it is worth building in-house."
+        },
+        {
+          "ar": "المنافسة العامة",
+          "en": "Open competition",
+          "def": "A traditional procurement method with clear specifications on which vendors compete. It suits cases where the need is known precisely."
+        },
+        {
+          "ar": "المنافسة على مرحلتين",
+          "en": "Two-stage competition",
+          "def": "Procurement in two stages: the first to explore solutions and ideas, the second to compete on final specifications. It suits cases where the requirements are not yet clear."
+        },
+        {
+          "ar": "المناقصة القائمة على التحدي",
+          "en": "Challenge-based procurement",
+          "def": "Putting a problem to vendors so that they compete in solving it in practice, instead of describing the solution in advance."
+        }
+      ]
+    },
+    "2.2": {
+      "simple": [
+        "SDAIA’s guide “**Adoption of AI Systems**” identifies **six factors** that settle the choice: availability of commercial solutions, data readiness, strategic value (a competitive advantage or an operational improvement), capability level, budget, and time. Three options with official advantages and disadvantages: **build**, **buy** and **partner** (with an external party who helps and builds alongside you).",
+        "The simplified logic: **competitive advantage** → build (or partner if capabilities are lacking). **Operational efficiency with good commercial solutions** → buy. But **data sensitivity and hosting location can override both**: a purchase that requires sending classified or personal data abroad is not an option."
+      ],
+      "example": "Three bodies. (1) A bank wants its own fraud-detection model, drawing on its expertise and unique data, and it has a strong team → **build**. (2) A body wants to turn meeting recordings into text, and the commercial solutions are excellent → **buy** (on condition of hosting inside the Kingdom if the meetings are sensitive). (3) A body wants a highly customised system, but has no engineers → **partner** with an expert body that builds alongside it and trains its team.",
+      "terms": [
+        {
+          "ar": "تبني أنظمة الذكاء الاصطناعي",
+          "en": "Adoption of AI Systems (SDAIA guide)",
+          "def": "An executive guide from SDAIA (Second Edition, April 2024) that identifies six factors for choosing between build, buy and partner. The name here is the English title."
+        },
+        {
+          "ar": "الشراكة",
+          "en": "Partner",
+          "def": "Working with an external party who builds the solution with you and helps develop your capabilities, instead of building entirely in-house or buying off the shelf."
+        },
+        {
+          "ar": "جاهزية البيانات",
+          "en": "Data readiness",
+          "def": "Does the required data exist in sufficient volume, freshness and quality, taking its sensitivity into account?"
+        }
+      ]
+    },
+    "2.3": {
+      "simple": [
+        "Each audience needs a different language. **Senior management**: the impact on the business, cost, risks and schedule, **not** “F1 = 0.87”. **Product owners**: the trade-offs. **Legal**: data flows, retention and residency. **Operations**: failures and escalation. **Users**: disclosure, limits and a route to help.",
+        "The pattern in a strong message: **translate the metric into consequences**, **give a range and a confidence level**, not a single figure, **state your recommendation and why**, and **name the conditions that would change your recommendation**. “leadership decides the trade-off, and the engineer measures it in numbers”."
+      ],
+      "example": "**A weak message to the manager**: “Recall 0.9 and precision 0.75.” The manager does not understand what that means. **A strong message**: “On last quarter’s data, the system detected 9 out of every 10 fraud cases. Of every 4 alerts, one is false, which costs the analysts about two hours a day of unnecessary review.” Now the manager can decide: are two hours a day an acceptable price for detecting 90% of fraud?",
+      "terms": [
+        {
+          "ar": "أصحاب المصلحة",
+          "en": "Stakeholders",
+          "def": "Everyone who is affected by the project or affects it: management, users, legal, operations, customers and regulators."
+        },
+        {
+          "ar": "المفاضلة",
+          "en": "Trade-off",
+          "def": "Choosing between two options that each have an advantage and a price, such as higher accuracy at higher cost."
+        },
+        {
+          "ar": "ترجمة المقاييس",
+          "en": "Metric translation",
+          "def": "Turning a technical number such as “precision 0.8” into a practical meaning such as “4 out of every 5 customers we predict will leave actually leave”."
+        }
+      ]
+    },
+    "2.4": {
+      "simple": [
+        "A typical question: “Your manager asks for a launch next week although the fairness test shows a large gap.” What behaviour is expected of an expert? **Documented professional escalation** in four steps: measure the risk in numbers, propose mitigations and a realistic plan, involve compliance and the AI Officer, and **do not launch a known violation**.",
+        "The two wrong options: **silent compliance** (“the manager said so, so we launched”) and **unilateral refusal** without escalation (“I refuse to work on the project”, then nothing). SDAIA publishes the **National Framework for Professional Standards in Data and AI** and the **Saudi Framework for AI Qualifications**, and the competencies are measured by the **AI Professional Badges** at their levels: assistant, associate and expert."
+      ],
+      "example": "A good escalation message: “The fairness test showed that the approval rate for those over 60 is 18% lower at equal income (attached: the analysis). Launching with this gap violates the fairness and equity principle. I propose rebalancing the data, and my estimate is that this closes most of the gap within two weeks. I have copied the Compliance Officer. I recommend postponing the launch by two weeks.” No silence, no angry refusal, but numbers, a solution and a written escalation.",
+      "terms": [
+        {
+          "ar": "التصعيد المهني",
+          "en": "Professional escalation",
+          "def": "Raising an ethical or legal problem with the relevant parties in a documented way, backed by numbers, with proposed solutions."
+        },
+        {
+          "ar": "الامتثال الصامت",
+          "en": "Silent compliance",
+          "def": "Carrying out a wrong request without objection or documentation. Behaviour that is not acceptable at the expert level."
+        },
+        {
+          "ar": "شارات محترفي الذكاء الاصطناعي",
+          "en": "AI Professional Badges (SDAIA)",
+          "def": "Badges from SDAIA that measure the competence of AI professionals, at the assistant, associate and expert levels. They are what this platform prepares you for."
+        }
+      ]
+    },
+    "2.5": {
+      "simple": [
+        "The scenarios are set in Saudi organisations, so know the map. **SDAIA**: the national reference for data and AI, which supervises the Personal Data Protection Law, ethics and the risk framework. **The National Data Management Office**: data standards for government bodies. **The National Information Center** and **the National Center for AI** (which includes ALLaM), both marked “needs verification” in the source. **The National Cybersecurity Authority**. **The International Center for AI Research and Ethics**. **the sector regulators**.",
+        "The strategic frame: **Vision 2030** and the **National Strategy for Data & AI**. The expectation in the exam: **answers that balance innovation and governance**, rejecting both reckless deployment and blanket refusal."
+      ],
+      "example": "A question: “A body wants to launch a smart assistant for citizens. What is the most suitable position?” The reckless option: “Launch it immediately, the technology is ready.” The strict option: “Never use AI with citizens because it carries risks.” The expert option: “Launch it in stages inside the Kingdom, with disclosure, sources, hand-over to a staff member, and monitoring.” This is the balance that SDAIA’s publications reflect.",
+      "terms": [
+        {
+          "ar": "رؤية 2030",
+          "en": "Saudi Vision 2030",
+          "def": "The national plan for economic and social transformation in the Kingdom, of which AI is one of the drivers."
+        },
+        {
+          "ar": "الاستراتيجية الوطنية للبيانات والذكاء الاصطناعي",
+          "en": "National Strategy for Data & AI",
+          "def": "The national strategy that guides the development of data and AI in the Kingdom."
+        },
+        {
+          "ar": "المركز الدولي لأبحاث وأخلاقيات الذكاء الاصطناعي",
+          "en": "International Center for AI Research and Ethics — ICAIRE",
+          "def": "A centre concerned with research and ethics initiatives and international cooperation in AI."
+        },
+        {
+          "ar": "الجهات التنظيمية القطاعية",
+          "en": "Sector regulators",
+          "def": "Bodies that regulate specific sectors (such as finance, health, telecom and media) and add their own rules."
+        }
+      ]
+    },
+    "2.6": {
+      "simple": [
+        "SDAIA’s series on AI use cases divides each sector into families of use. What matters for the exam is the **key risks** column, because **the technically better answer must also address the risk that is characteristic of the sector**.",
+        "Memorise the characteristic risk of each sector. **Health** → sensitive data and medical oversight. **Security** → limits of surveillance and the legal basis. **Education** → minors and academic integrity. **Media** → disclosure and deepfakes. **Energy** → safety-critical operations and the security of industrial control systems. **Municipal** → camera privacy and fairness across neighbourhoods."
+      ],
+      "example": "A question about a system that analyses street-camera images to detect visual pollution (potholes, or neglected buildings) in neighbourhoods. The technical solution is excellent: an accurate vision model. But the better answer adds the sector’s risk: **the privacy of people who appear in the images** (blurring faces and licence plates), **purpose limitation** (the images are for visual pollution only), and **fairness across neighbourhoods** (are the cameras distributed fairly, or are certain neighbourhoods monitored more?).",
+      "terms": [
+        {
+          "ar": "حالة الاستخدام",
+          "en": "Use case",
+          "def": "A specific application of AI to solve a particular problem, such as “detecting diabetic retinopathy from eye images”."
+        },
+        {
+          "ar": "التوأم الرقمي",
+          "en": "Digital twin",
+          "def": "A live digital copy of something real (a city, a factory or a network) updated with actual data, for simulation and planning."
+        },
+        {
+          "ar": "أنظمة التشغيل الصناعية",
+          "en": "OT / ICS — Operational Technology / Industrial Control Systems",
+          "def": "Systems that control machines and physical processes such as power plants. Breaching them is a danger to safety."
+        },
+        {
+          "ar": "اختلاف المواقع",
+          "en": "Site shift",
+          "def": "A decline in a medical model’s performance when it is moved from one hospital to another because of differences in equipment, patients and practices."
+        }
+      ]
+    },
+    "2.7": {
+      "simple": [
+        "SDAIA’s study “**AI and its Impact on Productivity**” says: productivity gains do not come from buying the tool, but from **redesigning tasks** around it. The engineer has five rules: **pick tasks, not jobs** (many repetitive tasks where AI drafts and a human reviews), **measure honestly** (before and after), **protect the data**, **invest in skills**, and **watch for side effects** (over-reliance, skills erosion and shadow AI).",
+        "At the end of the section is the **expert’s checklist for any proposal**: ten questions that bring the whole platform together, with the unit in which you review each question. Use it as a final review of any scenario."
+      ],
+      "example": "**Shadow AI**: a company banned public AI tools and did not provide an approved alternative. So employees began using public tools on their personal phones, pasting customers’ messages into them to arrange the replies. Management does not know, and the data leaves. The solution is not a harsher ban, but **an approved, easy-to-use in-house tool**, with training, so that the incentive to work around the rules disappears.",
+      "terms": [
+        {
+          "ar": "إعادة تصميم المهام",
+          "en": "Task redesign",
+          "def": "Changing the way the work itself is done so as to benefit from AI, instead of adding a tool on top of the old way."
+        },
+        {
+          "ar": "تآكل المهارات",
+          "en": "Skill erosion / deskilling",
+          "def": "Employees losing skills they once had because they have come to depend entirely on the tool."
+        },
+        {
+          "ar": "الذكاء الاصطناعي الخفي",
+          "en": "Shadow AI",
+          "def": "Employees using AI tools that the organisation has not approved, without its knowledge, which creates security and legal risks."
+        },
+        {
+          "ar": "مجموعة المقارنة",
+          "en": "Control group",
+          "def": "A group that does not use the new tool, against which the group that does use it is compared in order to measure the real impact."
+        }
+      ]
+    },
+    "3.1": {
+      "simple": [
+        "**The waste checklist**: twelve places where wasted money hides in AI invoices. The most important: **idle capacity** (machines running all the time at low utilisation), **development environments running 24 hours**, **a model bigger than the task**, **unsuitable hardware** (GPUs for classical models), **everything at the highest price**, **recomputing what has not changed**, **prompt bloat**, **no caching**, **unlimited retention**, **data transfer between regions**, **redundant replicas**, and **forgotten resources**.",
+        "**what must never be cut**, which is the source of many distractors: encryption and key management, the required audit logs, backup and recovery, distribution across zones for critical services, security monitoring, evaluation and monitoring pipelines, and **hosting inside the Kingdom** when the law requires it."
+      ],
+      "example": "A quick check of an invoice against the list. “4 GPUs for development, 720 hours a month” → item 2: the team works only 10 hours on working days. “A huge frontier model to classify 8 categories” → item 3. “Full conversation logs without limit” → item 9, and it is also a **violation** of the data protection law. The proposal “switch off audit logs to save $500” → **rejected**, because they are on the list of what must not be cut.",
+      "terms": [
+        {
+          "ar": "السعة الخاملة",
+          "en": "Idle capacity",
+          "def": "Machines or resources that are paid for but do not work most of the time."
+        },
+        {
+          "ar": "النموذج المتقدم",
+          "en": "Frontier model",
+          "def": "The providers’ newest, most powerful and most expensive models. Waste if used for a simple task that a small model would handle."
+        },
+        {
+          "ar": "تضخم الرموز",
+          "en": "Token bloat",
+          "def": "An unnecessary increase in the number of tokens in each request (a long conversation history, many passages, bloated instructions), so cost rises with no benefit."
+        },
+        {
+          "ar": "التخزين البارد",
+          "en": "Cold storage",
+          "def": "Very cheap storage for data that is rarely accessed, in exchange for slow retrieval."
+        },
+        {
+          "ar": "الوسم",
+          "en": "Tagging",
+          "def": "Putting labels on every cloud resource (owner, project and environment) to know who is spending what, and to discover the forgotten ones."
+        }
+      ]
+    },
+    "3.2": {
+      "simple": [
+        "**Invoice (A)**: a customer-support assistant, a total of $54,360 a month. The method: start with the big items. **Production** (8 machines × 24/7, utilisation 18%, with a peak of only 4 hours) = 42%. **Development** (4 machines × 24/7, used 10 hours on working days) = 21%. **The classification API** (a frontier model for 8 categories) = 18%. These three alone are 81% of the invoice.",
+        "The actions: schedule development for working hours, autoscale production, a small classifier instead of the frontier model, a retention policy for the logs, incremental embedding, and moving the application and model into one region. The result is a saving of about 67%. Three questions you will be asked: **the largest single saving** = autoscaling. **The safest saving** = scheduling development. **The compliance item** = the logs."
+      ],
+      "example": "The calculation step by step. **Development now**: 4 machines × 720 hours × $4 = 11,520. **After scheduling**: 4 × 220 working hours a month × 4 = 3,520, so the saving is 8,000 with no effect on users. **Production now**: 8 × 720 × 4 = 23,040. **After autoscaling**: 3 machines for 20 hours + 8 machines for the 4 peak hours = 60 + 32 = 92 instance-hours a day × 30 days × $4 = 11,040, so the saving is about 12,000.",
+      "terms": [
+        {
+          "ar": "الحصة",
+          "en": "Share of bill",
+          "def": "The percentage of the total invoice that each item represents. The items with the largest share are the first you examine."
+        },
+        {
+          "ar": "جهاز-ساعة",
+          "en": "Instance-hour / replica-hour",
+          "def": "Running one machine for one hour. 3 machines for 20 hours = 60 instance-hours."
+        },
+        {
+          "ar": "أكبر وفر مقابل أسلم وفر",
+          "en": "Biggest vs safest saving",
+          "def": "Biggest saving: the action that saves the most money. Safest saving: the action that never touches users. They may differ, so read what the question asks for."
+        }
+      ]
+    },
+    "3.3": {
+      "simple": [
+        "**Invoice (B)**: the language-model cost rises every month from $975 to $2,408, while **the number of requests is flat** (about a million) and **the length of the answers is flat** (about 250 tokens). So what changed? **The input tokens per request** have multiplied from 1,200 to 4,100, that is **3.4 times**. The prompt is growing.",
+        "The usual causes: the conversation history is appended in full, without limit, with every message; or the number of retrieved passages was increased; or the system instructions bloated; or the tool outputs are pasted in full. The remedy: summarise the history, reduce the passages while adding reranking, shorten the instructions and cache them. The rule: **“negotiate a discount” or “a cheaper model” is not the first step. Remove the waste first**."
+      ],
+      "example": "The calculation for January. Input tokens: a million requests × 1,200 tokens = 1,200 million tokens × $0.50 per million = $600. Output tokens: a million × 250 = 250 million × 1.50 = $375. The total is 975. In June, approximately: 0.99 million × 4,100 × 0.50 ≈ 2,030, and the output ≈ 379, so the total ≈ 2,408. The whole difference is almost entirely from the input. Like someone who sends a short message but attaches all the previous conversations to it every time.",
+      "terms": [
+        {
+          "ar": "النافذة المنزلقة للسجل",
+          "en": "Sliding-window history",
+          "def": "Sending only the last fixed number of conversation messages with each request, with a summary of the older ones, instead of sending the whole history."
+        },
+        {
+          "ar": "k (عدد المقاطع)",
+          "en": "Top-k retrieved chunks",
+          "def": "The number of retrieved passages sent to the model with each question. Increasing it raises the tokens and the cost."
+        }
+      ]
+    },
+    "3.4": {
+      "simple": [
+        "**Invoice (C)**: a fraud model of the XGBoost type (boosted trees). Training uses **8 GPUs**, **10 hours a day**, **every day**, **on the full 5-year history**, at the highest price. The cost is $9,600 of the 12,300.",
+        "Three kinds of waste in one line. **Unsuitable hardware**: boosted trees train efficiently on an ordinary CPU. **Recomputing what has not changed**: retraining daily on 5 years is unnecessary; weekly, or on drift, and on a recent period, is enough. **Everything at the highest price**: training tolerates cheap Spot machines with checkpoints. A warning: **the serving** (6 ordinary processors, 55% utilisation, 18 milliseconds) **is healthy, so do not touch it**."
+      ],
+      "example": "The calculation: 8 machines × 10 hours × 30 days × $4 = $9,600 a month. If it trained weekly on ordinary processors with Spot, it might fall to $600–1,200. The new total = (600 to 1,200) + 1,100 (the feature pipeline) + 1,300 (the serving) + 300 (the tracking) = 3,300 to 3,900, a saving of about 70%. Like someone who hires a big lorry every day to carry one small bag that his own car could have carried, and repacks the bag from scratch every day even though nothing in it has changed.",
+      "terms": [
+        {
+          "ar": "XGBoost",
+          "en": "XGBoost",
+          "def": "A very popular library for boosted trees. In most cases it trains efficiently on an ordinary CPU."
+        },
+        {
+          "ar": "Spark",
+          "en": "Apache Spark",
+          "def": "A framework for processing huge volumes of data across several servers, often used for feature pipelines."
+        }
+      ]
+    },
+    "3.5": {
+      "simple": [
+        "**Invoice (E)**: a RAG platform for a ministry, a total of $21,380. Five observations. (1) **Model class**: a 70-billion model achieves 91%, and the requirement is only 88%. An 8–14-billion model achieves 89–90%, **and the requirement is the judge, not the leaderboard**, so the smaller one is enough and saves half. (2) **Re-embedding and OCR of everything every night** when only 1% changes → incremental processing. (3) **Reranking the top 100** → the top 30 is usually enough (measure it). (4) **The vector database**, 3 replicas for availability → reasonable, so keep it. (5) **Logs without limit** → a retention policy.",
+        "The result: a saving of about 57%, **and compliance improves at the same time**. What is not touched: hosting inside the Kingdom, permission filtering, the evaluation gates, and the availability of the vector database."
+      ],
+      "example": "**“The requirement, not the leaderboard”**: you need a car that seats 5 people and travels at 120 km/h. Car “A” seats 5 and travels at 250 km/h at a price of 400,000. Car “B” seats 5 and travels at 180 km/h at a price of 120,000. Both meet the requirement, and “A” is better on paper, but you do not need the extra speed. Likewise 91% against 89% when 88% is what is required. The vector database calculation: 1.5 million vectors × 1,024 dimensions × 4 bytes ≈ 6 gigabytes only.",
+      "terms": [
+        {
+          "ar": "المتطلب هو الحَكَم",
+          "en": "Requirement as arbiter",
+          "def": "A principle: the right option is the cheapest one that meets the requirement, not the highest-scoring one, unless the scenario asks for an extra margin."
+        },
+        {
+          "ar": "اتساع إعادة الترتيب",
+          "en": "Rerank depth",
+          "def": "The number of candidates that the reranking model re-evaluates. Reducing it saves compute with a loss of quality that may be negligible."
+        }
+      ]
+    },
+    "3.6": {
+      "simple": [
+        "**Invoice (F)**: three plans for a fine-tuning project, and the requirement is quality ≥ 85%. **(A)** full fine-tuning of a 70B model: 16 machines for five days, the experiments $46,000, serving $11,500 a month, and quality 90%. **(B)** QLoRA on 70B: one machine, the experiments 2,400, serving 5,800, and quality 88%. **(C)** LoRA on 8B: one machine for a day, the experiments 300, serving 2,900, and quality 86%.",
+        "**All three meet the requirement**. (C) is far cheaper and passes by a small margin, (B) has a larger margin at a moderate cost, and (A) spends about **20 times** as much on experiments for 4 points that nobody asked for. The expected answer is **(C)**, or **(B)** if the scenario mentions a “safety margin” or “future expansion”. Before all that: **make sure the need is behaviour or format (fine-tuning), not changing knowledge (RAG)**."
+      ],
+      "example": "The calculation: the cost of (A)’s experiments ÷ the cost of (B)’s experiments = 46,000 ÷ 2,400 ≈ 19 times. Why 6 runs? Because real experimentation needs several attempts with different settings, so the cost of one run × 6. The lesson: the real difference between the plans is not in a single run but in the repeated experimentation and the permanent monthly serving. (A)’s serving costs 11,500 every month, that is 138,000 a year, against 34,800 for (C)’s serving.",
+      "terms": [
+        {
+          "ar": "هامش الأمان",
+          "en": "Safety margin",
+          "def": "The difference between actual performance and the minimum required. A larger margin protects against decline over time or with new data."
+        }
+      ]
+    },
+    "4.1": {
+      "simple": [
+        "**Invoice (D)**: when is the **managed API** (you pay per request) cheaper than **self-hosting** (you pay a fixed price for machines)? The API: $0.003 per request, with no fixed cost. Hosting: $3,600 per machine a month, the minimum is two machines, + 2,000 for operations. So **the minimum cost of hosting = 2 × 3,600 + 2,000 = $9,200** however low the volume.",
+        "The **break-even point** = 9,200 ÷ 0.003 ≈ **3.1 million requests a month**. Below it the API is cheaper, and above it hosting is cheaper, **provided** the team can run it and utilisation stays high. The decisive rule: **compliance can override cost**. If the data must not leave the Kingdom and the API is abroad, self-hosting or an in-country provider is required even at a million requests."
+      ],
+      "example": "The calculation for several volumes. **A million requests**: the API 1,000,000 × 0.003 = 3,000, and hosting 9,200 (two machines), so the API is cheaper. **3 million**: the API 9,000, and hosting 9,200, close to each other. **5 million**: the API 15,000, and hosting needs 3 machines (because two machines handle exactly 5 million with no spare) = 3 × 3,600 + 2,000 = 12,800, so hosting is cheaper. **8 million**: the API 24,000, and hosting 4 machines = 16,400.",
+      "terms": [
+        {
+          "ar": "التكلفة الثابتة والمتغيرة",
+          "en": "Fixed vs variable cost",
+          "def": "Fixed: paid whatever the volume (reserved machines and the team). Variable: increases with every request (payment per token or request)."
+        },
+        {
+          "ar": "نقطة التعادل",
+          "en": "Break-even point",
+          "def": "The volume at which the cost of two options is equal: fixed cost ÷ cost per request."
+        },
+        {
+          "ar": "جهاز-شهر",
+          "en": "GPU-month",
+          "def": "The cost of running one machine for a whole month."
+        }
+      ]
+    },
+    "4.2": {
+      "simple": [
+        "**Chart (G)**: the number of requests varies greatly during the day (from 15 requests a second at night to 260 in the evening), but the number of machines is **fixed at 10 all day**. The fleet is sized for the peak, and runs at 5–18% for nine hours a day.",
+        "The solution: **autoscaling** that follows the load, with **scheduled pre-scaling** before the two known peaks (9:00 and 18:00). The calculation: for each period, the number of machines = ⌈load ÷ 30⌉ + 1 spare. The result is 132 instance-hours a day instead of 240, a saving of 45%. The distractor: “buy reserved capacity for ten machines”, because it lowers the price but **locks in the waste**."
+      ],
+      "example": "The calculation for two periods. **Night (00–06)**: 15 requests a second ÷ 30 per machine = 0.5, rounded up = 1, + 1 spare = two machines × 6 hours = 12 instance-hours. **The evening peak (18–21)**: 260 ÷ 30 = 8.67 → 9, + 1 = 10 machines × 3 hours = 30. We repeat for all the periods and add up: 12 + 9 + 27 + 21 + 18 + 30 + 15 = 132. The fixed fleet: 10 × 24 = 240. The saving (240 − 132) ÷ 240 = 45%.",
+      "terms": [
+        {
+          "ar": "محجّم للذروة",
+          "en": "Sized for peak",
+          "def": "A fixed number of machines that is enough for the highest load of the day, so most of them stay idle for the rest of the time."
+        },
+        {
+          "ar": "التوسع المجدول المسبق",
+          "en": "Scheduled pre-scaling",
+          "def": "Adding machines minutes before a peak whose time is known, so that they are ready and warmed up when it begins."
+        }
+      ]
+    },
+    "4.3": {
+      "simple": [
+        "**Table (H)**: the three-year total cost of three options. **A managed API**: 1,410k, but it **fails the residency condition** for personal data (the provider is abroad). **A managed platform inside the Kingdom**: 1,220k, compliant, **and the cheapest**. **Self-hosting**: 1,770k, the lowest compute (420k) but **the highest total** because of the team and operations (900k).",
+        "The two lessons. (1) **Compare total cost including people and compliance**, not compute alone, because this is a **common blind spot**. (2) **Put them in order: hard constraints eliminate first, then cost chooses among what remains**. The answer does not flip towards self-hosting except at a much larger volume, or if the organisation already has an MLOps team whose cost is shared."
+      ],
+      "example": "You add up the numbers yourself. **The API**: 60 (setup) + 1,080 (usage) + 150 (team) + 120 (compliance) = 1,410. **The managed platform**: 120 + 650 + 300 + 150 = 1,220. **Self-hosting**: 250 + 420 + 900 + 200 = 1,770. Note that the self-hosting team (900) costs more than twice its compute (420). With personal data the API is excluded first, leaving two compliant options: 1,220 and 1,770, and the cheaper is the managed platform.",
+      "terms": [
+        {
+          "ar": "الإهلاك",
+          "en": "Depreciation",
+          "def": "Spreading the cost of buying hardware over the years of its life, instead of counting all of it in the first year."
+        },
+        {
+          "ar": "النقطة العمياء",
+          "en": "Blind spot",
+          "def": "A cost or risk that people usually overlook when comparing, such as the cost of the team in self-hosting."
+        }
+      ]
+    },
+    "4.4": {
+      "simple": [
+        "**The method for any cost question in five steps**, which you apply to every invoice. (1) **Identify the largest items**: usually 2 or 3 items carry most of the saving. (2) **Compare utilisation with cost**: actual utilisation, the hours needed against the hours running, and what changed against what is recomputed. (3) **Check the class**: is a premium model or machine doing work that the cheaper one would suffice for? (4) **Check compliance on every item**: some items are mandatory, some savings are unlawful, and some waste is also a violation. (5) **Rank by saving and risk**, and read what the question asks for.",
+        "The exam will give you different numbers, **but the method does not change**."
+      ],
+      "example": "Applying it to Invoice (A). (1) The largest items: production 42%, development 21% and the API 18%, which together carry 28,700 of a saving of 36,200. (2) Utilisation: 18% against a peak of only 4 hours, so it is idle capacity. (3) The class: a frontier model for eight categories, so it is the wrong class. (4) Compliance: logs without limit with personal data, so it is both waste and a violation. (5) The ranking: largest saving = autoscaling, safest saving = scheduling development.",
+      "terms": [
+        {
+          "ar": "الطريقة الخماسية للتكلفة",
+          "en": "Five-step cost method",
+          "def": "The major items, then utilisation against cost, then the class, then compliance, then ranking by saving and risk. Applied to any invoice."
+        }
+      ]
+    }
+  }
+}

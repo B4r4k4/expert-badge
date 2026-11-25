@@ -1,0 +1,1435 @@
+{
+  "num": 6,
+  "title": "AI Software Engineering & Integration",
+  "english": "AI Software Engineering & Integration",
+  "subtitle": "From an up-to-date RAG pipeline to resilient interfaces, a model gateway and trustworthy agents",
+  "domain": "Domain 3 · 14.0%",
+  "deliverable": "Design a RAG assistant that stays up to date as documents change, and deliver it through a resilient, secure interface that can be tested, monitored and integrated with enterprise systems.",
+  "intro": "This domain carries about 21 of the 150 questions, and it contains the topic that recurs most often according to candidates' accounts: an assistant connected to a retrieval-augmented generation (RAG) system over documents that are updated periodically. This unit builds the complete engineering picture around the model: the ingestion and query pipelines, keeping the index up to date, choosing the interaction pattern for the interface, resilience patterns, structured outputs, caching, and then integration architecture, the LLM gateway, testing, observability, conversational design, agents and secure development. The questions in this domain are mostly diagnostic scenarios: a symptom the question describes, a stage responsible for it, and a specific engineering fix; the usual distractors are generic solutions such as “raise the timeout” or “retrain the model”.",
+  "outcomes": [
+    "Draw an end-to-end RAG pipeline with its two stages (ingestion and query) and identify the key decision in each component.",
+    "Diagnose the symptoms of stale or incorrect RAG and link each symptom to its root cause and its correct fix.",
+    "Choose the interaction pattern, protocol and HTTP status code appropriate to each case in model-serving services.",
+    "Apply resilience and security patterns to LLM APIs: retry with backoff, idempotency keys, circuit breakers, quotas and versioning.",
+    "Distinguish architectural integration patterns and determine when an LLM gateway or a separate service is the answer.",
+    "Design a testing and observability strategy for non-deterministic, model-dependent software.",
+    "Apply the principles of reliable agents, conversational AI and secure development when integrating AI into enterprise systems."
+  ],
+  "method": "Study the unit through its tables, not its prose: each table here is in effect an answer key to a family of questions. Start with the RAG diagram in Chapter 1 until you can draw it from memory, then memorise the “symptom → cause → fix” table, because it is the most frequently recurring scenario. When reading any question, first ask yourself: at which stage does the fault lie (ingestion, retrieval, ranking, generation, caching, permissions)? Then choose the localised fix for that stage. In Chapter 2, memorise the HTTP status codes and their meaning in model-serving services, and practise telling 401 from 403 and 400 from 422. In Chapters 3 and 4, focus on the “scenario signals” that lead to a specific pattern (the gateway, the separate service, Saga, the deterministic workflow instead of the agent).",
+  "chapters": [
+    {
+      "title": "RAG Architecture and Keeping It Up to Date",
+      "sections": [
+        {
+          "title": "1.1 End-to-End RAG Architecture",
+          "blocks": [
+            {
+              "p": "A RAG system consists of two separate pipelines: the **ingestion** pipeline, which runs offline or when the source changes, and the **query** pipeline, which runs live with every question. Understanding both together is the foundation for diagnosing any fault."
+            },
+            {
+              "h": "Ingestion pipeline (offline / on change)"
+            },
+            {
+              "ol": [
+                "Sources → change detection.",
+                "Parsing and cleaning → chunking, sized in tokens, with overlap.",
+                "Metadata enrichment: doc_id, version, date, owner, classification and access control list (ACL).",
+                "Embed → upsert into the vector index.",
+                "Delete stale chunks."
+              ]
+            },
+            {
+              "h": "Query pipeline (online)"
+            },
+            {
+              "ol": [
+                "User → authentication → query rewrite.",
+                "Query embedding.",
+                "Retrieval: vector + keyword (hybrid) with metadata and permission filters.",
+                "Rerank the top k → prompt assembly.",
+                "LLM → answer with citations → guardrails → logging and tracing."
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Component",
+                  "Key decisions"
+                ],
+                [
+                  "Chunking",
+                  "Respect structure (headings, articles, tables); typically 200–800 tokens; 10–20% overlap; keep the section heading in every chunk"
+                ],
+                [
+                  "Metadata",
+                  "doc_id, version, effective date, source link, department, classification, access control list"
+                ],
+                [
+                  "Embedding model",
+                  "Good Arabic support; the same model for indexing and for querying; changing it means re-embedding everything"
+                ],
+                [
+                  "Vector index",
+                  "Approximate nearest-neighbour (ANN) search such as HNSW or IVF; supports metadata filtering, deletion and updates"
+                ],
+                [
+                  "Hybrid search",
+                  "Vector (meaning) + BM25 keywords (exact terms, identifiers, article numbers, names) — strong for Arabic and for codes"
+                ],
+                [
+                  "Reranker",
+                  "Cross-encoder over the top 20/50 → top 5 works better; adds latency"
+                ],
+                [
+                  "Prompt assembly",
+                  "Instructions + the best chunks with their identifiers + the question; “Answer from the context only, cite the identifiers, otherwise say you don't know”"
+                ],
+                [
+                  "Citations",
+                  "Return the document title, version and link for auditing and for building trust"
+                ]
+              ]
+            },
+            {
+              "quote": "Use the same model for indexing and for querying; changing the embedding model means re-embedding the whole corpus, not just part of it."
+            }
+          ]
+        },
+        {
+          "title": "1.2 Keeping RAG Up to Date When Documents Change",
+          "blocks": [
+            {
+              "p": "This is the scenario that recurs according to candidates' accounts. The exam describes a visible symptom, and what is required is that you know its root cause and the correct engineering fix, not a generic solution such as retraining."
+            },
+            {
+              "table": [
+                [
+                  "Symptom",
+                  "Root cause",
+                  "Correct fix"
+                ],
+                [
+                  "The assistant cites the old policy after it has been updated",
+                  "The index was not updated, or the old chunks were not deleted",
+                  "Incremental (delta) re-indexing triggered by change events (CDC, webhooks, checksums); upsert by doc_id and delete the superseded chunks"
+                ],
+                [
+                  "Both the old and the new versions are retrieved, and the answers contradict each other",
+                  "Versions without a “current” flag",
+                  "version / effective_from / is_current metadata; filter to the current version by default; keep history only if auditing needs it"
+                ],
+                [
+                  "Re-indexing the whole corpus every night is slow and expensive",
+                  "Full rebuild instead of incremental",
+                  "A hash for each document/chunk; re-embed only what has changed; schedule according to the rate of change"
+                ],
+                [
+                  "The index is up to date but the answers are still stale",
+                  "A response cache or semantic cache serves old answers",
+                  "Invalidate the cache entries tied to the changed doc_ids; a time-to-live (TTL) matched to the update cadence"
+                ],
+                [
+                  "New documents do not appear for hours",
+                  "Batch-only ingestion",
+                  "Event-driven ingestion for urgent sources; publish a freshness service-level agreement (SLA) (for example “indexed within 15 minutes”)"
+                ],
+                [
+                  "Retrieval quality drops after the embedding model is changed",
+                  "Vectors mixed from two models",
+                  "Re-embed the whole corpus into a new index; blue-green swap of the index"
+                ],
+                [
+                  "A user sees content belonging to a restricted department",
+                  "Permissions are not enforced at retrieval",
+                  "Filter by ACL inside the query (pre-filter), not after generation"
+                ],
+                [
+                  "A person asks for their data to be deleted",
+                  "Personal data inside the chunks and vectors",
+                  "Delete by data-subject identifier across the source, chunks, vectors, caches and logs (detailed in Unit 10)"
+                ]
+              ]
+            },
+            {
+              "quote": "Freshness checklist: incremental indexing triggered by change detection + versioned metadata + deletion of superseded chunks + cache invalidation + monitoring of index freshness."
+            },
+            {
+              "p": "Note that **fine-tuning** is not on this checklist: the reason for excluding it is explained in the comparison between RAG and fine-tuning (Unit 04, Section 4.1). In questions about changing documents, the fix lies in the ingestion pipeline, the index and the cache, not in the model's weights."
+            }
+          ]
+        },
+        {
+          "title": "1.3 Diagnosing RAG by Stage",
+          "blocks": [
+            {
+              "p": "When an answer is wrong, first identify the responsible stage; each stage has its own fix, and fixing the wrong stage wastes effort."
+            },
+            {
+              "table": [
+                [
+                  "Observation",
+                  "Responsible stage",
+                  "Fix"
+                ],
+                [
+                  "The correct document never appears in the top k",
+                  "Retrieval",
+                  "Hybrid search, an embedding model better suited to Arabic, query rewriting, context-preserving chunking, Arabic normalisation"
+                ],
+                [
+                  "The correct document appears at rank 15",
+                  "Ranking",
+                  "Add a reranker; tune k"
+                ],
+                [
+                  "The correct chunk is retrieved but the answer is wrong",
+                  "Generation",
+                  "Grounding instructions, fewer distracting chunks, a stronger model, a faithfulness check"
+                ],
+                [
+                  "Exact terms are missed (Article 12, a product code)",
+                  "Dense semantic search only",
+                  "Add BM25/keywords in a hybrid search"
+                ],
+                [
+                  "Poor answers about tables",
+                  "Parsing/chunking",
+                  "Table-aware parsing; keep tables intact; serialise rows together with their headers"
+                ],
+                [
+                  "Slow answers",
+                  "Too many chunks / heavy reranker / large model",
+                  "Smaller k, a lighter reranker, caching, a smaller model, streaming"
+                ]
+              ]
+            },
+            {
+              "quote": "Document absent → retrieval. Document ranked too low → ranking. Chunk correct but answer wrong → generation."
+            }
+          ]
+        },
+        {
+          "title": "1.4 Ingestion and Chunking Strategies",
+          "blocks": [
+            {
+              "p": "Retrieval can return only what ingestion has produced. Real enterprise repositories are a mixture of PDF files (some of them scanned), Word files, spreadsheets, presentations, HTML pages, emails and tickets — in Arabic, in English or in both."
+            },
+            {
+              "h": "A robust ingestion pipeline"
+            },
+            {
+              "ol": [
+                "Extract the text together with its structure (headings, lists, tables, page numbers) using format-specific parsers, and Arabic-capable optical character recognition (OCR) for scanned files.",
+                "Cleaning: remove headers, footers, repeated text and duplicate pages.",
+                "Normalisation: Arabic orthography, whitespace and encodings.",
+                "Chunking into passages, then enrichment with metadata.",
+                "Embedding and indexing.",
+                "Lineage recording: source, version, hash and ingestion time — so that any answer can be traced to its source and any document can be deleted."
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Chunking strategy",
+                  "How",
+                  "Strength",
+                  "Weakness"
+                ],
+                [
+                  "Fixed size with overlap",
+                  "For example 400 tokens with 15% overlap",
+                  "Simple and predictable",
+                  "Cuts through sentences, tables and articles"
+                ],
+                [
+                  "Recursive / structural",
+                  "Split by headings → paragraphs → sentences until each piece is below the limit",
+                  "Respects document structure",
+                  "Unequal chunk sizes"
+                ],
+                [
+                  "Semantic",
+                  "Split where the embedding similarity between sentences drops",
+                  "Topically coherent chunks",
+                  "More costly ingestion; needs tuning"
+                ],
+                [
+                  "Document-aware",
+                  "One legal article per chunk, one question-and-answer pair per chunk in FAQs, one table row with its headers",
+                  "Highest precision for regulations and FAQs",
+                  "Custom parsers for each document type"
+                ],
+                [
+                  "Parent–child / small-to-big",
+                  "Retrieve small, precise chunks and pass the larger parent section to the model",
+                  "The precision of the small chunk with the context of the large one",
+                  "More storage and more logic"
+                ],
+                [
+                  "Late chunking / contextual chunks",
+                  "Prepend the document title or section summary to each chunk before embedding",
+                  "Removes the ambiguity of short chunks (“Article 12” of which law?)",
+                  "Extra tokens per chunk"
+                ]
+              ]
+            },
+            {
+              "quote": "Regulations and FAQs → document-aware chunking. “Article 12” is ambiguous → contextual chunks. Small-chunk precision with sufficient context → parent–child."
+            }
+          ]
+        },
+        {
+          "title": "1.5 Query, Retrieval and Reranking Techniques",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Technique",
+                  "What it does",
+                  "When"
+                ],
+                [
+                  "Query rewriting",
+                  "The model turns a conversational follow-up question (“And for employees?”) into a standalone query",
+                  "Multi-turn conversation"
+                ],
+                [
+                  "Multi-query",
+                  "Generate several phrasings, retrieve for each, then merge",
+                  "Ambiguous or short queries; mismatch between dialect and Modern Standard Arabic"
+                ],
+                [
+                  "Decomposition",
+                  "Split a complex question into sub-questions",
+                  "Multi-hop questions"
+                ],
+                [
+                  "Hypothetical document (HyDE)",
+                  "Generate a hypothetical answer, embed it and search with it",
+                  "When the phrasing of queries differs greatly from that of the documents"
+                ],
+                [
+                  "Metadata filtering / self-query",
+                  "Extract filters (year, department, document type) from the question",
+                  "Structured repositories"
+                ],
+                [
+                  "Routing",
+                  "Send the query to the right index or tool (HR policies, IT tickets, SQL)",
+                  "Multiple heterogeneous sources"
+                ]
+              ]
+            },
+            {
+              "h": "Hybrid search and reciprocal rank fusion (RRF)"
+            },
+            {
+              "p": "Hybrid search runs **dense** vector retrieval and **sparse** BM25 keyword retrieval, then merges the results, often with **reciprocal rank fusion (RRF)**. Its advantage is that it does not need score calibration across the two systems, because it relies on ranks, not scores."
+            },
+            {
+              "formula": "RRF(d) = Σ 1 / (k + rank_i(d))   ,   k ≈ 60"
+            },
+            {
+              "p": "Worked example: a document ranked 1 in the vector list and 3 in the BM25 list, and another document ranked 2 in the vector list only:"
+            },
+            {
+              "formula": "A: 1/(60+1) + 1/(60+3) = 0.01639 + 0.01587 = 0.03226\nB: 1/(60+2) = 0.01613   →   A ranks above B"
+            },
+            {
+              "p": "Hybrid search is particularly valuable for Arabic: morphology and dialects weaken keyword-only search, while exact terms (article numbers, product codes, names) weaken semantic-only search."
+            },
+            {
+              "h": "Reranking, Diversity and Context Compression"
+            },
+            {
+              "ul": [
+                "**Reranking** with a cross-encoder (or an LLM) re-scores the top 20–100 candidates by reading the query and the chunk together, then keeps the best 3–8. It is often the single biggest quality gain after fixing chunking — at a cost of tens to a few hundred milliseconds.",
+                "**Diversity (MMR — maximal marginal relevance)** avoids sending five near-identical chunks.",
+                "**Context compression** shrinks the retrieved chunks to the important sentences, reducing tokens."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.6 Beyond Basic RAG",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Pattern",
+                  "Idea",
+                  "When"
+                ],
+                [
+                  "Knowledge-graph RAG (GraphRAG)",
+                  "Extract entities and relationships into a graph; retrieve connected facts and community summaries",
+                  "Relationship questions across many documents (“Which suppliers are linked to delayed projects?”)"
+                ],
+                [
+                  "Agentic RAG",
+                  "The model decides when and what to retrieve, iterates, and checks that the information is sufficient",
+                  "Complex research questions; higher cost and latency"
+                ],
+                [
+                  "Text-to-SQL / structured retrieval",
+                  "Generate queries against databases instead of searching text",
+                  "Numerical and aggregate questions (“Total claims last quarter”) — with validation and query restriction (read-only, tables on an allow list)"
+                ],
+                [
+                  "Multimodal RAG",
+                  "Index images, tables and charts (with text captions or image embeddings)",
+                  "Technical manuals, scanned forms"
+                ],
+                [
+                  "Corrective / self-reflective RAG",
+                  "Grade the retrieved documents; if they are weak, re-run the query or fall back to an alternative",
+                  "High-risk answers"
+                ]
+              ]
+            },
+            {
+              "quote": "Numerical aggregate question → text-to-SQL, not text search. Relationship question across many documents → GraphRAG."
+            }
+          ]
+        },
+        {
+          "title": "1.7 Evaluating RAG",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Metric",
+                  "The question it answers",
+                  "Component"
+                ],
+                [
+                  "Context recall",
+                  "Did we retrieve the chunks needed to answer?",
+                  "Retriever"
+                ],
+                [
+                  "Context precision",
+                  "Are the retrieved chunks relevant (and ranked at the top)?",
+                  "Retriever / reranker"
+                ],
+                [
+                  "Recall@k, MRR and nDCG",
+                  "Standard information-retrieval metrics on labelled query→document sets",
+                  "Retriever"
+                ],
+                [
+                  "Faithfulness / groundedness",
+                  "Is every claim in the answer supported by the context?",
+                  "Generator"
+                ],
+                [
+                  "Answer relevance",
+                  "Does the answer address the question?",
+                  "Generator"
+                ],
+                [
+                  "Answer correctness",
+                  "Does it match a reference answer?",
+                  "End to end"
+                ],
+                [
+                  "Citation accuracy",
+                  "Do the cited sources actually contain the claim?",
+                  "End to end"
+                ],
+                [
+                  "Latency, tokens and cost",
+                  "Is the system within budget?",
+                  "System"
+                ]
+              ]
+            },
+            {
+              "ul": [
+                "The **RAGAS** family of frameworks compute a number of these metrics using LLM judges; calibrate them against human labels on a sample.",
+                "Build a **golden set** from real user questions, including dialect phrasings, follow-up questions and questions whose answer is not in the corpus, to test abstention.",
+                "Evaluate retrieval and generation **separately** — otherwise you will not know which component to fix."
+              ]
+            },
+            {
+              "quote": "Context metrics measure the retriever; faithfulness and relevance measure the generator; and separate evaluation is what tells you which component needs fixing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Model-Serving Interfaces and Their Resilience",
+      "sections": [
+        {
+          "title": "2.1 Choosing the Interaction Pattern for Serving Interfaces",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Pattern",
+                  "When",
+                  "Example"
+                ],
+                [
+                  "Synchronous REST/JSON",
+                  "Short requests (under about 1–2 seconds), simple clients",
+                  "Fraud score, classification"
+                ],
+                [
+                  "gRPC",
+                  "Internal service-to-service calls, low latency, high throughput, binary payloads",
+                  "Feature service → model service"
+                ],
+                [
+                  "Streaming (SSE / WebSocket)",
+                  "LLM chat — display tokens as soon as they are generated, and reduce perceived latency",
+                  "Chat assistant"
+                ],
+                [
+                  "Asynchronous job + polling or webhook (queue)",
+                  "Long jobs (minutes): document processing, long reports, video",
+                  "Submit → 202 Accepted + job_id → callback"
+                ],
+                [
+                  "Batch / streaming / edge",
+                  "Compared in Unit 08",
+                  "—"
+                ]
+              ]
+            },
+            {
+              "quote": "Long LLM tasks over synchronous HTTP cause gateway timeouts (often 30–60 seconds) and retry storms. The fix is a queue-based asynchronous pattern, not “raising the timeout to 10 minutes”."
+            }
+          ]
+        },
+        {
+          "title": "2.2 Designing Model-Service Interfaces and HTTP Status Codes",
+          "blocks": [
+            {
+              "p": "A model is useful only through an interface that others can rely on. Good model interfaces are **predictable** (consistent resources, errors and versions), **safe to retry**, **observable** and **honest about uncertainty** (returning confidence scores, the model version and reasons where appropriate)."
+            },
+            {
+              "table": [
+                [
+                  "Code",
+                  "Meaning",
+                  "In model services"
+                ],
+                [
+                  "200 / 201",
+                  "Success / created",
+                  "Prediction returned / job record created"
+                ],
+                [
+                  "202 Accepted",
+                  "Accepted for asynchronous processing",
+                  "Long job queued; return the job identifier"
+                ],
+                [
+                  "400 Bad Request",
+                  "Malformed input",
+                  "Invalid JSON, missing fields"
+                ],
+                [
+                  "401 Unauthorized",
+                  "Not authenticated",
+                  "Missing or expired access token"
+                ],
+                [
+                  "403 Forbidden",
+                  "Authenticated but not permitted",
+                  "The user lacks permission for this model or this data"
+                ],
+                [
+                  "404 Not Found",
+                  "Resource does not exist",
+                  "Unknown model version or job identifier"
+                ],
+                [
+                  "409 Conflict",
+                  "State conflict",
+                  "Duplicate idempotency key with a different payload"
+                ],
+                [
+                  "413 Payload Too Large",
+                  "Request larger than allowed",
+                  "A document or prompt exceeds the limits"
+                ],
+                [
+                  "422 Unprocessable Entity",
+                  "Syntactically valid but semantically invalid",
+                  "Out-of-range values; schema validation failure"
+                ],
+                [
+                  "429 Too Many Requests",
+                  "Rate limit reached",
+                  "Quota exceeded; include Retry-After"
+                ],
+                [
+                  "500 Internal Server Error",
+                  "Unexpected failure",
+                  "Software bug — never expose stack traces"
+                ],
+                [
+                  "503 Service Unavailable",
+                  "Overload or temporary outage",
+                  "The model is warming up or capacity is exhausted; retryable"
+                ],
+                [
+                  "504 Gateway Timeout",
+                  "Backend service too slow",
+                  "A synchronous call exceeded the gateway timeout — redesign as an asynchronous pattern"
+                ]
+              ]
+            },
+            {
+              "quote": "401 = I don't know who you are. 403 = I know you, and you are not allowed. 400 = The syntax is broken. 422 = The syntax is sound and the values are unacceptable."
+            }
+          ]
+        },
+        {
+          "title": "2.3 Interface and Protocol Choices",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Need",
+                  "Choice",
+                  "Why"
+                ],
+                [
+                  "Public or partner interface, broad compatibility",
+                  "REST + JSON + OpenAPI specification",
+                  "Universally supported, easy to document and test"
+                ],
+                [
+                  "Heavy internal calls",
+                  "gRPC + Protocol Buffers",
+                  "Binary, strongly typed contracts, HTTP/2 multiplexing, streaming"
+                ],
+                [
+                  "Streaming tokens to the browser",
+                  "Server-Sent Events (SSE)",
+                  "One-way server-to-client streaming over HTTP; simple"
+                ],
+                [
+                  "Instant two-way communication (voice, collaboration)",
+                  "WebSocket",
+                  "Full duplex"
+                ],
+                [
+                  "Notifying the client when a long job finishes",
+                  "Signed webhook or polling",
+                  "Avoids holding connections open"
+                ],
+                [
+                  "Many event consumers",
+                  "Message broker / event stream (Kafka, RabbitMQ, cloud Pub/Sub)",
+                  "Decoupling, replay, back-pressure"
+                ]
+              ]
+            },
+            {
+              "quote": "One-way streaming to the browser → SSE. Instant two-way → WebSocket. Heavy internal → gRPC. Public for partners → REST + OpenAPI."
+            }
+          ]
+        },
+        {
+          "title": "2.4 Authentication, Authorisation, Limits and Versions",
+          "blocks": [
+            {
+              "ul": [
+                "**OAuth 2.0 / OpenID Connect** for user-facing access, with short-lived JWT access tokens that carry scopes; verify the signature, expiry, audience and issuer on every request.",
+                "**Service identities** (workload identity, mTLS certificates) for service-to-service calls; avoid long-lived shared API keys.",
+                "**Authorisation decisions inside the service** (RBAC/ABAC), including data-level rules: which documents, tenants or records this caller may see — enforced **before retrieval, not after generation**.",
+                "**Rate limiting** with a token bucket or sliding window algorithm, per key/user/tenant; for LLMs there are also token quotas (input and output tokens per minute) and maximum request sizes, which protect cost and availability together (Unbounded Consumption in the OWASP list).",
+                "**Versioning**: in the path (/v1/) or in a header; never change the meaning of a field in place; publish deprecation schedules; and return the model version in every response for traceability."
+              ]
+            },
+            {
+              "quote": "Data permissions are enforced before retrieval; filtering the answer after generation is too late."
+            }
+          ]
+        },
+        {
+          "title": "2.5 Resilience Patterns for LLM APIs",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Problem",
+                  "Pattern"
+                ],
+                [
+                  "Transient 429/503 errors from the provider",
+                  "Retry with exponential backoff and jitter and a bounded number of attempts; honour Retry-After"
+                ],
+                [
+                  "A retried POST creates duplicate actions",
+                  "Idempotency keys"
+                ],
+                [
+                  "A provider outage cascades into your application",
+                  "Circuit breaker + fallback (secondary model/provider, cached answer, graceful message)"
+                ],
+                [
+                  "One slow dependency ties up threads",
+                  "A timeout on every call; bulkheads"
+                ],
+                [
+                  "Clients exceed the quota or abuse the service",
+                  "Rate limiting per key/user/tenant; token quotas for LLMs"
+                ],
+                [
+                  "Cost spikes from long prompts or outputs",
+                  "Maximum input and output tokens, per-tenant budgets, alerts"
+                ],
+                [
+                  "Breaking changes for consumers",
+                  "API versions (/v1, /v2), a deprecation window, contract tests"
+                ],
+                [
+                  "Secrets in code",
+                  "Secrets manager / vault, rotation, and never any secrets in prompts or logs"
+                ],
+                [
+                  "Who is calling?",
+                  "OAuth2 / OIDC for users, short-lived JWTs, service identities (mTLS) between services; API keys only for simple server-to-server calls"
+                ],
+                [
+                  "Public exposure of model endpoints",
+                  "API gateway (authentication, quotas, logging) + web application firewall (WAF); internal models on private endpoints / a VPC rather than the public internet"
+                ],
+                [
+                  "Multi-tenant SaaS assistant",
+                  "Tenant isolation: enforce the tenant ID in every query, and use separate indexes/keys for sensitive tenants"
+                ]
+              ]
+            },
+            {
+              "quote": "Retrying is safe only with an idempotency key; and retrying during a complete outage makes things worse — this is where the circuit breaker comes in."
+            }
+          ]
+        },
+        {
+          "title": "2.6 Structured Outputs and Validation",
+          "blocks": [
+            {
+              "p": "When model outputs feed other software, follow this sequence:"
+            },
+            {
+              "ol": [
+                "Define a JSON schema.",
+                "Use the provider's structured-output feature, function calling or constrained decoding.",
+                "Validate the output (for example with Pydantic).",
+                "On failure, retry with the validation error message, or use a fallback."
+              ]
+            },
+            {
+              "quote": "Treat model output as untrusted input: do not execute it, and do not pass it to SQL, commands or HTML without sanitisation (Improper Output Handling in OWASP)."
+            }
+          ]
+        },
+        {
+          "title": "2.7 Caching",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Type",
+                  "Hit when",
+                  "Risk"
+                ],
+                [
+                  "Exact-match response cache",
+                  "The same prompt with the same parameters",
+                  "Stale answer after the source is updated → invalidate by doc_id or TTL"
+                ],
+                [
+                  "Semantic cache",
+                  "A similar question (embedding similarity above a threshold)",
+                  "Wrong answer to a subtly different question; and never shared between users with different permissions"
+                ],
+                [
+                  "Prompt / prefix caching at the provider or in vLLM",
+                  "An identical long system prompt or an identical document prefix",
+                  "Helps only if the prefix is exactly identical; put the static part first"
+                ],
+                [
+                  "Embedding cache",
+                  "Re-embedding chunks that have not changed",
+                  "Keyed by content hash + model version"
+                ],
+                [
+                  "Feature cache",
+                  "Repeated feature lookups",
+                  "Freshness of real-time features"
+                ]
+              ]
+            },
+            {
+              "quote": "Three caching rules for the exam: invalidate the cache when a document changes, do not share it across different permissions, and put the static part of the prompt first."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Integration Architecture, the Model Gateway and Packaging",
+      "sections": [
+        {
+          "title": "3.1 Integration Architecture Patterns",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Pattern",
+                  "Description",
+                  "Use in AI",
+                  "Trade-off"
+                ],
+                [
+                  "Synchronous request–response",
+                  "The caller waits for the answer",
+                  "Real-time scoring, chat",
+                  "Couples the availability of the two sides; needs timeouts"
+                ],
+                [
+                  "Asynchronous queue + workers",
+                  "The producer enqueues and the workers process",
+                  "Document processing, batch LLM jobs",
+                  "Results arrive later; needs job tracking"
+                ],
+                [
+                  "Event-driven / publish–subscribe (pub-sub)",
+                  "Services react to published events",
+                  "Re-indexing when a document changes; scoring on a new transaction",
+                  "Harder to trace end to end"
+                ],
+                [
+                  "Change data capture (CDC)",
+                  "Stream database changes as events",
+                  "Keep the RAG index and the feature store in sync with the source systems",
+                  "Schema evolution must be handled"
+                ],
+                [
+                  "Saga / compensating actions",
+                  "A multi-step workflow with rollback steps",
+                  "Agents carrying out business transactions",
+                  "Every compensation must be designed explicitly"
+                ],
+                [
+                  "API gateway",
+                  "A single entry point for authentication, quotas, routing and logging",
+                  "Exposing model endpoints",
+                  "An extra hop; a central policy point"
+                ],
+                [
+                  "Service mesh",
+                  "mTLS, retries and telemetry via a sidecar",
+                  "Large microservice estates",
+                  "Operational complexity"
+                ],
+                [
+                  "Strangler / side-car AI",
+                  "Add AI alongside an existing system and route a share of the traffic to it",
+                  "Modernising legacy processes safely",
+                  "Temporary duplication"
+                ]
+              ]
+            },
+            {
+              "h": "Monolith or microservices?"
+            },
+            {
+              "p": "Serving the model **inside the application process** is the simplest and fastest when one team owns both. A **separate model service** is better when the model needs graphics processing units (GPUs), independent scaling, its own release cadence, or is shared by several applications."
+            },
+            {
+              "quote": "Scenario signal: “the web tier and the model need very different hardware and scaling” → a separate service."
+            }
+          ]
+        },
+        {
+          "title": "3.2 The LLM Gateway Pattern",
+          "blocks": [
+            {
+              "p": "Organisations with several LLM-dependent applications typically place an **LLM gateway** between the applications and the model providers (external APIs and self-hosted models). The gateway concentrates responsibilities that every application should not have to rebuild:"
+            },
+            {
+              "ol": [
+                "**Authentication and per-team quotas** — who may call which model, with token budgets.",
+                "**Routing** — choosing a model per request (by task, cost tier, data classification or language); and a cascade from a small model to a large one when confidence is low.",
+                "**Data protection** — classifying requests, and masking or blocking personal and classified data before it leaves the boundary (data loss prevention, DLP), and enforcing the rule “restricted data goes only to approved models inside the Kingdom”.",
+                "**Resilience** — retry with backoff, timeouts, circuit breakers and failover between providers.",
+                "**Caching** — exact-match and semantic response caches, and prefix caching where supported.",
+                "**Observability and cost** — logs of the model, version, tokens, latency and cost per team; and tracing for debugging.",
+                "**Guardrails** — input filters (injection patterns, policy violations) and output filters (personal data, toxicity, schema).",
+                "**Audit** — retained according to the retention policy with personal data minimised."
+              ]
+            },
+            {
+              "quote": "In the scenario “each team calls the external models directly with its own keys, and nobody knows the spend or the data sent” → the LLM gateway is the expected architectural answer."
+            },
+            {
+              "p": "Note: failover in the gateway must respect data classification; the fallback during a provider outage must not be a non-approved model for restricted data."
+            }
+          ]
+        },
+        {
+          "title": "3.3 Packaging and Serving Models",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Tool or format",
+                  "Purpose",
+                  "Typical use"
+                ],
+                [
+                  "Docker images",
+                  "A reproducible runtime (code + dependencies + the model or a pointer to it)",
+                  "Every deployment"
+                ],
+                [
+                  "ONNX",
+                  "A framework-neutral model format with optimised runtimes",
+                  "Classical/deep models on CPU or GPU, and edge devices"
+                ],
+                [
+                  "TorchScript / torch.compile, TensorRT",
+                  "Optimised graphs and kernels",
+                  "Low-latency inference on GPU"
+                ],
+                [
+                  "Triton Inference Server",
+                  "Multi-framework, multi-model serving with dynamic batching",
+                  "Mixed model fleets on GPUs"
+                ],
+                [
+                  "vLLM, TGI, TensorRT-LLM, SGLang",
+                  "LLM serving with continuous batching, paged KV cache and quantisation",
+                  "Self-hosted LLMs"
+                ],
+                [
+                  "KServe / Seldon / BentoML / Ray Serve",
+                  "Model serving on Kubernetes with autoscaling and rollout features",
+                  "Platform teams"
+                ],
+                [
+                  "Managed endpoints (cloud ML platforms)",
+                  "Hosted serving with autoscaling",
+                  "Small teams; fast start"
+                ],
+                [
+                  "Model registry artefacts",
+                  "Versioned model files + metadata + model card",
+                  "Traceable promotion and rollback"
+                ]
+              ]
+            },
+            {
+              "h": "Artefact hygiene"
+            },
+            {
+              "ul": [
+                "Prefer safe serialisation formats: **safetensors instead of pickle** for weights.",
+                "Pin dependency versions, and scan containers for vulnerabilities.",
+                "Sign the artefacts.",
+                "Link the training-data version and the evaluation report to the model's entry in the registry."
+              ]
+            },
+            {
+              "quote": "These are the supply-chain controls in Unit 09, applied to your own models."
+            }
+          ]
+        },
+        {
+          "title": "3.4 Integrating AI with Enterprise Systems",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "System",
+                  "Typical integration",
+                  "Watch-outs"
+                ],
+                [
+                  "Identity (SSO, directory)",
+                  "Users and groups determine retrieval permissions and tool permissions",
+                  "Keep group membership in sync; least privilege"
+                ],
+                [
+                  "Enterprise resource planning (ERP) / finance",
+                  "Read master data; write proposals, not accounting entries",
+                  "Segregation of duties; approvals; audit trail"
+                ],
+                [
+                  "Customer relationship management (CRM) / contact centre",
+                  "Summaries, next-best action, ticket creation",
+                  "Marketing consent; redact personal data in logs"
+                ],
+                [
+                  "Document management",
+                  "Change events feed RAG ingestion",
+                  "Versions, classification labels, retention"
+                ],
+                [
+                  "Data platform",
+                  "Features, training data, analytics",
+                  "Lineage, quality gates, access control"
+                ],
+                [
+                  "Messaging / email",
+                  "Classification, drafting replies, routing",
+                  "Indirect prompt injection in inbound content"
+                ],
+                [
+                  "Legacy systems without APIs",
+                  "Robotic process automation (RPA) or database views as a bridge",
+                  "Fragile; prefer proper APIs; strong monitoring"
+                ]
+              ]
+            },
+            {
+              "h": "Integration principles"
+            },
+            {
+              "ul": [
+                "Put AI behind stable service interfaces.",
+                "Keep the systems of record authoritative: **AI proposes; the system of record decides and records**.",
+                "Pass the user's identity end to end so that permissions are enforced at the source.",
+                "Make every AI-originated change traceable to a model version and to an approver.",
+                "Design for the case where AI is unavailable — the business process must degrade gracefully, not stop."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Quality, Reliability and Security: From Practices to Agents",
+      "sections": [
+        {
+          "title": "4.1 Software-Engineering Practices for AI Features",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Practice",
+                  "What it means here"
+                ],
+                [
+                  "Prompts as code",
+                  "Under version control, reviewed and tested, released with a version identifier, and the version is logged with every response"
+                ],
+                [
+                  "Eval tests in CI",
+                  "A golden set run on every change to the prompt or model; block the merge on regression"
+                ],
+                [
+                  "Unit tests with mocks",
+                  "Mock the LLM so that the surrounding code can be tested deterministically"
+                ],
+                [
+                  "Contract tests",
+                  "Ensure that the model interface's schema matches what consumers expect"
+                ],
+                [
+                  "Observability",
+                  "Trace every step (retrieval, reranking, model, tools) with latency and tokens; correlation IDs"
+                ],
+                [
+                  "Feature flags",
+                  "Roll out a new model or prompt to a share of users; instant rollback"
+                ],
+                [
+                  "Reproducibility",
+                  "Pin the model version, prompt version, index version and parameters"
+                ],
+                [
+                  "Separation of concerns",
+                  "The model behind a service interface → swap providers or models without changing clients (avoid vendor lock-in)"
+                ]
+              ]
+            },
+            {
+              "quote": "To reproduce an answer, pin four things — the model version, the prompt version, the index version and the parameters."
+            }
+          ]
+        },
+        {
+          "title": "4.2 Testing AI-Powered Software",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Layer",
+                  "What is tested",
+                  "How"
+                ],
+                [
+                  "Unit",
+                  "Pre- and post-processing, prompt assembly, parsers, tool wrappers",
+                  "Deterministic tests with the model mocked"
+                ],
+                [
+                  "Contract",
+                  "Interface schemas between services and with model providers",
+                  "Schema validation in CI; consumer-driven contracts"
+                ],
+                [
+                  "Data",
+                  "Schemas, ranges, distributions, leakage",
+                  "Validation suites on every pipeline run"
+                ],
+                [
+                  "Model quality",
+                  "Metrics on golden sets and slices; regression against the current production model",
+                  "An automated evaluation gate before promotion"
+                ],
+                [
+                  "Behavioural",
+                  "Invariance (rephrasing does not change the classification), directional expectations, minimum functionality",
+                  "CheckList-style test cases, including Arabic dialect variants"
+                ],
+                [
+                  "Safety and security",
+                  "Prompt injection, jailbreaks, personal-data leakage, toxic outputs",
+                  "Red-team suites, automated adversarial prompts"
+                ],
+                [
+                  "Integration / end to end",
+                  "The full flow with real dependencies in a staging environment",
+                  "Synthetic transactions; canary checks"
+                ],
+                [
+                  "Performance",
+                  "Latency percentiles, throughput, memory at the target concurrency",
+                  "Load, spike and soak tests — in Unit 08"
+                ],
+                [
+                  "Fairness",
+                  "Outcome gaps between groups",
+                  "Slice metrics with thresholds"
+                ]
+              ]
+            },
+            {
+              "h": "Non-determinism"
+            },
+            {
+              "p": "An LLM's outputs differ between calls. Tests therefore verify **properties**, not literal text: valid JSON, required fields present, cites a source, refuses a disallowed request, semantic similarity to a reference answer above a threshold. Run the important cases several times and track **pass rates**."
+            },
+            {
+              "quote": "Do not test an LLM by exact text matching; test properties and track the pass rate across multiple runs."
+            }
+          ]
+        },
+        {
+          "title": "4.3 Observability for AI Systems",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Pillar",
+                  "What it is",
+                  "Examples"
+                ],
+                [
+                  "Metrics",
+                  "Aggregated numbers",
+                  "Latency percentiles, error rates, tokens, cost"
+                ],
+                [
+                  "Logs",
+                  "Discrete events with their context",
+                  "A refusal event, a validation error"
+                ],
+                [
+                  "Traces",
+                  "The path of a single request across services and steps",
+                  "The chain of steps tied together by a correlation ID"
+                ]
+              ]
+            },
+            {
+              "p": "**OpenTelemetry** is the common standard for emitting the three pillars. In LLM applications, the trace must show every step, tied together by a correlation ID:"
+            },
+            {
+              "ul": [
+                "Guardrail checks.",
+                "Query rewriting.",
+                "Retrieval (with document identifiers and scores), then reranking.",
+                "The model call (model, version, prompt version, tokens, latency).",
+                "Tool calls, and output validation."
+              ]
+            },
+            {
+              "h": "Privacy-respecting logging"
+            },
+            {
+              "ul": [
+                "Mask personal data before logging.",
+                "Restrict access to the logs and apply the retention schedule.",
+                "Avoid storing full prompts and outputs by default where they may contain sensitive data — store hashes, metadata or masked copies of a sample instead."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.4 Conversational AI Design",
+          "blocks": [
+            {
+              "p": "A production assistant is more than an LLM behind a chat box; it is a conversational system with responsibilities: understanding the user's need, deciding whether it can help, collecting missing information, acting safely, and handing over to a human when appropriate."
+            },
+            {
+              "table": [
+                [
+                  "Principle",
+                  "Application"
+                ],
+                [
+                  "Intent routing before generation",
+                  "A lightweight classifier (or the model itself with constrained output) decides the path first: a deterministic answer (balance, opening hours), a RAG answer, a transaction path (changing a plan, booking an appointment), or handover to a human. Deterministic paths are cheaper, faster and auditable; the model handles the remaining varied cases (the long tail)"
+                ],
+                [
+                  "Slot filling for transactions",
+                  "Collect the required fields explicitly (account, date, amount), validate them against the systems, confirm them with the user (“You want to cancel plan X effective 1 Muharram — do you confirm?”), then call the API with an idempotency key"
+                ],
+                [
+                  "Memory policy",
+                  "Short conversation context with summarisation; long-term memory is stored only for a clear purpose, with consent where needed, within retention limits, and deleted at the user's request — memory is personal data"
+                ],
+                [
+                  "Handover",
+                  "Triggers: the user asks for a person, low confidence, repeated failure, sensitive topics (complaints, legal, medical, safety), detected distress, high-value actions. Pass the conversation summary so that the user does not have to repeat themselves"
+                ],
+                [
+                  "Arabic conversation quality",
+                  "Decide the language register (Modern Standard Arabic or polite Saudi dialect) and keep to it; follow the user's language if they switch to English; handle both the Hijri and Gregorian calendars; display numbers and text right to left correctly in the interface; test with real dialectal inputs, spelling errors and Arabizi"
+                ],
+                [
+                  "Accessibility and inclusion",
+                  "Clear language, voice channels for those who prefer to speak, screen-reader-friendly interfaces, and not relying on the bot as the sole service channel"
+                ]
+              ]
+            },
+            {
+              "quote": "Do not let free generation alone trigger a transaction: collect the slots, validate, confirm with the user, then call the API with an idempotency key."
+            }
+          ]
+        },
+        {
+          "title": "4.5 Engineering Reliable Agents",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Practice",
+                  "Why"
+                ],
+                [
+                  "Explicit workflow graph / state machine",
+                  "Predictable paths, easier testing and auditing than free-form loops"
+                ],
+                [
+                  "Typed tool interfaces",
+                  "Schemas catch malformed calls before execution"
+                ],
+                [
+                  "Idempotent, reversible tools",
+                  "Safe retries; compensation for partial failures"
+                ],
+                [
+                  "Read/write separation",
+                  "Most steps need read access only; writes go through approval"
+                ],
+                [
+                  "Step, time and cost budgets",
+                  "Stop runaway loops and runaway bills"
+                ],
+                [
+                  "Checkpointed state",
+                  "Resume long tasks after a failure; a human can inspect and continue"
+                ],
+                [
+                  "Structured observations",
+                  "Tool results are summarised and validated before being fed back into the context"
+                ],
+                [
+                  "Untrusted-content handling",
+                  "Tool outputs and documents cannot change goals or permissions"
+                ],
+                [
+                  "Human checkpoints",
+                  "Approvals for irreversible, external or high-value actions"
+                ],
+                [
+                  "Full tracing",
+                  "Every plan, call, argument and result is logged for audit"
+                ],
+                [
+                  "Evaluation on tasks",
+                  "Measure the task success rate, the number of steps, cost and safety violations on a suite of scenarios"
+                ]
+              ]
+            },
+            {
+              "h": "Handling failure"
+            },
+            {
+              "p": "Agents fail differently from interfaces: they misunderstand goals, call the wrong tool, go round in loops, or stop early. Design for that: detect repeated identical calls, set a retry ceiling per tool, fall back to asking the user or a human, and summarise partial progress."
+            },
+            {
+              "formula": "Plan → confirm the plan with the user (for tasks with side effects) → execute with checkpoints → deliver the report"
+            },
+            {
+              "h": "When not to use an agent"
+            },
+            {
+              "p": "If the task follows a known sequence, a deterministic workflow with LLM steps is cheaper, faster and more reliable. Resort to open-ended agents only when the path genuinely cannot be determined in advance — and then with their permissions restricted."
+            },
+            {
+              "quote": "Known sequence → deterministic workflow with LLM steps. Path that cannot be determined in advance → agent with restricted permissions."
+            }
+          ]
+        },
+        {
+          "title": "4.6 Secure Development for AI Features",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Stage",
+                  "AI-specific security activity"
+                ],
+                [
+                  "Design",
+                  "Threat modelling including prompt injection, data leakage, excessive agency and model theft; a data-flow diagram with classification"
+                ],
+                [
+                  "Dependencies",
+                  "Pin and scan ML libraries; verify the hashes and signatures of model artefacts; prefer safetensors"
+                ],
+                [
+                  "Coding",
+                  "Treat model output as untrusted; parameterised queries; output encoding; secrets from the vault"
+                ],
+                [
+                  "Review",
+                  "Review prompts and tool definitions like code; check AI-generated code carefully"
+                ],
+                [
+                  "Testing",
+                  "Injection and jailbreak suites; personal-data leakage tests; authorisation tests on retrieval"
+                ],
+                [
+                  "Deployment",
+                  "Private endpoints; a gateway with authentication and quotas; service accounts with least privilege"
+                ],
+                [
+                  "Operations",
+                  "Abuse monitoring; anomaly alerts on usage and cost; incident-response playbooks; key rotation"
+                ]
+              ]
+            },
+            {
+              "quote": "Prompts and tool definitions are code: they are reviewed, tested and released like any other code."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Apply the stage-by-stage diagnostic method and the resilience and integration patterns to an enterprise RAG assistant over documents that change periodically.",
+    "scenario": [
+      "A government entity in Riyadh launched an internal assistant that answers employees' questions about regulations and administrative policies, built on RAG over about 40,000 documents (PDFs, some of them scanned, Word files and FAQs). The index is rebuilt in full every night, and the assistant is served through a synchronous HTTP call from the API gateway.",
+      "Two months later the following complaints appeared: after the leave regulation was updated, the assistant went on citing the old version for hours, and sometimes even showed both versions with contradictory answers; questions such as “What is the text of Article 17?” were returned with other articles; and an employee in a general department saw a passage from a confidential HR memo.",
+      "At the same time, management asked for a “summarise the whole case file for me” feature that takes 3–5 minutes, so requests began failing with gateway timeouts and being retried automatically, and the external provider's bill rose. It was also discovered that two other teams are calling the same provider directly with their own keys."
+    ],
+    "steps": [
+      "Classify each complaint by its stage: citing the old version → ingestion/index (and possibly the cache); both versions together → no current-version flag; Article 17 → semantic-only retrieval; the confidential memo → permissions not enforced at retrieval; summarisation failure → wrong interaction pattern.",
+      "Replace the nightly rebuild with incremental indexing triggered by change detection (document-management-system events or hashes), with an upsert by doc_id and deletion of the superseded chunks, and publish a freshness agreement such as “indexed within 15 minutes”.",
+      "Add version, effective_from and is_current metadata and filter to the current version by default, and invalidate the cache entries tied to the changed documents.",
+      "Add BM25 in a hybrid search merged with RRF, chunk the regulations one article per chunk with the name of the law prepended to each chunk (contextual chunks), and add a reranker.",
+      "Enforce the access control list inside the retrieval query (pre-filter) based on the user's groups from the identity system, not by filtering the answer after generation.",
+      "Turn the summarisation feature into an asynchronous pattern: 202 Accepted with a job_id, a queue and workers, and a notification via a signed webhook or polling, with idempotency keys and retry with exponential backoff and jitter.",
+      "Place a shared LLM gateway across the three teams: authentication and token quotas per team, masking of personal and classified data, routing by data classification, cost logging per team, and caching.",
+      "Prove the improvement with a golden set that measures context recall and precision separately from faithfulness and answer correctness, and make it a gate in CI on every change to the prompt or model."
+    ],
+    "traps": [
+      "“Fine-tune the model on the new regulations” — freshness is an index and ingestion problem, not a weights problem.",
+      "“Raise the gateway timeout to 10 minutes” — long jobs need a queue-based asynchronous pattern.",
+      "“Filter the answer after it is generated to hide the confidential content” — permissions are enforced before retrieval.",
+      "“Rebuild the index every hour instead of every night” — it remains slow and expensive; the correct fix is incremental indexing with hashes and change events.",
+      "“Change the embedding model and re-embed only the new documents” — this mixes the vectors of two models; re-embed the whole corpus into a new index and do a blue-green swap.",
+      "“A semantic cache shared by all employees saves cost” — it must not be shared across users with different permissions."
+    ],
+    "deliverable": "A stage-ordered remediation plan that links each symptom to its root cause and fix, with a simplified diagram of the new pipeline (incremental ingestion, hybrid search, permission pre-filtering, asynchronous pattern, model gateway) and the metrics that verify the improvement."
+  },
+  "review": [
+    {
+      "q": "An entity updated its regulation, and the assistant still cites the old version even though the indexing log confirms that the new version was inserted. What is the most likely cause, and what is the fix?",
+      "a": "Either the old chunks were not deleted, or a response cache is serving stale answers. The fix: delete the superseded chunks on upsert by doc_id, an is_current flag with filtering on it, and invalidation of the cache entries tied to the changed document."
+    },
+    {
+      "q": "The correct document appears at rank 15 in the retrieval results. Which stage do you fix, and how?",
+      "a": "The ranking stage: add a cross-encoder reranker over the top 20–100 candidates and keep the best 3–8, and tune k. The document is already retrieved, so changing the embedding model is not the first fix."
+    },
+    {
+      "q": "Calculate the RRF score for a document ranked 2 in the vector search and 1 in BM25, with k = 60.",
+      "a": "1/(60+2) + 1/(60+1) = 0.01613 + 0.01639 ≈ 0.0325. The advantage of RRF is that it merges by rank, so it does not need score calibration between the two systems."
+    },
+    {
+      "q": "What is the difference between status codes 401 and 403, and between 400 and 422, in a model service?",
+      "a": "401 means the caller is not authenticated (missing or expired token), and 403 means authenticated but without permission for the model or data. 400 is a malformed input (invalid JSON), and 422 is well-formed syntax with semantically invalid values or a schema-validation failure."
+    },
+    {
+      "q": "A POST request to create a ticket was retried after a timeout and created two tickets. Which pattern is missing? Which code is appropriate if the same key is reused with a different payload?",
+      "a": "Idempotency keys make retrying safe. Reusing the same key with a different payload returns 409 Conflict."
+    },
+    {
+      "q": "When is the LLM gateway the expected architectural answer?",
+      "a": "When several teams call the external models directly with their own keys and nobody knows the spend or the data sent. The gateway concentrates authentication, quotas, routing, data protection, resilience, caching, observability, guardrails and audit."
+    },
+    {
+      "q": "Why is a shared semantic cache not enough in a multi-department internal assistant?",
+      "a": "Because it may return an answer to a subtly different question, and because it must not be shared between users with different permissions, as it could reveal restricted content to someone not entitled to see it."
+    },
+    {
+      "q": "How do you test a feature that depends on an LLM whose outputs are non-deterministic?",
+      "a": "Verify properties, not literal text: valid JSON, required fields, presence of a citation, refusal of disallowed requests, semantic similarity above a threshold; run the important cases several times and track the pass rate. Mock the model in unit tests for the surrounding code."
+    },
+    {
+      "q": "You are asked to build an agent that handles refund requests that always follow the same steps. What is the most suitable design?",
+      "a": "A deterministic workflow with LLM steps, because it is cheaper, faster and more reliable than an open-ended agent. Open-ended agents only when the path cannot be determined in advance, and with restricted permissions and human approvals for irreversible actions."
+    },
+    {
+      "q": "When do you separate the model into an independent service instead of serving it inside the application process?",
+      "a": "When the model needs a GPU, independent scaling or its own release cadence, or is shared by several applications; the usual scenario signal: the web tier and the model need very different hardware and scaling."
+    }
+  ],
+  "summary": "You have mastered this unit when, faced with any scenario about an enterprise AI assistant, you can identify the stage responsible for the fault (ingestion, retrieval, ranking, generation, caching, permissions, interaction pattern) and choose its localised fix: incremental, versioned indexing instead of a rebuild or fine-tuning; hybrid search and reranking instead of changing the model; permission filtering before retrieval; an asynchronous pattern instead of raising the timeout; and idempotency keys, circuit breakers and a model gateway instead of ad hoc solutions for each team — while justifying it with the right code, pattern and metric.",
+  "coverage": [
+    "4.1",
+    "4.2",
+    "4.3",
+    "4.4",
+    "4.5",
+    "4.6",
+    "4.7",
+    "4.8",
+    "4.9",
+    "4.10",
+    "4.11",
+    "4.12",
+    "4.13",
+    "4.14",
+    "4.15",
+    "4.16",
+    "4.17",
+    "4.18"
+  ]
+}

@@ -1,0 +1,1344 @@
+{
+  "num": 0,
+  "title": "Beginner's Introduction: AI from Zero",
+  "english": "Beginner's Introduction: AI from Zero",
+  "subtitle": "Everything you need to read the remaining units without getting lost: data, models, metrics, language models and systems",
+  "domain": "Preface — before Unit 01",
+  "deliverable": "Read any scenario in the following units and understand its core terms: data, model, metric, latency, cost and privacy.",
+  "intro": "This unit is written for readers who have never studied artificial intelligence. It assumes no technical background beyond using a computer and the internet. In it you will build the complete picture step by step: what we mean by artificial intelligence, how a model “learns” from data, how we tell whether it is good or bad, what language models such as AI assistants are, and what systems run them in companies and government bodies. Every term that appears here will appear later in the exam, but the exam assumes you already know it. Here you learn it from zero.",
+  "outcomes": [
+    "Explain the difference between rule-based programming and learning from data, and between artificial intelligence, machine learning, deep learning and generative AI.",
+    "Distinguish data, features and labels, and explain why data is split into training, validation and test sets.",
+    "Describe how a model learns by trial and error, and what overfitting and underfitting are.",
+    "Calculate accuracy, precision and recall from a small example, and explain why accuracy can be misleading.",
+    "Explain tokens, the context window, the prompt, hallucination, vector embeddings and RAG in simple terms.",
+    "Interpret latency, throughput, replicas, caching and cost in a system running on a server.",
+    "Recognise personal and sensitive data, and the role of SDAIA and the Personal Data Protection Law (PDPL)."
+  ],
+  "method": "Read this unit slowly, and do not memorise anything. The goal is to understand. After each section, close your eyes and explain the idea to yourself with an example from your own life. If you can, you have understood; if you cannot, re-read the “Example”. When you reach the calculations, pick up a pen and redo them by hand. You will come back to this unit often while reading the following units, so use it as a reference, and use the glossary as well.",
+  "chapters": [
+    {
+      "title": "What Is Artificial Intelligence?",
+      "sections": [
+        {
+          "title": "1.1 From Rule-Based Programming to Learning from Data",
+          "blocks": [
+            {
+              "p": "An ordinary program is a set of **rules** written by a programmer: “If the amount exceeds SAR 10,000, send an alert.” The computer executes the rule exactly as written and knows nothing beyond it."
+            },
+            {
+              "p": "This works when we know the rule. But for many tasks we cannot write the rules: how would you write a rule that tells a picture of a cat from a picture of a dog? Or that recognises a fraudulent email? Here we change the approach: we give the computer **many examples** together with their correct answers, and let an algorithm extract the pattern by itself. This is **machine learning**."
+            },
+            {
+              "table": [
+                [
+                  "",
+                  "Traditional programming",
+                  "Machine learning"
+                ],
+                [
+                  "What do we give the computer?",
+                  "Rules + data",
+                  "Data + correct answers (examples)"
+                ],
+                [
+                  "What is produced?",
+                  "Answers",
+                  "Extracted rules (a model)"
+                ],
+                [
+                  "When does it fit?",
+                  "The rule is known and stable",
+                  "The rule is complex, unknown or changing"
+                ],
+                [
+                  "Example",
+                  "Calculating 15% value-added tax",
+                  "Detecting a suspicious card transaction"
+                ]
+              ]
+            },
+            {
+              "quote": "Machine learning does not mean that the computer “thinks”. It means that it extracts a statistical pattern from past examples and applies it to new cases."
+            },
+            {
+              "p": "An important point for the exam: **not every problem needs machine learning**. If the rule is clear (an upper limit on an amount, or a regulatory condition), a written rule is cheaper, clearer and easier to audit. Many wrong exam options propose a complex model for a problem that a rule would solve."
+            }
+          ]
+        },
+        {
+          "title": "1.2 Artificial Intelligence, Machine Learning, Deep Learning and Generative AI",
+          "blocks": [
+            {
+              "p": "These are four terms that many people confuse. Picture them as circles nested inside one another:"
+            },
+            {
+              "ul": [
+                "**Artificial intelligence (AI)**: the broadest term. Any system that performs a task we normally associate with human intelligence: speech recognition, translation, decision-making or planning. It may rely on written rules or on learning.",
+                "**Machine learning (ML)**: a subset of artificial intelligence in which the system learns from data instead of from written rules.",
+                "**Deep learning (DL)**: a subset of machine learning that uses **neural networks** with many layers. It excels at images, audio and text, and needs more data and more computing power.",
+                "**Generative AI**: systems that **produce new content**: text, images, audio or code. Most of them today are built on deep learning, such as large language models."
+              ]
+            },
+            {
+              "formula": "AI  ⊃  ML  ⊃  Deep Learning  ⊃  (most) Generative AI"
+            },
+            {
+              "table": [
+                [
+                  "Type",
+                  "What does it do?",
+                  "Example"
+                ],
+                [
+                  "Traditional machine learning",
+                  "Predicts a number or a category from a data table",
+                  "Predicting whether a customer will be late repaying a loan"
+                ],
+                [
+                  "Deep learning",
+                  "Understands images, sounds and text",
+                  "Reading the characters from a scanned ID image"
+                ],
+                [
+                  "Generative AI",
+                  "Produces new content",
+                  "An assistant that writes a reply to a customer enquiry"
+                ]
+              ]
+            },
+            {
+              "p": "In the exam you will find that **the simplest type that solves the problem is usually the correct one**. A structured data table (columns and numbers) is normally well served by traditional machine learning and does not need a huge language model."
+            }
+          ]
+        },
+        {
+          "title": "1.3 What Is a “Model”? Training and Inference",
+          "blocks": [
+            {
+              "p": "A **model** is the output we obtain after learning: a mathematical function that takes an input and produces an output. Give it a transaction's data and it gives you the probability that it is fraudulent. Give it a question and it gives you a text answer."
+            },
+            {
+              "p": "A model's life has two completely different phases, and they will recur in every unit:"
+            },
+            {
+              "table": [
+                [
+                  "",
+                  "Training",
+                  "Inference"
+                ],
+                [
+                  "What happens?",
+                  "The model learns from the data and adjusts its internal numbers",
+                  "The trained model is used to answer new requests"
+                ],
+                [
+                  "How often?",
+                  "Once or a few times (or periodically)",
+                  "With every request from every user, thousands or millions of times"
+                ],
+                [
+                  "Cost",
+                  "Very high but temporary",
+                  "Small per request, but continuous and cumulative"
+                ],
+                [
+                  "Analogy",
+                  "The student studies",
+                  "The student answers in the exam"
+                ]
+              ]
+            },
+            {
+              "p": "This distinction matters greatly in the exam: many questions about cost and speed concern **inference** (the daily service), not training. A common mistake is an option that proposes “retraining” for a problem whose cause lies in inference, such as a slow server or an error in the input data."
+            },
+            {
+              "quote": "Training creates the model. Inference uses it. Most of the monthly bill usually comes from inference."
+            }
+          ]
+        },
+        {
+          "title": "1.4 Types of Learning: Supervised, Unsupervised and Reinforcement",
+          "blocks": [
+            {
+              "p": "Learning methods differ according to the type of data available:"
+            },
+            {
+              "table": [
+                [
+                  "Type",
+                  "Idea",
+                  "Analogy",
+                  "Example"
+                ],
+                [
+                  "Supervised learning",
+                  "Every example has a known correct answer (a label), and the model learns to map the input to the answer",
+                  "A student studying from a bank of solved questions",
+                  "Messages labelled “fraud/legitimate” to train a fraud detector"
+                ],
+                [
+                  "Unsupervised learning",
+                  "There are no answers; the model looks for clusters or patterns by itself",
+                  "Arranging a library of untitled books by similarity",
+                  "Segmenting customers into groups with similar behaviour"
+                ],
+                [
+                  "Reinforcement learning",
+                  "The system tries actions and receives a reward or a penalty, so it learns what maximises the reward",
+                  "Training a pet with rewards",
+                  "Tuning a language model's behaviour using human ratings of its answers"
+                ]
+              ]
+            },
+            {
+              "p": "Most exam questions about traditional models concern **supervised learning**, because it is the most widely used in business: we predict something whose answer we know in the historical data. Its hardest part is usually obtaining the **correct labels**, because they are assigned by humans, which is costly and may introduce errors."
+            }
+          ]
+        },
+        {
+          "title": "1.5 Types of Tasks: Classification, Regression, Clustering and Generation",
+          "blocks": [
+            {
+              "p": "Before choosing any model, ask: **what shape of answer is required?** This alone determines the type of task:"
+            },
+            {
+              "table": [
+                [
+                  "Task",
+                  "Shape of the answer",
+                  "Examples"
+                ],
+                [
+                  "Classification",
+                  "One of a set of defined categories",
+                  "Fraud / legitimate; urgent / routine / complaint"
+                ],
+                [
+                  "Regression",
+                  "A continuous number",
+                  "Property price; number of orders tomorrow"
+                ],
+                [
+                  "Clustering",
+                  "Groups the model discovers by itself",
+                  "Customer segments"
+                ],
+                [
+                  "Ranking and recommendation",
+                  "An ordered list",
+                  "The top 10 products for this customer"
+                ],
+                [
+                  "Generation",
+                  "New content",
+                  "A report summary; a reply to a customer"
+                ]
+              ]
+            },
+            {
+              "p": "Classification with only two categories is called **binary classification**, such as fraud/legitimate. Classification with more than two categories is called **multi-class classification**."
+            },
+            {
+              "p": "Each type has different evaluation metrics. Do not measure a regression model by accuracy, or a classification model by mean error. You will learn the metrics in the third chapter of this unit."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Data and How a Model Learns",
+      "sections": [
+        {
+          "title": "2.1 Data: Rows, Columns, Features and Labels",
+          "blocks": [
+            {
+              "p": "The simplest form of data is a **table**, like an Excel sheet. Each **row** is one case (a customer, a transaction, a patient), and each **column** is one of its attributes."
+            },
+            {
+              "table": [
+                [
+                  "Transaction ID",
+                  "Amount (SAR)",
+                  "Hour",
+                  "Country",
+                  "Was it fraud?"
+                ],
+                [
+                  "1001",
+                  "120",
+                  "14:05",
+                  "Saudi Arabia",
+                  "No"
+                ],
+                [
+                  "1002",
+                  "9,800",
+                  "03:12",
+                  "Another country",
+                  "Yes"
+                ],
+                [
+                  "1003",
+                  "45",
+                  "09:30",
+                  "Saudi Arabia",
+                  "No"
+                ]
+              ]
+            },
+            {
+              "ul": [
+                "**Features**: the columns the model uses to make its prediction. Here: the amount, the hour and the country.",
+                "**Label or target**: the column we want to predict, here “Was it fraud?” In historical data we know its value; in new cases we do not, which is why we need the model.",
+                "**Dataset**: the whole table with all its rows."
+              ]
+            },
+            {
+              "p": "Not all data is tabular. There is also **unstructured data** such as text, images, audio and scanned documents. Deep learning and language models usually handle these."
+            },
+            {
+              "quote": "A model is only as good as its data. Incomplete, outdated or wrong data produces a bad model, however powerful the algorithm."
+            }
+          ]
+        },
+        {
+          "title": "2.2 Why We Split the Data: Training, Validation and Test",
+          "blocks": [
+            {
+              "p": "Imagine a teacher who gives students a question bank and then sets the final exam **from the same questions**. Everyone will get high marks, but we will not know whether they understood or memorised. A model is like the student: if we test it on the data it learned from, it will look excellent, but that means nothing."
+            },
+            {
+              "p": "So we split the data into three parts:"
+            },
+            {
+              "table": [
+                [
+                  "Part",
+                  "Common share",
+                  "Use",
+                  "Analogy"
+                ],
+                [
+                  "Training set",
+                  "≈ 70%",
+                  "The model learns from it",
+                  "The bank of solved questions"
+                ],
+                [
+                  "Validation set",
+                  "≈ 15%",
+                  "We use it to compare settings and models and choose the best",
+                  "The mock exam"
+                ],
+                [
+                  "Test set",
+                  "≈ 15%",
+                  "We use it to measure final performance once, at the end",
+                  "The sealed final exam"
+                ]
+              ]
+            },
+            {
+              "p": "The shares above are a common example, not a fixed rule. The fixed rule is: **the test set is seen neither by the model nor by the team during development**. If we use it repeatedly to choose settings, it becomes like a leaked exam."
+            },
+            {
+              "p": "There is a more dangerous risk called **data leakage**: the training features contain information that will not be available at real prediction time. Example: a column “amount refunded” is known only after the fraud has been detected. The model will rely on it and look brilliant in testing, then fail in the real world. You will see it in detail in Unit 02."
+            }
+          ]
+        },
+        {
+          "title": "2.3 Memorising versus Understanding: Overfitting and Underfitting",
+          "blocks": [
+            {
+              "p": "There are two ways in which a model fails to learn:"
+            },
+            {
+              "table": [
+                [
+                  "",
+                  "Underfitting",
+                  "Overfitting"
+                ],
+                [
+                  "Meaning",
+                  "The model is too simple to capture the pattern",
+                  "The model has memorised the training data with all its details and noise"
+                ],
+                [
+                  "Analogy",
+                  "A student who did not study: gets the question bank wrong and the exam wrong",
+                  "A student who memorised the answers word for word: excellent on the question bank, poor on any new question"
+                ],
+                [
+                  "Symptom",
+                  "Poor performance on both training and test",
+                  "Excellent performance on training, poor on test"
+                ],
+                [
+                  "Common remedy",
+                  "A more powerful model, better features, or longer training",
+                  "More data, a simpler model, regularisation, or early stopping"
+                ]
+              ]
+            },
+            {
+              "p": "The sign that reveals overfitting is a **large gap** between training performance and validation performance. For example, 99% on training and 75% on validation."
+            },
+            {
+              "p": "Specialists call this idea the **bias–variance trade-off**. High bias means underfitting, and high variance means overfitting. Bias here means the error caused by oversimplifying the model, which is a different meaning from bias against a group of people."
+            }
+          ]
+        },
+        {
+          "title": "2.4 How a Model Learns: Parameters, Loss and Adjustment",
+          "blocks": [
+            {
+              "p": "Inside every model are adjustable numbers called **parameters or weights**. All of learning is the search for values of these numbers that bring the predictions close to the correct answers."
+            },
+            {
+              "ol": [
+                "**Guess**: the model predicts with its current weights (initially almost random).",
+                "**Measure the error**: we calculate the **loss function**, a number that measures how far the prediction is from the correct answer.",
+                "**Adjust**: we change the weights slightly in the direction that reduces the loss. The common method is called **gradient descent**.",
+                "**Repeat**: we repeat the steps thousands of times over the training examples until the loss stops improving."
+              ]
+            },
+            {
+              "p": "An analogy: imagine you are in a valley covered in fog and want to reach the lowest point. You cannot see the bottom, but you can feel the slope of the ground under your feet, so you take a small step downhill, then repeat. The step size is called the **learning rate**. If it is too large you leap over the bottom; if it is too small it takes a very long time."
+            },
+            {
+              "p": "The number of parameters determines the size of the model. A small traditional model may contain hundreds of numbers. A large language model contains **billions** of parameters, and its size is written like this: 7B means 7 billion parameters, and 70B means 70 billion. Each parameter needs a place in memory, which is why large models need special hardware."
+            },
+            {
+              "formula": "Weights memory ≈ number of parameters × bytes per parameter  →  7B × 2 bytes ≈ 14 GB"
+            }
+          ]
+        },
+        {
+          "title": "2.5 Neural Networks by Intuition",
+          "blocks": [
+            {
+              "p": "A **neural network** is a model loosely inspired by the brain. It consists of small units called **neurons** arranged in **layers**:"
+            },
+            {
+              "ul": [
+                "**Input layer**: receives the data, such as image pixels or numbers representing words.",
+                "**Hidden layers**: each layer transforms what reaches it into a more abstract representation. In images, for example, the first layers pick up edges, then shapes, then parts such as the eye and the ear, then the whole object.",
+                "**Output layer**: gives the result, such as the probability that the image shows a cat."
+              ]
+            },
+            {
+              "p": "Each neuron takes numbers, multiplies each by a weight, adds them up, then passes the result through a simple function called an **activation function**. The power comes not from a single neuron but from millions of neurons and weights that learn together."
+            },
+            {
+              "p": "The word “deep” in deep learning means having **many layers**. The best-known modern architecture is called the **Transformer**, and large language models are built on it. You will meet it in Unit 04."
+            },
+            {
+              "quote": "A neural network does not understand the way a human does. It is a huge function whose weights were learned from examples."
+            }
+          ]
+        },
+        {
+          "title": "2.6 Why We Need Graphics Processing Units (GPUs)",
+          "blocks": [
+            {
+              "p": "The **central processing unit (CPU)** in your computer is like a small number of experts: each one fast and clever, but there are few of them. A **graphics processing unit (GPU)**, by contrast, is like thousands of simple workers carrying out simple operations at the same time."
+            },
+            {
+              "p": "Neural networks are built on an enormous number of multiplications and additions that can be executed **in parallel**, which is why GPUs outperform CPUs on them by a wide margin. These units were originally designed for game graphics and then became the main tool of artificial intelligence."
+            },
+            {
+              "table": [
+                [
+                  "",
+                  "CPU",
+                  "GPU"
+                ],
+                [
+                  "Architecture",
+                  "A few powerful cores",
+                  "Thousands of simple cores"
+                ],
+                [
+                  "Excels at",
+                  "Varied and sequential tasks",
+                  "Repetitive parallel operations"
+                ],
+                [
+                  "In artificial intelligence",
+                  "Sufficient for small traditional models",
+                  "Essential for training deep networks and running large language models"
+                ],
+                [
+                  "Cost",
+                  "Low",
+                  "High, and usually billed by the hour in the cloud"
+                ]
+              ]
+            },
+            {
+              "p": "Each GPU has a limited **dedicated memory**, such as 24, 48 or 80 GB. The model must fit in it. That is why you will meet calculations in the exam such as: does a model of 14 GB fit in 24 GB of memory? How much is left for concurrent users?"
+            },
+            {
+              "p": "One of the exam's recurring rules: **adding GPUs is not always the first solution**. Sometimes the cheapest solution is a smaller model, caching, request batching, or shutting down idle machines."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "How We Judge a Model",
+      "sections": [
+        {
+          "title": "3.1 The Confusion Matrix: Four Kinds of Answers",
+          "blocks": [
+            {
+              "p": "Take a fraud detector. Each transaction has two possibilities in reality (fraud or legitimate), and two possibilities in the model's prediction. The result is four cases, arranged in a table called the **confusion matrix**:"
+            },
+            {
+              "table": [
+                [
+                  "",
+                  "Model said: fraud",
+                  "Model said: legitimate"
+                ],
+                [
+                  "Reality: fraud",
+                  "**True positive (TP)**: we caught the fraudster",
+                  "**False negative (FN)**: we missed the fraudster"
+                ],
+                [
+                  "Reality: legitimate",
+                  "**False positive (FP)**: a false alarm that bothered an innocent customer",
+                  "**True negative (TN)**: we let the legitimate transaction through"
+                ]
+              ]
+            },
+            {
+              "p": "The word “positive” here does not mean “good”; it means the model said “yes, this is the case we are looking for.” In medicine it might mean “diseased”, and in fraud, “fraud”."
+            },
+            {
+              "h": "A numerical example we will use in the following sections"
+            },
+            {
+              "p": "1,000 transactions, of which 10 are genuine fraud. The model flagged 20 transactions as fraud, 8 of them actually fraud."
+            },
+            {
+              "table": [
+                [
+                  "",
+                  "Said: fraud",
+                  "Said: legitimate",
+                  "Total"
+                ],
+                [
+                  "Reality: fraud",
+                  "TP = 8",
+                  "FN = 2",
+                  "10"
+                ],
+                [
+                  "Reality: legitimate",
+                  "FP = 12",
+                  "TN = 978",
+                  "990"
+                ],
+                [
+                  "Total",
+                  "20",
+                  "980",
+                  "1,000"
+                ]
+              ]
+            },
+            {
+              "p": "How to calculate: the model flagged 20, of which 8 were correct, so FP = 20 − 8 = 12. The genuine fraud is 10 and we caught 8, so FN = 10 − 8 = 2. The remainder is TN = 1,000 − 8 − 12 − 2 = 978."
+            }
+          ]
+        },
+        {
+          "title": "3.2 Accuracy and Why It Misleads",
+          "blocks": [
+            {
+              "p": "**Accuracy** is the proportion of correct answers out of all answers:"
+            },
+            {
+              "formula": "Accuracy = (TP + TN) / Total = (8 + 978) / 1,000 = 98.6%"
+            },
+            {
+              "p": "A figure that looks wonderful. But look at a “lazy” model that always says “legitimate” for every transaction without any thought:"
+            },
+            {
+              "formula": "Accuracy (lazy) = (0 + 990) / 1,000 = 99%"
+            },
+            {
+              "p": "The lazy model has higher accuracy than our model, even though it **did not catch a single fraudster**. The reason is that the data is **imbalanced**: the cases we are looking for are rare (only 1%)."
+            },
+            {
+              "quote": "When the target case is rare (fraud, disease, failure), accuracy is a misleading metric. This is one of the most frequent distractors in the exam."
+            }
+          ]
+        },
+        {
+          "title": "3.3 Precision, Recall and F1",
+          "blocks": [
+            {
+              "p": "Instead of accuracy we use two metrics, each answering a different question:"
+            },
+            {
+              "table": [
+                [
+                  "Metric",
+                  "The question it answers",
+                  "Calculation in our example"
+                ],
+                [
+                  "**Precision**",
+                  "Of everything the model said was fraud, how much actually was fraud?",
+                  "TP / (TP + FP) = 8 / 20 = 40%"
+                ],
+                [
+                  "**Recall**",
+                  "Of all the genuine fraud, how much did the model catch?",
+                  "TP / (TP + FN) = 8 / 10 = 80%"
+                ]
+              ]
+            },
+            {
+              "p": "Note the naming: Arabic uses two near-identical terms: [[ar:الدقة الكلية]] (“overall accuracy”) for accuracy and [[ar:الدقة]] (plain “accuracy”) for precision. In the exam the English term usually comes beside the Arabic, so rely on it."
+            },
+            {
+              "p": "Which of the two metrics matters more? **It depends on the cost of the error**:"
+            },
+            {
+              "ul": [
+                "If **missing the case is very costly** (a cancer patient, or major fraud), we care about **recall**, and accept some false alarms.",
+                "If **a false alarm is costly** (blocking an innocent customer's card, or an expensive manual review), we care about **precision**."
+              ]
+            },
+            {
+              "p": "When we want a single number that balances the two, we use **F1**, which is the harmonic mean of the two metrics:"
+            },
+            {
+              "formula": "F1 = 2 × (Precision × Recall) / (Precision + Recall) = 2 × (0.4 × 0.8) / (0.4 + 0.8) = 0.64 / 1.2 ≈ 0.53"
+            }
+          ]
+        },
+        {
+          "title": "3.4 The Threshold: When Does the Model Say “Yes”?",
+          "blocks": [
+            {
+              "p": "Most models do not say “fraud” or “legitimate” directly. They give a **probability** between 0 and 1, such as 0.73. We choose the **threshold**: if the probability exceeds the threshold, we treat the transaction as fraud."
+            },
+            {
+              "table": [
+                [
+                  "Threshold",
+                  "What happens?",
+                  "Precision",
+                  "Recall"
+                ],
+                [
+                  "Low (e.g. 0.2)",
+                  "The model suspects many transactions",
+                  "Falls (more false alarms)",
+                  "Rises (we catch more fraud)"
+                ],
+                [
+                  "High (e.g. 0.9)",
+                  "The model says fraud only when highly confident",
+                  "Rises",
+                  "Falls (we miss more fraud)"
+                ]
+              ]
+            },
+            {
+              "p": "An analogy: a fire alarm. If you make it very sensitive it will ring from cooking steam (false alarms), and if you make it insensitive it may not ring in a real fire."
+            },
+            {
+              "p": "The key point for the exam: **changing the threshold does not require retraining the model**. If the review team complains of too many alerts, the first solution is usually to raise the threshold, not to train a new model. The right way to choose the threshold is to calculate the **expected cost** of each error, which you will learn in Unit 01."
+            }
+          ]
+        },
+        {
+          "title": "3.5 Essential Statistics: Mean, Median, Percentile and Probability",
+          "blocks": [
+            {
+              "p": "You will meet these concepts in almost every unit. Take the response times of 10 requests in milliseconds (ms, a thousandth of a second):"
+            },
+            {
+              "formula": "100, 110, 120, 120, 130, 140, 150, 160, 400, 900"
+            },
+            {
+              "table": [
+                [
+                  "Concept",
+                  "Definition",
+                  "In the example"
+                ],
+                [
+                  "**Mean**",
+                  "Sum of the values ÷ their count",
+                  "2,330 ÷ 10 = 233 ms"
+                ],
+                [
+                  "**Median**",
+                  "The middle value after sorting",
+                  "(130 + 140) ÷ 2 = 135 ms"
+                ],
+                [
+                  "**Percentile p90**",
+                  "The value that 90% of the values are below or equal to",
+                  "≈ 400 ms"
+                ],
+                [
+                  "**Percentile p95 / p99**",
+                  "The same idea at 95% and 99%",
+                  "Measure the slowest requests"
+                ]
+              ]
+            },
+            {
+              "p": "Note: the mean (233) does not represent most of the requests, because two very slow requests pushed it up. This is why speed requirements in real systems are written as percentiles: “**p95 ≤ 300 ms**” means that 95% of requests must finish within 300 milliseconds or less. You will see this form often in the exam."
+            },
+            {
+              "ul": [
+                "**Percentage (%)**: a part of 100. Note the difference between “increased by 10%” and “increased by 10 percentage points”: going from 50% to 60% is an increase of 10 points, but 20% in relative terms.",
+                "**Probability**: a number between 0 (impossible) and 1 (certain). 0.05 means 5%.",
+                "**Distribution**: the shape in which values are spread: where they concentrate and how far apart they are. When the “distribution changes” between the training data and real-world data, we say there is **drift**; you will see it in Units 02 and 07."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Language Models and Generative AI",
+      "sections": [
+        {
+          "title": "4.1 What Is a Large Language Model (LLM)?",
+          "blocks": [
+            {
+              "p": "A **large language model (LLM)** is a huge neural network trained on vast quantities of text. Its task is, at heart, simple: to **predict the next piece of text** based on what came before."
+            },
+            {
+              "p": "When you type “The capital of Saudi Arabia is”, the model predicts that the most likely next word is “Riyadh”. When this prediction is repeated word after word, a complete answer is formed. From this simple skill, combined with enormous scale, capabilities emerge such as summarisation, translation, code writing and question answering."
+            },
+            {
+              "table": [
+                [
+                  "What it can usually do",
+                  "What it does not guarantee by itself"
+                ],
+                [
+                  "Summarise and rephrase a text",
+                  "Factual accuracy"
+                ],
+                [
+                  "Answer general questions",
+                  "Knowledge of events after its training date"
+                ],
+                [
+                  "Extract information from a document",
+                  "Knowledge of your company's internal data"
+                ],
+                [
+                  "Write drafts and code",
+                  "Respecting user permissions or regulations"
+                ]
+              ]
+            },
+            {
+              "p": "Language models are built in stages: **pre-training** on huge general texts teaches them language and knowledge, then **instruction tuning** teaches them to follow requests, then **alignment** with human ratings makes them helpful and safe."
+            },
+            {
+              "quote": "A language model produces text that is “linguistically convincing”, not necessarily “factually correct”. Fluency is not evidence of correctness."
+            }
+          ]
+        },
+        {
+          "title": "4.2 Tokens and the Context Window",
+          "blocks": [
+            {
+              "p": "The model does not read letters or words the way we read them. It first splits the text into small pieces called **tokens**, then converts each token into a number. The tool that splits the text is called the **tokenizer**."
+            },
+            {
+              "p": "A token may be a whole word, part of a word, or a punctuation mark. A word such as the single word [[ar:والمستشفيات]] (“and the hospitals”) may be split into several tokens. So **a token does not equal one word**, and the ratio differs between languages and models. Many tokenizers split Arabic text into more tokens than the equivalent English text, which means higher cost and longer latency."
+            },
+            {
+              "p": "Why does the number of tokens matter?"
+            },
+            {
+              "ul": [
+                "**Cost**: model providers usually charge **by the number of tokens**, both input (your question and the context) and output (the answer).",
+                "**Speed**: the model generates the answer token by token, so a longer answer takes longer.",
+                "**The limit**: every model has a **context window**, the maximum number of tokens it can handle in a single request, including the instructions, the conversation, the documents and the answer."
+              ]
+            },
+            {
+              "p": "An analogy for the context window: an office desk. Everything you want the model to see must be placed on the desk, and the desk has limited space. Even if the desk is large, not everything on it is read with the same attention."
+            }
+          ]
+        },
+        {
+          "title": "4.3 The Prompt and Temperature",
+          "blocks": [
+            {
+              "p": "The **prompt** is the text you give the model: your question, the instructions, and any examples or documents. How the prompt is worded strongly affects the quality of the answer, and the art of wording it is called **prompt engineering**."
+            },
+            {
+              "p": "In applications, messages are usually divided into roles:"
+            },
+            {
+              "ul": [
+                "**System prompt**: written by the developer, such as “You are a customer-service assistant for a telecom company; answer in Arabic and do not promise discounts.”",
+                "**User message**: the user's question.",
+                "**Assistant response**: what the model generates."
+              ]
+            },
+            {
+              "p": "**Temperature** is a setting that controls the “randomness” of selection. At a low temperature (close to 0) the model picks the most probable words, so answers become more stable and repetitive. At a high temperature, answers are more varied and creative."
+            },
+            {
+              "table": [
+                [
+                  "Task",
+                  "Usually appropriate temperature"
+                ],
+                [
+                  "Extracting data from an invoice, classification, or answers that need consistency",
+                  "Low"
+                ],
+                [
+                  "Brainstorming, or creative writing",
+                  "Higher"
+                ]
+              ]
+            },
+            {
+              "p": "Exam warning: **lowering the temperature does not make an answer correct**. It only makes it more stable. The model may repeat the same mistake consistently."
+            }
+          ]
+        },
+        {
+          "title": "4.4 Hallucination: Why the Model Errs with Confidence",
+          "blocks": [
+            {
+              "p": "**Hallucination** is when the model produces information that is incorrect or unsupported by any source and presents it in confident wording. It may invent an article number in a law, the name of a reference, or a statistic."
+            },
+            {
+              "p": "The reason is that the model is trained to produce text that is **linguistically probable**, not to verify facts. If it does not know the answer it will not automatically say “I don't know”; it will continue with whatever seems plausible."
+            },
+            {
+              "table": [
+                [
+                  "Remedy",
+                  "How it helps"
+                ],
+                [
+                  "Supplying it with the correct sources in the context (RAG)",
+                  "It answers from the documents, not from its memory"
+                ],
+                [
+                  "Requiring it to cite the source",
+                  "Every claim can be verified"
+                ],
+                [
+                  "Allowing it to abstain (“I cannot find that in the documents”)",
+                  "Prevents it from inventing an answer"
+                ],
+                [
+                  "Human review of important decisions",
+                  "A last line of defence"
+                ]
+              ]
+            },
+            {
+              "p": "These remedies **reduce** hallucination but do not eliminate it entirely. Any exam option that says a technique “completely eliminates hallucination” is usually wrong."
+            }
+          ]
+        },
+        {
+          "title": "4.5 Vector Embeddings and Semantic Search",
+          "blocks": [
+            {
+              "p": "How does a computer know that “car” and “vehicle” are close in meaning? We convert each text into a list of numbers called an **embedding**. A specialised model produces these numbers so that **texts close in meaning are close in numbers**."
+            },
+            {
+              "p": "An analogy: a map. Each text is a point on the map. Similar texts lie near one another: “How do I renew my passport?” is close to “Steps for renewing the passport”, and far from “Today's gold price”. The real map has hundreds of dimensions rather than two, but the idea is the same."
+            },
+            {
+              "table": [
+                [
+                  "",
+                  "Lexical (keyword) search",
+                  "Semantic search"
+                ],
+                [
+                  "Relies on",
+                  "Literal word matching",
+                  "Closeness of meaning (embeddings)"
+                ],
+                [
+                  "Excels at",
+                  "Numbers, codes and exact names, such as an invoice number",
+                  "Questions worded differently from the text"
+                ],
+                [
+                  "Weak at",
+                  "Synonyms and rephrasing",
+                  "Exact identifiers and numbers"
+                ]
+              ]
+            },
+            {
+              "p": "That is why many systems combine the two methods, which is called **hybrid search**. Embeddings are stored in a special type of database called a **vector database**, which can find the nearest points quickly."
+            }
+          ]
+        },
+        {
+          "title": "4.6 Three Ways to Customise a Model: Prompting, RAG and Fine-Tuning",
+          "blocks": [
+            {
+              "p": "A general language model does not know your company's policies or documents. There are three main ways to make it useful in your work, and choosing among them is one of the exam's most important decisions:"
+            },
+            {
+              "table": [
+                [
+                  "Method",
+                  "Idea",
+                  "Analogy",
+                  "When to choose it?"
+                ],
+                [
+                  "**Prompt engineering**",
+                  "Better instructions and examples in the request",
+                  "Clear directions to a smart employee",
+                  "Always first: the cheapest and fastest"
+                ],
+                [
+                  "**Retrieval-augmented generation (RAG)**",
+                  "We search our documents for the relevant passages and place them in the context with the question",
+                  "An “open-book” exam: the student looks up the reference, then answers",
+                  "The knowledge changes, or you need citation of the source"
+                ],
+                [
+                  "**Fine-tuning**",
+                  "Additional training of the model on examples from your task, so its weights change",
+                  "A training course that changes the employee's style",
+                  "A fixed style or format, or a narrow repetitive task at large volume"
+                ]
+              ]
+            },
+            {
+              "p": "**RAG** stands for Retrieval-Augmented Generation: retrieval, then generation. Its steps, simply: (1) we split the documents into passages and compute their embeddings, (2) when a question arrives we search for the nearest passages, (3) we give them to the model together with the question, (4) it answers from them and cites them."
+            },
+            {
+              "quote": "A golden rule in the exam: if the documents change continuously, or the source must be cited, the answer is RAG, not fine-tuning. Fine-tuning does not make the model know what changed yesterday."
+            }
+          ]
+        },
+        {
+          "title": "4.7 Agents",
+          "blocks": [
+            {
+              "p": "An ordinary language model only **answers**. An **agent**, by contrast, is a system that uses the language model to **plan and take steps**: it decides to search a database, then calls another system, then writes an email, and so on until it completes the task."
+            },
+            {
+              "p": "The agent connects to the world through **tools**: software functions that the developer allows it to call, such as “look up an order”, “create a ticket” and “send a notification”."
+            },
+            {
+              "p": "An analogy: the language model is a consultant who gives you an opinion. The agent is an employee to whom you have handed the keys to some systems. The more keys, the greater the risk, which is why we need controls:"
+            },
+            {
+              "ul": [
+                "**Least privilege**: the agent gets only the tools and data it actually needs.",
+                "**Human approval** before important actions or ones that cannot be undone, such as payment, deletion or sending outside the organisation.",
+                "**An audit log** of every step: what it did, when and why.",
+                "**Limits**: a maximum number of steps, a budget and a time limit."
+              ]
+            },
+            {
+              "p": "One of the exam's rules: **do not use an agent if the workflow is fixed and known**. A predefined sequence of steps (a workflow) is cheaper, clearer and easier to test."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Systems That Run Artificial Intelligence",
+      "sections": [
+        {
+          "title": "5.1 The Server, the Cloud and the Application Programming Interface (API)",
+          "blocks": [
+            {
+              "p": "In practice the model usually does not run on the user's device, but on a **server**: a powerful computer that runs continuously and receives requests from applications."
+            },
+            {
+              "p": "The **cloud** means renting servers from a provider instead of buying them: you pay for what you use, by the hour or by the request. The alternative is to own your machines in your own data centre, which is called **on-premises** hosting. In the Saudi context, the requirement that data be hosted **inside the Kingdom**, that is, in data centres located in it, recurs often."
+            },
+            {
+              "p": "How does an application talk to the model? Through an **application programming interface (API)**. An analogy: the order window at a restaurant. You do not enter the kitchen; you submit a **request** in an agreed format, and a **response** comes back to you."
+            },
+            {
+              "table": [
+                [
+                  "Option",
+                  "Idea",
+                  "Advantage",
+                  "Watch out"
+                ],
+                [
+                  "External provider API",
+                  "We send the request to a model run by a provider, and pay per use",
+                  "Quick to start, no hardware",
+                  "Where does the data go? Does it leave the Kingdom?"
+                ],
+                [
+                  "Self-hosting",
+                  "We run the model on our own servers or on rented servers",
+                  "Full control over the data",
+                  "Cost of hardware, operations and expertise"
+                ]
+              ]
+            },
+            {
+              "p": "When you read in the exam “the application sends personal data to a model API abroad to save cost”, stop: this is technically a valid solution but it may violate regulations. You will learn why in Unit 10."
+            }
+          ]
+        },
+        {
+          "title": "5.2 Latency, Throughput and Concurrency",
+          "blocks": [
+            {
+              "p": "Three speed metrics that many people confuse. Picture a fast-food restaurant:"
+            },
+            {
+              "table": [
+                [
+                  "Metric",
+                  "Meaning",
+                  "At the restaurant",
+                  "Unit"
+                ],
+                [
+                  "**Latency**",
+                  "The time from sending the request until the response arrives",
+                  "How many minutes you waited for your meal",
+                  "Milliseconds (ms) or seconds"
+                ],
+                [
+                  "**Throughput**",
+                  "The number of requests completed per unit of time",
+                  "How many meals the restaurant hands out per hour",
+                  "Requests/second (QPS, RPS)"
+                ],
+                [
+                  "**Concurrency**",
+                  "The number of requests in progress at the same moment",
+                  "How many customers are waiting at the till right now",
+                  "A count"
+                ]
+              ]
+            },
+            {
+              "p": "**QPS** stands for Queries Per Second, that is, the number of requests per second. A simple relationship links the three metrics, called **Little's Law**:"
+            },
+            {
+              "formula": "Concurrency = arrival rate × average service time  →  10 requests/second × 2 seconds = 20 requests in progress"
+            },
+            {
+              "p": "Language models have two special metrics: **time to first token (TTFT)**, that is, when the user starts to see the answer, and **generation speed** in tokens per second. The user feels the system is fast if the answer starts to appear quickly, even if it completes seconds later. This is why **streaming** is used, that is, displaying the answer while it is being generated."
+            },
+            {
+              "quote": "Improving throughput may increase latency, and vice versa. Batching requests serves more of them, but each request waits a little. The exam asks you which of the two matters in the scenario."
+            }
+          ]
+        },
+        {
+          "title": "5.3 Scaling, Replicas and Caching",
+          "blocks": [
+            {
+              "p": "When the number of users grows, the system must scale. There are two ways:"
+            },
+            {
+              "ul": [
+                "**Scaling up (vertical)**: a more powerful machine, such as a larger GPU. It has a limit, and often requires taking the service down.",
+                "**Scaling out (horizontal)**: more **replicas** of the same service, each on a machine, with a **load balancer** distributing requests among them. An analogy: opening extra tills instead of speeding up the single cashier."
+              ]
+            },
+            {
+              "p": "**Autoscaling**: the system adds replicas at peak and removes them when quiet, so we do not pay for idle machines at night. Note the **cold start**: a new replica needs time to load the model, which can be minutes for large models, so it does not help if it starts late."
+            },
+            {
+              "p": "**Cache**: saving the result of a repeated question to return it immediately without running the model again. An analogy: the receptionist who memorises the answers to the most frequent questions instead of phoning the relevant department every time. It saves cost and time together, but beware: do not show a cached answer to a user who has no permission to see it, nor a stale answer after the information has changed."
+            },
+            {
+              "table": [
+                [
+                  "Solution",
+                  "Helps when…"
+                ],
+                [
+                  "More replicas",
+                  "The load exceeds the capacity of the current machines"
+                ],
+                [
+                  "Autoscaling",
+                  "The load varies through the day, such as a morning peak"
+                ],
+                [
+                  "Caching",
+                  "Questions repeat often"
+                ],
+                [
+                  "A smaller model",
+                  "The required quality is achieved by a cheaper model"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "5.4 Deployment, Versioning and Monitoring",
+          "blocks": [
+            {
+              "p": "**Deployment** is putting the model into the **production** environment, that is, the real environment that people use. Before that, things are tried in the **staging** environment."
+            },
+            {
+              "p": "Models change, so we need **versioning**: each model has a version number, and we store with it the data it was trained on, its settings and its evaluation results. The aim is that we always know which version is running now, and can **roll back** to the previous version immediately if things go wrong."
+            },
+            {
+              "p": "A new model is usually not deployed to everyone at once. It is released gradually, for example to 5% of users first, while we monitor, and then expand. This is called a **canary release**, after the canary birds that miners used to take with them to warn them early of dangerous gases."
+            },
+            {
+              "p": "After deployment, **monitoring** begins. We monitor four things:"
+            },
+            {
+              "ul": [
+                "**System health**: is it running? What is the latency? How many errors?",
+                "**Incoming data**: has its shape changed from the training data? (drift)",
+                "**Prediction quality**: is the model still accurate?",
+                "**Business impact**: has it achieved the goal, such as reducing fraud or improving customer satisfaction?"
+              ]
+            },
+            {
+              "p": "All of this is recorded in the **logs**, a diary of the system: every request, when it arrived, how long it took, and the error if there was one."
+            }
+          ]
+        },
+        {
+          "title": "5.5 Cost: Per Hour and Per Token",
+          "blocks": [
+            {
+              "p": "Cost questions are a fixed pattern in the exam. There are two main ways to pay:"
+            },
+            {
+              "table": [
+                [
+                  "Payment method",
+                  "How it is calculated",
+                  "Illustrative example",
+                  "Suits"
+                ],
+                [
+                  "Per hour (machines)",
+                  "Price per hour × number of machines × number of hours",
+                  "A GPU at USD 4/hour × 24 hours × 30 days = USD 2,880 per month for one machine",
+                  "Large, continuous load"
+                ],
+                [
+                  "By usage (tokens or requests)",
+                  "Number of tokens × price per token",
+                  "If the price is USD 2 per million tokens, then 50 million tokens = USD 100",
+                  "Small or intermittent load"
+                ]
+              ]
+            },
+            {
+              "p": "The figures above are for illustration only. The important idea: **a machine you pay for by the hour is paid for even while it is idle**. A machine running at 15% utilisation means that most of what you pay is wasted."
+            },
+            {
+              "p": "Common sources of waste, which you will learn to detect in Unit 11:"
+            },
+            {
+              "ul": [
+                "Machines running 24 hours for a load that exists for only 8 hours.",
+                "A huge model for a task that a small model would handle.",
+                "Reprocessing all the documents daily although few of them have changed.",
+                "Forgotten development environments running over the weekend."
+              ]
+            },
+            {
+              "quote": "The exam rewards “the cheapest sufficient solution”: the lowest cost that meets all the hard requirements. Not the absolute cheapest, and not the absolute most powerful."
+            }
+          ]
+        },
+        {
+          "title": "5.6 Personal Data, Encryption and Permissions",
+          "blocks": [
+            {
+              "p": "**Personal data**: any information that identifies a specific person, directly or when combined with other information: the name, the ID number, the mobile number, the address, and even a purchase history linked to a name."
+            },
+            {
+              "p": "**Sensitive data**: a type of personal data whose disclosure causes greater harm, such as health and genetic data. It needs stronger protection. You will learn its official list precisely in Unit 10."
+            },
+            {
+              "table": [
+                [
+                  "Control",
+                  "Meaning",
+                  "Analogy"
+                ],
+                [
+                  "**Encryption**",
+                  "Converting data into symbols that are unreadable except to whoever holds the key",
+                  "A message written in a secret language"
+                ],
+                [
+                  "Encryption in transit",
+                  "Protecting data while it travels across the network",
+                  "A sealed envelope in the post"
+                ],
+                [
+                  "Encryption at rest",
+                  "Protecting data while it is stored on disk",
+                  "A safe in the office"
+                ],
+                [
+                  "**Access control**",
+                  "Each person or system sees only what it is entitled to",
+                  "An access card that opens only your department's doors"
+                ],
+                [
+                  "**Data minimisation**",
+                  "Collect and send only what you actually need",
+                  "Do not ask for an ID photo in order to send a newsletter"
+                ]
+              ]
+            },
+            {
+              "p": "An important warning: **encryption does not make the use of data lawful**. If you collect data without a lawful basis, encrypting it does not correct the violation. Encryption protects against theft, but it does not answer the question “are we entitled to use this data at all?”"
+            }
+          ]
+        },
+        {
+          "title": "5.7 SDAIA and the Data Protection Law, and Why the Four Constraints Come Together",
+          "blocks": [
+            {
+              "p": "**SDAIA** is the **Saudi Data and AI Authority**, the national body responsible for data and artificial intelligence in the Kingdom. It issued the **AI Ethics Principles** and guidelines for generative AI, and it is the body that awards the AI professional badges you are preparing for."
+            },
+            {
+              "p": "The **Personal Data Protection Law (PDPL)** is a Saudi law that regulates the collection, processing and sharing of personal data, and gives data subjects rights such as being informed of what is collected about them and accessing it. In Unit 10 you will learn SDAIA's seven principles and the law's obligations by their exact names, because the exam asks about them verbatim."
+            },
+            {
+              "p": "Now you can understand what the exam actually measures. Almost every scenario puts **four constraints together** in front of you:"
+            },
+            {
+              "table": [
+                [
+                  "Constraint",
+                  "The question you ask",
+                  "You learned it in"
+                ],
+                [
+                  "**Cost**",
+                  "Is this the cheapest sufficient solution?",
+                  "Section 5.5"
+                ],
+                [
+                  "**Latency**",
+                  "Does it meet the required response time (such as p95)?",
+                  "Sections 3.5 and 5.2"
+                ],
+                [
+                  "**Accuracy**",
+                  "Is the metric suited to the cost of error?",
+                  "The third chapter"
+                ],
+                [
+                  "**Compliance**",
+                  "Does it respect the regulations and SDAIA's principles?",
+                  "Sections 5.6 and 5.7"
+                ]
+              ]
+            },
+            {
+              "quote": "The correct answer in the exam meets all four hard constraints, then chooses the simplest and cheapest among them. This is exactly what Unit 01 teaches you."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Read a short business story and extract from it the components of any artificial intelligence project: the data, the type of task, the metric, the speed, the cost and the privacy.",
+    "scenario": [
+      "A hospital in Riyadh suffers from patient no-shows: about 10% of appointments are missed by their owners, so doctors lose working hours. The hospital has a three-year record of appointments: patient age, clinic, appointment day and hour, number of days between booking and appointment, and whether the patient attended or not.",
+      "The hospital wants a system that predicts every morning which appointments are at risk of no-show, so as to send an extra reminder message to their owners. One employee suggested using a large language model from an external provider “because it is the smartest”, and sending it the complete patient records."
+    ],
+    "steps": [
+      "**Data and label**: the features are age, clinic, day, hour and days between booking and appointment. The label is “did they attend?” The data is a structured table, and its labels exist in the historical record.",
+      "**Type of learning and task**: supervised learning, because the answers are known from the past. The task is **binary classification**: will not attend or will attend.",
+      "**Suitable model**: a structured table is well served by a traditional machine learning model. A large language model is not necessary, and is more expensive and slower here.",
+      "**Metric**: no-shows are only 10%, that is, imbalanced data, so we do not rely on accuracy. A model that always says “will attend” has an accuracy of 90% and is useless. The cost of an extra reminder is small (a message), and the cost of a miss is larger (a wasted doctor's hour), so we care about **recall** with reasonable precision.",
+      "**Speed**: the prediction is made once each morning for all of the day's appointments, so no user is waiting. A daily batch run is enough, and there is no need for a fast server running all the time.",
+      "**Split**: we train on the first two years and test on the last year, so that the model is tested on a “future” it has not seen.",
+      "**Privacy**: patient records are sensitive health data. Sending them in full to an external provider contradicts the principle of data minimisation and may violate hosting conditions. The proposed model does not need the name or the ID number, and can be run inside the hospital."
+    ],
+    "traps": [
+      "“The large language model is the smartest, so it is the most suitable”: the most suitable is the simplest option that meets the requirement.",
+      "“90% accuracy is excellent”: with 10% no-shows, this is the accuracy of a model that does nothing.",
+      "“We need a server with a response time under 100 ms”: no one is waiting, and batch processing is enough.",
+      "“Encryption is enough for sending the records to the provider”: encryption does not justify collecting or sending data we do not need.",
+      "“We test on a random sample from all the years”: when predicting the future, the test must be on a period later than the training period."
+    ],
+    "deliverable": "For any new scenario, write six lines: the data and label, the type of task, the simplest suitable model, the metric and why, whether it needs an immediate response, and what the sensitive data is and how it is protected."
+  },
+  "review": [
+    {
+      "q": "What is the difference between traditional programming and machine learning in one sentence?",
+      "a": "In traditional programming we write the rules ourselves, and in machine learning we give examples with their answers and the algorithm extracts the rules (the model) by itself."
+    },
+    {
+      "q": "Is all artificial intelligence machine learning? Is all machine learning generative?",
+      "a": "Neither. Artificial intelligence includes written-rule systems, and machine learning includes models that predict a number or a category without generating content."
+    },
+    {
+      "q": "What is the difference between training and inference, and which one recurs with every user?",
+      "a": "Training is making the model from data, and inference is using it to answer. Inference recurs with every request, which is why it usually accounts for most of the ongoing cost."
+    },
+    {
+      "q": "Why do we not test the model on the same training data?",
+      "a": "Because it has seen it and may have memorised it, so it will look excellent without our knowing its performance on new cases. We test it on data it has never seen."
+    },
+    {
+      "q": "A model achieved 99% in training and 72% in validation. What is the problem?",
+      "a": "Overfitting: it memorised the training data and did not generalise. Remedies include more data, a simpler model, regularisation, or early stopping."
+    },
+    {
+      "q": "In 1,000 cases of which 10 are positive, a model always says “negative”. What are its accuracy and recall?",
+      "a": "Its accuracy is 990/1000 = 99%, and its recall is 0/10 = 0%. This is why accuracy is unsuitable with imbalanced data."
+    },
+    {
+      "q": "When do we prefer recall over precision?",
+      "a": "When missing the case is more expensive than a false alarm, such as diagnosing a serious disease or major fraud."
+    },
+    {
+      "q": "The review team complains of too many false alerts. Do we retrain the model?",
+      "a": "Not first. We raise the threshold so false alarms fall, accepting a drop in recall. Changing the threshold does not require retraining."
+    },
+    {
+      "q": "Why does a token not equal one word, and why does its count matter to us?",
+      "a": "Because the tokenizer may split a word into parts depending on the language and the model. Its count matters because cost, latency and the context-window limit are all measured in tokens."
+    },
+    {
+      "q": "The company's policy documents change weekly and the source must be cited in every answer. RAG or fine-tuning?",
+      "a": "RAG, because it retrieves the latest version of the documents at question time and allows citation. Fine-tuning changes style and does not keep up with continuous change."
+    }
+  ],
+  "summary": "The mastery criterion for this unit: that you can read any scenario and name its components in your own words. What are the data and the label? What is the type of task? What is the simplest model that suffices? Which metric suits the cost of error? Is anyone waiting for the answer? What is the cost and where is the waste? What is the personal data and how is it protected? If you can do that, you are ready for Unit 01, where these questions become a structured procedure for solving exam questions.",
+  "coverage": []
+}

@@ -1,0 +1,1468 @@
+{
+  "num": 7,
+  "title": "MLOps, LLMOps, Deployment & Reliability",
+  "english": "MLOps, LLMOps, Deployment & Reliability",
+  "subtitle": "From a notebook that worked once to a system that is released safely, monitored, recovers, and is governed throughout its life",
+  "domain": "Domain 4 · 18.0%",
+  "deliverable": "Choose the right rollout, monitoring, retraining and recovery strategy for any operational scenario, calculate an error budget and read drift indicators.",
+  "intro": "This is the heaviest domain in the exam (about 27 questions out of 150), and those who have sat it say the operational topics are \"harder than you expect\". Its questions are mostly stories: a model launch failed — how should it have been rolled out? Monitoring missed a regression — what should have been monitored? Manual retraining is slow — what do we automate? A language feature degraded after a prompt change — which process was missing? This unit builds the answer to these questions layer by layer: the model lifecycle and its automation, then deployment, monitoring and drift, then reliability, incidents and resilience, and finally what differs in LLM operations (LLMOps) and how model, vendor and ethics risks are managed within day-to-day operations.",
+  "outcomes": [
+    "Diagnose a team's ML operations maturity level (0/1/2) and identify the correct next step.",
+    "Choose the right deployment strategy (shadow, canary, blue–green, A/B, multi-armed bandit, rolling update) from the constraints of the scenario.",
+    "Design four-layer monitoring, read drift indicators (PSI, KS, chi-square and others) and make the retraining decision with discipline.",
+    "Calculate the error budget and end-to-end availability, and choose a disaster recovery strategy according to RPO and RTO.",
+    "Order the incident-response steps and design burn-rate alerts and a fallback chain for graceful degradation.",
+    "Distinguish what differs in LLMOps: version pinning, the evaluation harness, the LLM judge, guardrails and cost levers.",
+    "Apply model risk management: inventory, tiering, independent validation, the documentation required for audit, and due diligence on vendors."
+  ],
+  "method": "Study this unit through its tables first: the deployment strategies table, the monitoring layers table, the availability-in-minutes table, the RPO/RTO table, the retraining triggers table and the fallback chain table. For each table ask yourself: which constraint in the scenario leads me to this row and no other? Then memorise the numbers that are calculated in the exam (PSI thresholds, a 99.9% budget ≈ 43 minutes a month, multiplying availabilities for components in series). Finally, practise \"the pattern behind the correct answer\": mitigate before diagnosing, gates before promotion, staged rollout instead of all at once, drift is a signal to investigate and not an automatic trigger, and accountability does not transfer to the vendor.",
+  "chapters": [
+    {
+      "title": "Lifecycle, Automation and Model Governance",
+      "sections": [
+        {
+          "title": "1.1 The ML Lifecycle and Maturity Levels",
+          "blocks": [
+            {
+              "p": "The exam measures a team's maturity on three levels, and the usual question is \"What is the next step?\". The correct answer is always the step that moves the team directly to the next level up, not a jump to the tools of the final level."
+            },
+            {
+              "table": [
+                [
+                  "Level",
+                  "Characteristics",
+                  "Typical next step"
+                ],
+                [
+                  "0 — Manual",
+                  "Notebooks, manual hand-off to engineers, infrequent releases, no monitoring",
+                  "Version control for data, code and models; a reproducible training pipeline"
+                ],
+                [
+                  "1 — Pipeline automation",
+                  "Automated training pipeline, continuous training (CT) on new data or triggers, model registry, monitoring",
+                  "Continuous integration and delivery (CI/CD) for the pipeline itself"
+                ],
+                [
+                  "2 — Full CI/CD automation",
+                  "Pipeline code is tested and deployed automatically; automated evaluation gates; frequent safe releases",
+                  "Optimisation and governance at scale"
+                ]
+              ]
+            },
+            {
+              "h": "CI / CD / CT"
+            },
+            {
+              "ul": [
+                "**Continuous Integration:** tests the code, **the data and the model** together — schema checks, unit tests and evaluation tests.",
+                "**Continuous Delivery/Deployment:** releases the service and the model through successive stages.",
+                "**Continuous Training:** retrains automatically on a schedule or on a trigger: drift, arrival of new labelled data, or a performance drop."
+              ]
+            },
+            {
+              "quote": "A team at level 0 does not start with a full CI/CD platform; it starts with version control and a reproducible training pipeline."
+            }
+          ]
+        },
+        {
+          "title": "1.2 What Gets Versioned and Tracked",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Asset",
+                  "Example tools",
+                  "Reason"
+                ],
+                [
+                  "Code",
+                  "Git",
+                  "Reproducibility"
+                ],
+                [
+                  "Data & features",
+                  "DVC, lakeFS, Delta/Iceberg time travel, feature store",
+                  "Rebuild any training set; trace lineage"
+                ],
+                [
+                  "Experiments",
+                  "MLflow, Weights & Biases",
+                  "Compare runs, parameters and metrics"
+                ],
+                [
+                  "Model registry",
+                  "MLflow Registry, SageMaker/Vertex registries",
+                  "Versions, stages (staging/production/archived), approvals and model cards"
+                ],
+                [
+                  "Environment",
+                  "Docker images, lock files",
+                  "The same runtime in training and serving"
+                ],
+                [
+                  "Prompts, RAG index and LLM configuration",
+                  "Prompt registry, index version tags",
+                  "LLM outputs depend on all of them"
+                ]
+              ]
+            },
+            {
+              "p": "**Lineage** is the ability to answer the question: \"Which data, code, parameters and approver produced the model that is in production now?\" It is required for audit and accountability, and ties directly to the governance unit."
+            },
+            {
+              "quote": "If you cannot rebuild the training set that produced the production model, you have neither reproducibility nor audit evidence."
+            }
+          ]
+        },
+        {
+          "title": "1.3 Pipelines & Orchestration",
+          "blocks": [
+            {
+              "p": "An ML pipeline turns \"a notebook that worked once\" into a repeatable, auditable process. The typical stages:"
+            },
+            {
+              "formula": "ingest → validate data → build features → split → train → evaluate → compare with production → register → (approve) → deploy → monitor"
+            },
+            {
+              "p": "Each stage is a step inside a container with declared inputs and outputs, so any run can be reproduced from its code, data snapshot, parameters and environment, all of them versioned."
+            },
+            {
+              "p": "**Orchestrators** schedule and track these steps: general workflow engines (Airflow, Prefect, Dagster) and ML-specific pipeline systems (Kubeflow Pipelines, TFX, cloud pipeline services). Choose according to the team's skills and platform: a scenario of \"a small team already working on a managed cloud ML platform\" points to its native pipelines, not to a self-managed Kubeflow cluster."
+            },
+            {
+              "h": "Pipeline properties the exam rewards"
+            },
+            {
+              "ul": [
+                "**Idempotent steps:** re-running a step with the same inputs gives the same outputs, with no duplication.",
+                "**Caching of unchanged steps:** do not recompute features if only the training parameters changed.",
+                "**Lineage capture:** every asset records what produced it.",
+                "**Gates:** a failed data validation or evaluation stops promotion automatically.",
+                "**Environment separation:** development, test (staging) and production, with promotion between them and controlled access to production data.",
+                "**Infrastructure as code (Terraform, Helm) and GitOps:** the deployed state equals what is in version control; changes are reviewed pull requests, and rollback is simply a revert."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.4 Production Launch Checklist",
+          "blocks": [
+            {
+              "p": "This checklist gathers what must be true before any launch. In \"What was missing?\" questions, look for the line that was neglected."
+            },
+            {
+              "table": [
+                [
+                  "Area",
+                  "What must be verified before launch"
+                ],
+                [
+                  "Data",
+                  "Training data is validated and versioned, and the legal basis is documented; no leakage; slice coverage checked"
+                ],
+                [
+                  "Evaluation",
+                  "Beats the production model on the primary metric with statistical confidence; no regression on the golden set or critical slices; fairness thresholds met"
+                ],
+                [
+                  "Performance",
+                  "p95/p99 latency and throughput verified under load at the target concurrency; memory fits with headroom"
+                ],
+                [
+                  "Security",
+                  "Dependencies scanned; artefacts signed; secrets in a vault; endpoint behind authentication and rate limits; red-team tests passed (for LLMs)"
+                ],
+                [
+                  "Governance",
+                  "Model card and risk assessment up to date; approvals recorded; data protection impact assessment (DPIA) completed where personal data is processed"
+                ],
+                [
+                  "Operations",
+                  "Dashboards and alerts working; runbook written; named on-call owner; rollback tested; previous version kept warm"
+                ],
+                [
+                  "Rollout",
+                  "A shadow or canary plan with success and stop criteria and a duration defined in advance"
+                ],
+                [
+                  "Communication",
+                  "Support teams briefed; disclosure to users where AI interacts with people"
+                ]
+              ]
+            },
+            {
+              "quote": "Stop criteria are set before the rollout, not during it; otherwise the judgement becomes impressionistic under pressure."
+            }
+          ]
+        },
+        {
+          "title": "1.5 Feature Stores, Model Registries and Approval Paths",
+          "blocks": [
+            {
+              "h": "Feature store"
+            },
+            {
+              "p": "It defines each feature once (code + metadata + owner) and materialises it in an **offline store** that holds historical values for training with **point-in-time-correct joins**, so that a training row sees only the feature values that existed at that moment, and in an **online store** that holds the latest values for fast key lookups during serving."
+            },
+            {
+              "ul": [
+                "It removes **training–serving skew**, enables reuse across teams, and documents lineage.",
+                "It earns its operating cost when several models share features or real-time features are needed; a single batch model may not need one."
+              ]
+            },
+            {
+              "h": "Model registry"
+            },
+            {
+              "p": "A catalogue of model versions that includes: artefact location, link to the training run, data version, metrics, evaluation report, model card, owner, stage (none → staging → production → archived), and approval history. **Deployments point to registry versions, not to local files, and rollback = promoting the previous version.**"
+            },
+            {
+              "h": "Model cards"
+            },
+            {
+              "p": "They document the intended and out-of-scope uses, a summary of the training data, evaluation results overall and by slice, fairness analysis, limitations, ethical considerations, and the owner and contact route. They are a practical implementation of the principles of **Transparency & Explainability** and **Accountability & Responsibility**, and the first thing an auditor asks for."
+            },
+            {
+              "h": "Approval paths scale with risk"
+            },
+            {
+              "p": "Low-risk models may be promoted automatically after passing the gates; high-risk ones (credit, health, hiring, public services) require human sign-off from named roles, recorded in the registry — which matches the pre- and post-deployment conformity assessments required for high-risk systems in the AI Ethics Principles issued by SDAIA."
+            }
+          ]
+        },
+        {
+          "title": "1.6 Model Risk Management",
+          "blocks": [
+            {
+              "p": "Banks and regulated sectors have long treated models as a source of risk to be governed throughout their life. The same discipline applies to AI systems and maps directly onto the AI Ethics Principles and the National AI Risk Management Framework."
+            },
+            {
+              "ul": [
+                "**Model inventory:** every model — including vendor models and applications built on language models — is registered with its purpose, owner, users, data used, risk level (the Ethics Principles levels and the Risk Framework score), dependencies, version, validation status and review date. **You cannot govern what you cannot list.**",
+                "**Tiering:** controls scale with risk. A classification based on **impact** (on individuals' rights, finances, health and safety, and on the organisation) and **autonomy** (decision support versus automated decision) determines the depth of validation, the approval level, the monitoring frequency and the review cycle.",
+                "**Independent validation:** for the higher tiers, a team independent of the developers reviews conceptual soundness, data quality, performance, stability, fairness, explainability, implementation correctness and limitations — **and has the power to block deployment**, and its findings are tracked to closure.",
+                "**Ongoing monitoring and periodic review:** performance, drift, fairness and usage against limits, with scheduled re-validation (annually for the high tier, for example) and event-driven reviews when the data, the use or the regulation changes.",
+                "**Use limits:** each model's card states the intended and prohibited uses. Using a model outside its validated scope (such as applying a model built for one product to another product) requires new validation — and it is a recurring root cause in failure scenarios.",
+                "**Retirement:** models are decommissioned deliberately: traffic moved, assets archived according to retention rules, documentation kept for audit, and dependent systems notified."
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Tier",
+                  "Example",
+                  "Validation",
+                  "Approval",
+                  "Monitoring"
+                ],
+                [
+                  "Low",
+                  "Internal document search, spam filter",
+                  "Self-assessment and automated evaluation gates",
+                  "Product owner",
+                  "Monthly dashboards"
+                ],
+                [
+                  "Medium",
+                  "Customer-service assistant with hand-off to a human",
+                  "Evaluation harness + security review + DPIA if personal data is present",
+                  "Product owner + AI officer",
+                  "Weekly; incident alerts"
+                ],
+                [
+                  "High",
+                  "Credit decisions, health triage, hiring, public-service eligibility",
+                  "Independent validation, fairness and explainability review, pre- and post-deployment conformity assessment",
+                  "Governance / compliance committee",
+                  "Daily/continuous; quarterly review"
+                ],
+                [
+                  "Unacceptable",
+                  "Social scoring, manipulative systems",
+                  "—",
+                  "Not permitted",
+                  "—"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.7 The Documentation Set Auditors Expect",
+          "blocks": [
+            {
+              "p": "A common question: \"Which document records this?\" or \"Which document is missing?\". Memorise the table together with the principle each document serves."
+            },
+            {
+              "table": [
+                [
+                  "Document",
+                  "Content",
+                  "Principle served"
+                ],
+                [
+                  "Use-case charter",
+                  "The problem, users, benefits, risk level, owner",
+                  "Accountability"
+                ],
+                [
+                  "Data sheet",
+                  "Sources, collection, consent/legal basis, classification, quality, known gaps",
+                  "Privacy & Security; Fairness"
+                ],
+                [
+                  "Impact assessment (DPIA)",
+                  "Description of the processing, necessity, risks, mitigation, residual risk",
+                  "Privacy & Security"
+                ],
+                [
+                  "Model card",
+                  "Intended use, metrics by slice, limitations, fairness analysis",
+                  "Transparency; Fairness"
+                ],
+                [
+                  "Risk assessment",
+                  "Risk Framework categories, likelihood × impact, treatment decisions",
+                  "Reliability & Safety; Accountability"
+                ],
+                [
+                  "Validation report",
+                  "Independent findings and their closure",
+                  "Accountability"
+                ],
+                [
+                  "Approval records",
+                  "Who approved which version, when, and under what conditions",
+                  "Accountability"
+                ],
+                [
+                  "Monitoring plan and runbook",
+                  "Metrics, thresholds, alerts, escalation, rollback",
+                  "Reliability & Safety"
+                ],
+                [
+                  "User disclosure and explanation texts",
+                  "What users are told; the complaint channel",
+                  "Transparency; Humanity"
+                ],
+                [
+                  "Incident log",
+                  "Failures, breaches, actions, notifications",
+                  "Transparency; Accountability"
+                ]
+              ]
+            },
+            {
+              "quote": "Reconstructing an approval decision after the fact needs three things together: the validation report, the approval records, and lineage in the registry."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Deployment, Monitoring, Drift and Retraining Strategies",
+      "sections": [
+        {
+          "title": "2.1 Deployment Strategies — the Most Heavily Tested Table",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Strategy",
+                  "How",
+                  "Risk to users",
+                  "When to choose it"
+                ],
+                [
+                  "Shadow / dark launch",
+                  "The new model receives a copy of live traffic; its outputs are logged and not served",
+                  "None",
+                  "Validating a new model on real traffic before any exposure — especially in high-risk domains"
+                ],
+                [
+                  "Canary",
+                  "Route a small percentage (1–5–25–100%) to the new model; watch the metrics; automatic rollback",
+                  "Small and limited",
+                  "Safe gradual release with measurement of the actual impact on users"
+                ],
+                [
+                  "Blue–green",
+                  "Two full environments; switch traffic all at once; instant return",
+                  "All users at the moment of the switch, but rollback is instant",
+                  "A need for a fast switch and instant rollback, with the ability to tolerate double capacity for a short period"
+                ],
+                [
+                  "A/B test",
+                  "Split users randomly; compare a business metric with statistical significance",
+                  "A split segment of users",
+                  "Deciding which of the two models is better for the business"
+                ],
+                [
+                  "Multi-armed bandit",
+                  "Shift traffic dynamically towards the winning variant",
+                  "Lower regret than A/B",
+                  "Many variants and a wish to exploit while exploring"
+                ],
+                [
+                  "Rolling update",
+                  "Replace replicas gradually",
+                  "Mixed versions during the rollout",
+                  "Routine updates of stateless services"
+                ],
+                [
+                  "Big bang",
+                  "Replace everything at once",
+                  "Highest",
+                  "Almost never the correct answer in the exam"
+                ]
+              ]
+            },
+            {
+              "h": "How to read the scenario"
+            },
+            {
+              "ul": [
+                "\"We want to validate on real traffic with no effect on users\" → **shadow**. But it does not measure the model's effect on user behaviour (conversion, for example) because its outputs are not shown.",
+                "\"We want to reduce harm while measuring the real impact\" → **canary** with stop criteria defined in advance. A canary is a safety mechanism, not a controlled experiment.",
+                "\"A switch at a specific moment (a regulatory effective date) with a return within seconds and a budget that tolerates two environments\" → **blue–green**.",
+                "\"Which of the two models raises the business metric, with a defensible answer\" → **A/B** with random split and statistical significance.",
+                "\"Many variants and we want to minimise loss during the experiment\" → **multi-armed bandit**."
+              ]
+            },
+            {
+              "quote": "Replacing everything at once is the highest-risk option; if it appears among the options it is usually the distractor."
+            }
+          ]
+        },
+        {
+          "title": "2.2 Four-Layer Monitoring",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Layer",
+                  "Metrics",
+                  "Example alert"
+                ],
+                [
+                  "Infrastructure / service",
+                  "p50/p95/p99 latency, throughput, error rate (5xx), saturation (CPU/GPU/memory/queue), availability",
+                  "p99 > 800 ms for 5 minutes"
+                ],
+                [
+                  "Data",
+                  "Schema violations, null rates, ranges, input drift (PSI/KS), data freshness",
+                  "PSI > 0.2 on a key feature"
+                ],
+                [
+                  "Model",
+                  "Prediction distribution, confidence, performance on delayed labels, slice metrics, fairness",
+                  "Recall on new labels < 0.85"
+                ],
+                [
+                  "Business",
+                  "Conversion, fraud losses, complaints, manual review rate",
+                  "Chargebacks +30% week on week"
+                ]
+              ]
+            },
+            {
+              "p": "The **four golden signals** in site reliability engineering (SRE): latency, traffic, errors and saturation. But a model can be \"healthy\" at the infrastructure level (fast, error-free) while silently wrong at the model level — so ML monitoring needs the data and model layers as well."
+            },
+            {
+              "ul": [
+                "**The average hides slices:** a stable overall performance may hide a collapse in a single slice; monitor slice metrics.",
+                "**Confidence is not performance:** a rise in model confidence does not mean its predictions are correct.",
+                "**Silent defaults:** a feature whose source was cut off and was replaced by a default value keeps the dashboards green — it is exposed by monitoring null rates, ranges and freshness.",
+                "**Saturation is an early warning:** a full queue or full GPU memory precedes the rise in latency and errors."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.3 Drift Detection — the Statistics",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Test / metric",
+                  "Data type",
+                  "Reading",
+                  "Notes"
+                ],
+                [
+                  "Population Stability Index (PSI)",
+                  "Numeric binned into buckets, or categorical",
+                  "< 0.1 stable · 0.1–0.25 moderate shift · > 0.25 major shift",
+                  "Common in credit risk; depends on the binning method"
+                ],
+                [
+                  "Kolmogorov–Smirnov (KS)",
+                  "Continuous",
+                  "Maximum distance between the two cumulative distribution functions (CDFs); p-value",
+                  "With huge samples, trivial and unimportant shifts become \"statistically significant\""
+                ],
+                [
+                  "Chi-square",
+                  "Categorical",
+                  "Compares category frequencies",
+                  "Needs sufficient counts in each category"
+                ],
+                [
+                  "Jensen–Shannon divergence",
+                  "Distributions",
+                  "From 0 (identical) to 1 (disjoint, with base 2)",
+                  "Symmetric and bounded"
+                ],
+                [
+                  "Wasserstein distance",
+                  "Continuous",
+                  "The cost of \"moving earth\", in the feature's units",
+                  "An interpretable magnitude"
+                ],
+                [
+                  "Embedding drift",
+                  "Text/images",
+                  "Distance between embedding centroids; a two-sample test with a classifier",
+                  "For LLM inputs: a change in the mix of topics and languages"
+                ],
+                [
+                  "Prediction drift",
+                  "Model outputs",
+                  "Shift in the score distribution or the rate of positive cases",
+                  "An early warning when labels are delayed"
+                ],
+                [
+                  "Performance on recent labels",
+                  "Labelled samples",
+                  "Recall, precision, MAE … over time",
+                  "The ground truth for degradation"
+                ]
+              ]
+            },
+            {
+              "formula": "PSI = Σ_i (a_i − e_i) · ln(a_i / e_i)"
+            },
+            {
+              "p": "where e_i is the expected proportion (from training) and a_i is the actual proportion (from live traffic) in bin i. Every term in the sum is always positive (because the difference and the logarithm carry the same sign), so PSI accumulates with every bin that has changed."
+            },
+            {
+              "h": "Illustrative worked example"
+            },
+            {
+              "formula": "bin 1: e = 0.50, a = 0.40 → (0.40 − 0.50) · ln(0.40/0.50) = (−0.10)(−0.223) = 0.0223\nbin 2: e = 0.50, a = 0.60 → (0.60 − 0.50) · ln(0.60/0.50) = (0.10)(0.182) = 0.0182\nPSI ≈ 0.041 → < 0.1 → stable"
+            },
+            {
+              "h": "Interpretation discipline"
+            },
+            {
+              "p": "**Drift is a signal to investigate, not an automatic retraining trigger.** Ask: is it a pipeline bug, a real change in the population, or seasonality? Does it affect important features? Does performance on the available labels confirm harm? Retrain when performance (or a reliable proxy metric) degrades beyond the acceptable limit, and go through the same evaluation gates."
+            },
+            {
+              "quote": "With millions of samples, a small p-value in KS does not mean an important shift; look at the magnitude (PSI, Wasserstein) and at the effect on performance."
+            }
+          ]
+        },
+        {
+          "title": "2.4 Retraining Strategy",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Trigger",
+                  "When it is used",
+                  "Caveat"
+                ],
+                [
+                  "Scheduled (weekly/monthly)",
+                  "Stable drift and cheap training",
+                  "May retrain unnecessarily or too late"
+                ],
+                [
+                  "Performance-based",
+                  "Labels arrive at a reasonable speed",
+                  "Needs reliable ground truth"
+                ],
+                [
+                  "Drift-based",
+                  "Labels are delayed (fraud, credit)",
+                  "Drift does not always mean worse performance; confirm first"
+                ],
+                [
+                  "Event-based",
+                  "A known change: a new product, a new regulation, a season",
+                  "—"
+                ]
+              ]
+            },
+            {
+              "p": "Every retrained model passes through the **same automated evaluation gates** (golden set, slices, fairness, latency) and a staged rollout (shadow/canary). **Promoting a retrained model straight to 100% of traffic without gates is a classic wrong answer.** Triggers can be combined (a baseline schedule + an event + confirmed drift)."
+            },
+            {
+              "p": "Watch out for feedback loops: a model whose decisions create its own future training data (for example, only approved loans get repayment labels) — details in the next section."
+            }
+          ]
+        },
+        {
+          "title": "2.5 Feedback Loops and the Risks of Continuous Learning",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Loop",
+                  "Mechanism",
+                  "Consequence",
+                  "Mitigation"
+                ],
+                [
+                  "Selection bias",
+                  "The model's decisions determine which outcomes are observed (approved loans only)",
+                  "Future models never learn about the rejected cases",
+                  "A small amount of random exploration, reject inference, cautious evaluation"
+                ],
+                [
+                  "Popularity loop",
+                  "Recommender systems show what is popular → more clicks → more popularity",
+                  "Diversity collapse; new items get no chance",
+                  "Exploration, diversity constraints"
+                ],
+                [
+                  "Self-fulfilling predictions",
+                  "Areas predicted to be \"high-crime\" receive more patrols → more recorded incidents",
+                  "Bias amplification, harm to fairness",
+                  "Audit the labels; do not train on outcomes the model itself caused"
+                ],
+                [
+                  "Training on model outputs",
+                  "Generated text re-enters the training data",
+                  "Degradation of quality and diversity (model collapse)",
+                  "Track provenance; filter synthetic content"
+                ],
+                [
+                  "Adversarial adaptation",
+                  "Fraudsters learn the model's blind spots",
+                  "Erosion of recall",
+                  "Frequent retraining, model ensembles, rules for new patterns, red teams"
+                ],
+                [
+                  "Online learning poisoning",
+                  "Attackers feed a continuously learning model with crafted data",
+                  "Behaviour manipulation",
+                  "Validate and rate-limit the training data; deferred updates governed by gates"
+                ]
+              ]
+            },
+            {
+              "quote": "If the model decides what gets observed, its next training data is not a neutral sample of reality."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Reliability, Incidents and Resilience",
+      "sections": [
+        {
+          "title": "3.1 Service Indicators, Objectives, Agreements and the Error Budget",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Term",
+                  "Meaning",
+                  "Example"
+                ],
+                [
+                  "SLI — service level indicator",
+                  "A measured quantity",
+                  "The proportion of requests < 300 ms"
+                ],
+                [
+                  "SLO — service level objective",
+                  "An internal target for an indicator",
+                  "99% of requests < 300 ms over 30 days"
+                ],
+                [
+                  "SLA — service level agreement",
+                  "An external contract with penalties",
+                  "99.9% availability, or service credits"
+                ],
+                [
+                  "Error budget",
+                  "1 − SLO; the permitted unreliability",
+                  "99.9% → ≈ 43 minutes of downtime a month"
+                ]
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Availability",
+                  "Monthly downtime (30 days)",
+                  "Annual downtime"
+                ],
+                [
+                  "99%",
+                  "7.2 hours",
+                  "3.65 days"
+                ],
+                [
+                  "99.9%",
+                  "43.2 minutes",
+                  "8.76 hours"
+                ],
+                [
+                  "99.95%",
+                  "21.6 minutes",
+                  "4.38 hours"
+                ],
+                [
+                  "99.99%",
+                  "4.3 minutes",
+                  "52.6 minutes"
+                ]
+              ]
+            },
+            {
+              "formula": "budget = (1 − SLO) × window\n(1 − 0.999) × 30 d × 24 h × 60 min = 0.001 × 43,200 min = 43.2 min"
+            },
+            {
+              "h": "Components in series multiply"
+            },
+            {
+              "formula": "API 99.9% × vector DB 99.9% × LLM provider 99.5% = 0.999 × 0.999 × 0.995 ≈ 0.993 → ≈ 99.3% end-to-end"
+            },
+            {
+              "p": "End-to-end availability is always lower than the weakest link. To raise it: **redundancy** (replicas across availability zones), **fallbacks**, and **removing hard dependencies**. Note that the SLO is an internal target that is usually set tighter than the external SLA, to leave a margin before penalties."
+            },
+            {
+              "p": "**Error budget policy:** when the budget is exhausted, risky releases are frozen and effort is spent on reliability. The budget is usually calculated over a rolling window (30 days, for example)."
+            }
+          ]
+        },
+        {
+          "title": "3.2 Health Checks, Graceful Operation and Disaster Recovery",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Mechanism",
+                  "Purpose"
+                ],
+                [
+                  "Liveness probe",
+                  "Restart a hung container"
+                ],
+                [
+                  "Readiness probe",
+                  "Send no traffic until the model is loaded and warmed up (large models take minutes)"
+                ],
+                [
+                  "Startup probe",
+                  "Give slow-loading models time without being killed"
+                ],
+                [
+                  "Graceful shutdown / draining",
+                  "Finish in-flight requests before stopping"
+                ],
+                [
+                  "Disruption budgets / multi-AZ (PDB / multi-AZ)",
+                  "Keep a minimum number of replicas during maintenance and zone failures"
+                ],
+                [
+                  "Rollback plan",
+                  "The previous version is ready and available in the registry"
+                ]
+              ]
+            },
+            {
+              "h": "Disaster recovery: RPO and RTO"
+            },
+            {
+              "table": [
+                [
+                  "Term",
+                  "Meaning",
+                  "Determines"
+                ],
+                [
+                  "RPO — recovery point objective",
+                  "The maximum acceptable data loss measured in time (for example 15 minutes)",
+                  "Backup frequency / synchronous replication"
+                ],
+                [
+                  "RTO — recovery time objective",
+                  "The maximum time to restore the service (for example one hour)",
+                  "The standby strategy"
+                ],
+                [
+                  "Backup",
+                  "A copy at a point in time; protects against corruption and deletion",
+                  "RPO = the backup interval"
+                ],
+                [
+                  "Replication",
+                  "Continuous copying; protects against losing a node/zone — but it copies corruption too",
+                  "Near-zero RPO"
+                ]
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Strategy",
+                  "RTO",
+                  "Cost"
+                ],
+                [
+                  "Backup & restore",
+                  "Hours",
+                  "Lowest"
+                ],
+                [
+                  "Pilot light: core data is replicated and compute is switched off",
+                  "Tens of minutes",
+                  "Low"
+                ],
+                [
+                  "Warm standby: a scaled-down copy is running",
+                  "Minutes",
+                  "Medium"
+                ],
+                [
+                  "Active–active multi-region",
+                  "≈ 0",
+                  "Highest"
+                ]
+              ]
+            },
+            {
+              "p": "In ML systems also back up the model registry, the feature store, the vector index (or its rebuild pipeline), the prompts and the configurations — **restoring the front end without the model assets is not recovery**. Multi-region recovery for personal or classified data must stay within approved in-Kingdom regions."
+            },
+            {
+              "quote": "Replication is not a backup: if the data is corrupted or deleted, the corruption is copied immediately to the other side."
+            }
+          ]
+        },
+        {
+          "title": "3.3 Alert Design and On-Call Practice",
+          "blocks": [
+            {
+              "p": "Alerts must fire on **symptoms that users feel** (SLO budget consumption, error spikes, latency breaches, drops in business metrics) and not on every internal cause, and every alert has an **owner** and an **entry in the runbook**. Too many noisy alerts cause **alert fatigue**, so real incidents are ignored."
+            },
+            {
+              "ul": [
+                "**Burn-rate alerts:** an immediate page when the error budget is consumed quickly (a rate that would exhaust a month's budget in hours), and a ticket when consumption is slow.",
+                "**Multi-window checks:** require the condition to hold in both a short window and a longer one, to avoid flapping.",
+                "**Severity levels:** page only for urgent problems that affect users; send the rest to dashboards or tickets.",
+                "**Runbooks:** for every alert: what it means, the first checks, the mitigation (rollback, fallback, scale-out), and the escalation path.",
+                "**Blameless post-mortems:** the timeline, the root causes, the contributing factors, what worked, and actions that add tests, monitoring or safeguards.",
+                "**Toil reduction:** automate repetitive manual operations that grow with load (restarting failed jobs, manual upgrades)."
+              ]
+            },
+            {
+              "h": "Illustrative burn-rate worked example"
+            },
+            {
+              "formula": "SLO 99.9% → allowed error rate = 0.1%\nobserved error rate = 1% → burn rate = 1% / 0.1% = 10×\n30-day budget exhausted in 30 / 10 = 3 days → page\nobserved 0.15% → burn rate 1.5× → budget gone in 20 days → ticket"
+            }
+          ]
+        },
+        {
+          "title": "3.4 Incident Response in ML Systems",
+          "blocks": [
+            {
+              "ol": [
+                "**Detect:** an alert from monitoring or reports from users.",
+                "**Mitigate first:** roll back to the last healthy model/prompt, switch to the fallback, or disable the feature flag.",
+                "**Diagnose:** traces, data checks, and version comparison.",
+                "**Fix & verify:** through the normal pipeline and gates — no hotfix that bypasses them.",
+                "**Blameless post-mortem:** the root cause, and add a test or monitor so it cannot recur silently.",
+                "**If personal data leaked** → breach-handling procedures under the Personal Data Protection Law (PDPL)."
+              ]
+            },
+            {
+              "quote": "Mitigate before diagnosing: stop the harm first with a rollback or a fallback, then look for the cause."
+            }
+          ]
+        },
+        {
+          "title": "3.5 Graceful Degradation and the Fallback Chain",
+          "blocks": [
+            {
+              "p": "Every AI dependency will fail one day: the model server, the GPU node, the vector store, the external provider, the feature store. Expert designs decide in advance what the product does on each failure, so the business keeps working at reduced quality instead of stopping."
+            },
+            {
+              "table": [
+                [
+                  "Failure",
+                  "Degraded behaviour",
+                  "Example"
+                ],
+                [
+                  "Primary LLM unavailable",
+                  "Route to a secondary model (smaller or from another provider)",
+                  "The conversation continues with a shorter, simpler model"
+                ],
+                [
+                  "Both models unavailable",
+                  "Serve cached answers to common questions; show search results with links; offer contact with a human",
+                  "FAQ answers from the cache, and a \"Our assistant is busy\" message"
+                ],
+                [
+                  "Vector store slow/unavailable",
+                  "Keyword search only; or reply \"I can't access the documents right now\" instead of answering without sources",
+                  "No ungrounded answers in a policy assistant"
+                ],
+                [
+                  "Feature store unavailable",
+                  "Score with a model that uses a reduced feature set, or decide by rules only",
+                  "Fraud: rules + conservative thresholds; queue borderline transactions"
+                ],
+                [
+                  "Sudden latency spike",
+                  "Timeout, then a lighter path; load shedding of low-priority work",
+                  "Skip reranking under load"
+                ],
+                [
+                  "Bad model release",
+                  "Automatic rollback through canary metrics",
+                  "The previous version is ready"
+                ],
+                [
+                  "Data pipeline delayed",
+                  "Use the last healthy snapshot with a staleness flag",
+                  "Yesterday's forecasts with a warning"
+                ]
+              ]
+            },
+            {
+              "h": "Principles"
+            },
+            {
+              "ul": [
+                "**Fail safe, not just soft:** in high-impact decisions the safe default may be \"refer to a human\" rather than \"approve\".",
+                "**Make degradation visible:** metrics and messages to the user.",
+                "**Test fallbacks regularly:** an untested fallback is a hope, not a design."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.6 Resilience Testing for ML Systems",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Test",
+                  "What it injects",
+                  "What you verify"
+                ],
+                [
+                  "Chaos / fault injection",
+                  "Killing containers, blocking a dependency, adding network latency",
+                  "Retries, timeouts, circuit breakers and fallbacks work as designed"
+                ],
+                [
+                  "Zone failure drill",
+                  "Removing an entire availability zone",
+                  "Capacity and routing hold; the SLO is still met"
+                ],
+                [
+                  "Load & spike tests",
+                  "2–4× peak traffic, sudden bursts",
+                  "Speed of automatic scaling, queues, p99 latency"
+                ],
+                [
+                  "Data failure tests",
+                  "Null values, changed units, schema drift, late batches",
+                  "Validation blocks the bad data; alerts fire"
+                ],
+                [
+                  "Model failure tests",
+                  "Deliberately deploying a degraded model in the test environment",
+                  "Evaluation gates and canary rollback catch it"
+                ],
+                [
+                  "Deprecation drill",
+                  "A change in the alias of the provider's model",
+                  "Pinned versions, an evaluation harness, a migration guide"
+                ],
+                [
+                  "DR drill",
+                  "Restoring models, indexes and data from backup",
+                  "RPO and RTO are actually met"
+                ],
+                [
+                  "Security drills",
+                  "Injection campaigns, a leaked-credentials scenario",
+                  "Detection, key rotation, incident response time (including readiness for the 72-hour deadline in the PDPL)"
+                ]
+              ]
+            },
+            {
+              "p": "**Game days** — scheduled exercises in which the team runs these scenarios on the test environment (and carefully on production) — turn runbooks from documents into practised habits. The **Reliability & Safety** principle's requirement to verify that the system works \"in emergencies and unexpected scenarios\" is implemented in exactly this way."
+            }
+          ]
+        },
+        {
+          "title": "3.7 Operating GPU Fleets",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Aspect",
+                  "Practice"
+                ],
+                [
+                  "Health",
+                  "Monitor GPU errors (ECC, Xid-type faults), temperature and throttling; isolate and drain faulty nodes automatically (cordon & drain)"
+                ],
+                [
+                  "Utilisation",
+                  "Track compute and memory use per GPU, not only node CPU; consolidate lightly used models (MIG, multi-model serving)"
+                ],
+                [
+                  "Scheduling",
+                  "Separate pools for training (long, interruptible, with checkpoints) and serving (latency-sensitive, protected); priorities and quotas per team"
+                ],
+                [
+                  "Capacity",
+                  "Forecast demand quarterly; mix reserved, on-demand and Spot; keep headroom for peaks and failures"
+                ],
+                [
+                  "Drivers and images",
+                  "Tested standard base images; staged driver upgrades with canary nodes"
+                ],
+                [
+                  "Cost visibility",
+                  "GPU-hours by team and workload; alerts for idle instances; automatic shutdown of idle notebooks"
+                ],
+                [
+                  "Security",
+                  "Tenant isolation; restrict privileged containers; image scanning; protect stored model weights"
+                ]
+              ]
+            },
+            {
+              "quote": "Training tolerates interruption if checkpoints exist, so Spot suits it; latency-sensitive serving does not tolerate it, so it is protected with reserved or on-demand capacity."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "LLM Operations (LLMOps), Platform, Vendors and Ethics",
+      "sections": [
+        {
+          "title": "4.1 LLMOps — What Is Different",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Aspect",
+                  "Traditional MLOps",
+                  "LLMOps"
+                ],
+                [
+                  "What changes behaviour",
+                  "Model weights",
+                  "Prompts, model version (which the provider may update!), RAG index, tools, parameters"
+                ],
+                [
+                  "Evaluation",
+                  "Fixed metrics on a labelled test set",
+                  "Golden question-and-answer sets, LLM-as-judge, human review, faithfulness, safety tests"
+                ],
+                [
+                  "Cost driver",
+                  "Training compute, replicas",
+                  "Tokens per request × volume; context length"
+                ],
+                [
+                  "Failure modes",
+                  "Drift, errors",
+                  "Hallucination, prompt injection, refusals, broken formatting, toxic outputs"
+                ],
+                [
+                  "Monitoring",
+                  "Accuracy, drift",
+                  "Tokens and cost per request, time to first token (TTFT), refusal rate, user rating (👍/👎), groundedness, guardrail triggers"
+                ],
+                [
+                  "Release",
+                  "Model version",
+                  "Prompt version + model version + index version, pinned together"
+                ],
+                [
+                  "Tracing",
+                  "Request logs",
+                  "Step-level traces: retrieval → reranking → model → tool calls"
+                ]
+              ]
+            },
+            {
+              "h": "Golden rules"
+            },
+            {
+              "ul": [
+                "Pin the provider's model version (avoid silent \"latest\" changes).",
+                "Run the evaluation harness with every change to the prompt.",
+                "Log the prompt, model and index versions with every answer.",
+                "Collect user ratings and feed failures back into the evaluation set.",
+                "Set token budgets and alerts.",
+                "Guardrails on inputs (injection, personal data) and on outputs (personal-data leakage, toxicity, schema)."
+              ]
+            },
+            {
+              "quote": "Did the quality of a language feature degrade after a prompt change? The missing process: running the evaluation harness on every change, with the prompt version in a registry."
+            }
+          ]
+        },
+        {
+          "title": "4.2 The LLM Application Lifecycle and the LLM Judge",
+          "blocks": [
+            {
+              "ol": [
+                "**Scope and risk:** the use case, the users, data classification, risk level, success metrics, and the design of human oversight.",
+                "**Model selection:** compare the candidate models on your own evaluation set (quality, performance in Arabic and its dialects, latency, cost, context length, licence, hosting location).",
+                "**Prompt/context design:** the system prompt, retrieval, tools and the output schema; versioned in the prompt registry.",
+                "**Evaluation harness:** a golden set (hundreds of real cases), an adversarial set (injection, jailbreaks, extraction of personal data), automated metrics + LLM judges calibrated against human labels, and human review of high-impact outputs.",
+                "**Guardrails:** classification and filtering of inputs, validation of outputs (schema, personal data, toxicity, groundedness), and refusal and escalation paths.",
+                "**Staged launch:** internal use (dogfooding) → shadow → canary → general availability, with stop criteria.",
+                "**Operation:** tracing, cost and token dashboards, capturing user ratings, and incident handling.",
+                "**Continuous improvement:** turn failures and negative ratings into the evaluation set; tune prompts and retrieval; and consider fine-tuning only when prompting and RAG reach their limit.",
+                "**Model upgrade and retirement:** providers retire models; plan the migration with the evaluation harness as the acceptance test, and pin versions in the meantime."
+              ]
+            },
+            {
+              "h": "The LLM Judge Done Right (LLM-as-judge)"
+            },
+            {
+              "p": "Using a strong model to grade outputs scales up evaluation, but judges have biases: a preference for **longer answers**, for **the option shown first** (position bias), for **their own model family**, and for **a confident tone**."
+            },
+            {
+              "ul": [
+                "Explicit evaluation criteria (rubrics) with clear criteria and scales.",
+                "Ask for the justification before the score.",
+                "Swap the order of the answers and take the average.",
+                "Pairwise comparison instead of absolute scores where possible.",
+                "Verify agreement with human raters on a labelled sample (for example Cohen's kappa) before relying on it.",
+                "Re-validate when the judge model changes.",
+                "Keep humans in the loop for safety-critical judgements and for the nuances of Arabic."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.3 Guardrails Architecture",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Check",
+                  "Example action"
+                ],
+                [
+                  "Input",
+                  "Authentication, rate/token limits, size limits",
+                  "Reject with 413/429"
+                ],
+                [
+                  "Input",
+                  "Data sensitivity classification; personal data (PII) detection",
+                  "Redact, route to an in-Kingdom model, or block"
+                ],
+                [
+                  "Input",
+                  "Prompt-injection and jailbreak classifiers; an allowed-topics list",
+                  "Refuse or answer with a safe template"
+                ],
+                [
+                  "Retrieval",
+                  "Permission filters (ACLs); source trust levels",
+                  "Exclude unauthorised or untrusted content"
+                ],
+                [
+                  "Tool use",
+                  "Parameter validation; an allow-list of actions; human approval for high-impact actions",
+                  "Hold the action until confirmed"
+                ],
+                [
+                  "Output",
+                  "Schema validation; personal-data/secrets scan; toxicity; groundedness and citation checks",
+                  "Repair, regenerate, or fall back to \"I can't answer that\" with escalation"
+                ],
+                [
+                  "Logging",
+                  "Redaction; retention",
+                  "Store metadata and redacted samples"
+                ]
+              ]
+            },
+            {
+              "quote": "Permissions are enforced at the retrieval stage, before the model sees the text; prompt instructions are not an access control."
+            }
+          ]
+        },
+        {
+          "title": "4.4 Managing the Cost of LLM Workloads",
+          "blocks": [
+            {
+              "p": "Track cost per request, per user, per feature and per team from the **gateway**. The usual levers, **in order of safety**:"
+            },
+            {
+              "ol": [
+                "**Remove token waste:** trim prompts, summarise history, fewer and better chunks, limits on output length.",
+                "**Caching:** exact, semantic, prefix.",
+                "**Routing:** simple requests to smaller models with escalation.",
+                "**Batching:** for non-interactive work (often at discounted batch prices).",
+                "**Self-hosting:** for high, steady volumes.",
+                "**Quantised or distilled models.**"
+              ]
+            },
+            {
+              "formula": "cost ≈ tokens per request × request volume × price per token"
+            },
+            {
+              "p": "Set budgets and alerts for each team. **A sudden jump in cost while traffic is steady** is usually a bug (a retry loop, an agent stuck in a tool loop) or abuse — not natural growth."
+            }
+          ]
+        },
+        {
+          "title": "4.5 Designing an Internal AI Platform",
+          "blocks": [
+            {
+              "p": "Organisations with many use cases converge on a shared platform so that each team does not rebuild the infrastructure and controls."
+            },
+            {
+              "table": [
+                [
+                  "Capability",
+                  "What it provides"
+                ],
+                [
+                  "Data access layer",
+                  "Governed, classified, catalogued data with access controls and lineage"
+                ],
+                [
+                  "Feature store",
+                  "Shared, point-in-time-correct features, online and offline"
+                ],
+                [
+                  "Experiments and tracking",
+                  "Notebooks with managed compute; experiment tracking"
+                ],
+                [
+                  "Training and pipeline orchestration",
+                  "Reproducible pipelines; GPU scheduling; Spot support"
+                ],
+                [
+                  "Model registry and approvals",
+                  "Versions, model cards, an approval path by risk tier"
+                ],
+                [
+                  "Serving",
+                  "Standard deployment templates (real-time, batch, LLM), automatic scaling, canary/shadow"
+                ],
+                [
+                  "LLM gateway",
+                  "Model catalogue, routing, data protection, quotas, caching, guardrails"
+                ],
+                [
+                  "Vector and retrieval services",
+                  "Managed indexes with permission filtering, ingestion pipelines"
+                ],
+                [
+                  "Evaluation service",
+                  "Golden sets, judges, red-team test packs, dashboards"
+                ],
+                [
+                  "Observability & cost",
+                  "Unified metrics and traces, drift, fairness, cost per team"
+                ],
+                [
+                  "Governance portal",
+                  "Inventory, risk assessments, documentation, audit evidence"
+                ]
+              ]
+            },
+            {
+              "p": "**Platform success metrics:** time from idea to first production deployment, the share of models on the **paved path**, the percentage of models with complete documentation, incident rate, cost per prediction/answer, and team satisfaction."
+            },
+            {
+              "quote": "The platform should make the compliant way the easy way."
+            }
+          ]
+        },
+        {
+          "title": "4.6 Third-Party and Vendor Model Risk",
+          "blocks": [
+            {
+              "p": "**Buying a model or AI service transfers work, not accountability.** Due diligence before and during use:"
+            },
+            {
+              "ul": [
+                "**Documentation before procurement (Transparency principle):** data sources, evaluation results by segment, limitations, intended use, and update policy.",
+                "**Data handling:** where prompts, outputs and files are processed and stored; retention; whether your data trains their models; sub-processors; residency and transfer basis.",
+                "**Security:** certifications, penetration-test results, incident-notification commitments, access controls, and isolation between customers.",
+                "**Performance on your data:** run your evaluation set before signing, and define acceptance criteria in the contract.",
+                "**Change management:** notice periods for model changes and retirements; version pinning; rollback options.",
+                "**Exit plan:** data export, portability of prompts and indexes, and alternative providers behind your gateway.",
+                "**Contractual allocation of responsibility** for errors and harms, remembering that under the Risk Framework transferring a risk does not remove the entity's responsibility."
+              ]
+            },
+            {
+              "quote": "The vendor's published metrics are not evidence of its performance in your environment; the evidence is your own evaluation set, before signing."
+            }
+          ]
+        },
+        {
+          "title": "4.7 Ethics in Day-to-Day Operations",
+          "blocks": [
+            {
+              "p": "Responsible AI is not a one-time review before launch; it lives in operations:"
+            },
+            {
+              "table": [
+                [
+                  "Operational practice",
+                  "Principle / stage"
+                ],
+                [
+                  "Fairness monitoring next to accuracy on the same dashboards, with thresholds set at design",
+                  "Fairness; Deployment & Monitoring stage"
+                ],
+                [
+                  "Complaint and appeal handling connected to model owners, with response times and root-cause analysis",
+                  "Transparency; Accountability"
+                ],
+                [
+                  "Periodic testing of the user interface and experience for usability and bias risks",
+                  "Transparency; Deployment & Monitoring stage"
+                ],
+                [
+                  "Continuous privacy impact review when data use, features or retention change",
+                  "Privacy & Security"
+                ],
+                [
+                  "Tracking social and environmental impact — energy consumption and wider effects",
+                  "Social & Environmental Benefits"
+                ],
+                [
+                  "Documentation and reporting of incidents for failures, breaches and leaks",
+                  "Transparency"
+                ],
+                [
+                  "Effectiveness of human oversight — verifying that reviewers do not sign off mechanically (override rates, review time)",
+                  "Human oversight"
+                ]
+              ]
+            },
+            {
+              "p": "The exam's governance questions often hide in operational stories: a complaint queue nobody owns, a fairness metric nobody watches, a log nobody deletes. Recognise them as **governance failures with operational fixes**."
+            },
+            {
+              "quote": "An override rate close to zero with a review time of seconds is not evidence of model quality; it is a sign of purely nominal human oversight."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Apply the whole method of the unit to a single production incident: from choosing the rollout plan to monitoring, recovery and governance.",
+    "scenario": [
+      "A financing company in Riyadh runs a model that scores personal-financing applications (a high-risk category) and a language assistant that answers customers' questions about financing policies through RAG. The data team manually retrained the scoring model on the last quarter's data and promoted it straight to 100% of traffic on Thursday evening because its offline accuracy was higher.",
+      "Two days later complaints rose, and the business dashboard showed that the rejection rate for the segment of newly hired private-sector employees had doubled, while the infrastructure dashboard was green: p99 = 220 ms and an error rate of 0.02%. The PSI for the \"employment duration\" feature between the training data and live traffic reached 0.31. In the same week the assistant's vector store was delayed for hours, so the assistant answered policy questions without sources, and the LLM provider changed the \"latest\" alias to a new model without notice.",
+      "The assistant service consists of a front end with 99.9% availability, a vector database at 99.9%, and an LLM provider at 99.5%, and management asks for an end-to-end availability SLO of 99.9%."
+    ],
+    "steps": [
+      "Mitigate first: promote the previous version from the model registry (rollback = promoting the previous version) before any diagnosis, and enable the \"I can't access the documents right now\" behaviour for the assistant instead of answering without sources.",
+      "Diagnose with four layers: the infrastructure is healthy, but the data layer (PSI = 0.31 > 0.25, a major shift) and the business layer (complaints and rejections in one segment) reveal the fault; check whether the shift is a pipeline bug or a real change in the population, and measure performance and fairness on the segment.",
+      "Name the missing processes: no automated evaluation gates (slices and fairness), no staged rollout, no human sign-off for a high-risk model, and no stop criteria defined in advance.",
+      "Redesign: any retrained model goes through the same gates, then shadow (because the domain is high-risk), then a 1–5–25–100% canary with stop criteria that include the rejection rate by segment, together with independent validation and an approval record.",
+      "Calculate availability: 0.999 × 0.999 × 0.995 ≈ 0.993, that is ≈ 99.3%, which does not meet the 99.9% target; raise it with replicas across availability zones, a secondary model from another provider behind the gateway, and cached answers to common questions. A 99.9% budget ≈ 43.2 minutes a month.",
+      "Pin the provider's model version instead of \"latest\", make the evaluation harness the acceptance test for any migration, and add a notice-of-change clause and a notice period to the contract.",
+      "Close the loop with a blameless review: add fairness monitoring next to accuracy, a drift alert on the key features that leads to an investigation and not to automatic retraining, a game-day exercise for the fallbacks, and update the model card, the risk assessment and the incident log."
+    ],
+    "traps": [
+      "Promoting a retrained model to 100% of traffic because its offline metric is higher, with no gates or staged rollout.",
+      "Treating a green infrastructure dashboard as evidence that the model is sound; a model can be fast, error-free and silently wrong.",
+      "Treating drift (or a small p-value in KS on a huge sample) as an automatic retraining trigger instead of a signal to investigate.",
+      "Starting with diagnosis and the search for the root cause before rolling back or enabling the fallback.",
+      "Assuming that the availability of a chain equals that of the weakest component, or their average, instead of multiplying the availabilities.",
+      "Believing that contracting a vendor transfers accountability, or relying on the \"latest\" alias without pinning the version."
+    ],
+    "deliverable": "A one-page written plan that specifies: the immediate mitigation step, the layer that exposed the fault, the corrected rollout strategy with its stop criteria, the availability calculation and the error budget, the fallback chain, and the documents that must be updated."
+  },
+  "review": [
+    {
+      "q": "A team trains its models in notebooks, hands them over manually to engineers and monitors nothing. What is the correct next step?",
+      "a": "It is at level 0 (manual), and its next step is version control for data, code and models and building a reproducible training pipeline — not jumping to CI/CD for the pipeline, which is the level 1 step."
+    },
+    {
+      "q": "When do you choose blue–green rather than canary?",
+      "a": "When everyone must be switched at a single moment with an instant rollback, and double capacity can be tolerated for a short period. A canary is better when you want to measure the real impact with small, limited exposure."
+    },
+    {
+      "q": "What can shadow deployment not detect?",
+      "a": "The model's effect on user behaviour and on business metrics such as conversion, because its outputs are logged and not shown; it verifies predictions and latency on real traffic with no risk to users."
+    },
+    {
+      "q": "The PSI of a key feature is 0.18. How do you read it and what do you do?",
+      "a": "It lies between 0.1 and 0.25, so it is a moderate shift. Drift is a signal to investigate: is it a pipeline fault, a real change or seasonality, and does performance on the available labels confirm harm? Retrain only if performance degrades beyond the limit, and through the same gates."
+    },
+    {
+      "q": "How many minutes of downtime a month does an SLO of 99.9% availability allow?",
+      "a": "The error budget = 1 − 0.999 = 0.1% of 43,200 minutes (30 days) ≈ 43.2 minutes. When it is exhausted, risky releases are frozen and effort goes to reliability."
+    },
+    {
+      "q": "A front end at 99.9%, a vector database at 99.9% and a model provider at 99.5% in series. What is the end-to-end availability?",
+      "a": "Components in series multiply: 0.999 × 0.999 × 0.995 ≈ 0.993, about 99.3% — lower than the weakest component. Raise it with redundancy across zones, fallbacks and removing hard dependencies."
+    },
+    {
+      "q": "Why does replication not replace backup?",
+      "a": "Because it copies corruption and deletion immediately too; it protects against losing a node or zone and gives a near-zero RPO, whereas a point-in-time backup is what protects against corruption and deletion."
+    },
+    {
+      "q": "What is the first step after detecting an incident in a production model that is causing harm?",
+      "a": "Mitigate before diagnosing: roll back to the last healthy model or prompt, switch to the fallback, or disable the feature flag; then diagnose and fix through the pipeline and gates, then a blameless review, and PDPL procedures if personal data leaked."
+    },
+    {
+      "q": "What are the main biases of an LLM judge and how do you mitigate them?",
+      "a": "A preference for the longer answer, the one shown first, its own model family and a confident tone. Mitigation: explicit criteria, justification before the score, swapping the order and averaging, pairwise comparison, verifying agreement with humans (Cohen's kappa) and repeating it when the judge changes."
+    },
+    {
+      "q": "An entity bought a model from a vendor and harm occurred to beneficiaries. Who is accountable?",
+      "a": "The entity itself; buying transfers work, not accountability, and transferring a risk under the Risk Framework does not remove the entity's responsibility. Hence due diligence is needed: documentation, data handling, security, performance on its own data, change management, an exit plan, and the contractual allocation of responsibility."
+    }
+  ],
+  "summary": "You have mastered this unit when, faced with any operational story, you can identify the team's maturity level and its next step, choose the rollout strategy from the scenario's constraints, name the monitoring layer that should have exposed the fault, read PSI and KS with discipline without turning drift into an automatic trigger, calculate the error budget and series availability, choose the recovery strategy from RPO and RTO, order the incident response starting with mitigation, and design a fallback chain that fails safe. For language models: you pin versions, evaluate every change and manage the judge, the guardrails and the cost. In governance: you inventory and tier the models and ask for the right document, remembering that accountability does not transfer to the vendor and that ethics lives in day-to-day operations.",
+  "coverage": [
+    "5.1",
+    "5.2",
+    "5.3",
+    "5.4",
+    "5.5",
+    "5.6",
+    "5.7",
+    "5.8",
+    "5.9",
+    "5.10",
+    "5.11",
+    "5.12",
+    "5.13",
+    "5.14",
+    "5.15",
+    "5.16",
+    "5.17",
+    "5.18",
+    "5.19",
+    "5.20",
+    "5.21",
+    "5.22"
+  ]
+}

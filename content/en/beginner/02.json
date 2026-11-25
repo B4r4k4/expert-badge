@@ -1,0 +1,782 @@
+{
+  "before": [
+    "This unit is about **data**: how to split it, how to know the model has really learned and has not cheated, how to choose the right metric, and how to keep data quality up after launch. It is the foundation of Domain 1, the second-heaviest domain of the exam (about 26 questions out of 150).",
+    "One idea recurs throughout the unit: **most model problems are caused by the data, not the algorithm**. That is why the correct answer in the exam is often “inspect the data or fix the split”, not “use a bigger model”.",
+    "You need two things from Unit 00 first: Chapter 2 (data, splitting and overfitting) and Chapter 3 (the confusion matrix, precision, recall and the threshold). If you are not comfortable with them, go back to them first."
+  ],
+  "sections": {
+    "1.1": {
+      "simple": [
+        "You learned in Unit 00 that we split data into training, validation and test sets. This section answers: **how** do we split? Randomly? Not always. The way to split depends on the shape of the data.",
+        "The general rule: the test must resemble the reality in which the model will operate. If the model will predict the future, we must test it on a “future” it has not seen, meaning the most recent period. If it will serve new customers, we must test it on customers it has not seen."
+      ],
+      "example": "You have a hospital visits log: the patient Ahmed visited 10 times. If we split randomly, 7 of Ahmed's visits will fall in training and 3 in the test. The model will recognise Ahmed and predict his condition well, not because it understood the disease but because it “knows Ahmed”. In reality it will meet patients it has never seen. The fix: a **group split**, meaning all of Ahmed's visits go on one side.",
+      "terms": [
+        {
+          "ar": "مستقلة ومتماثلة التوزيع",
+          "en": "i.i.d. — independent and identically distributed",
+          "def": "The assumption that each row is unrelated to the others, and that all rows come from the same reality. A random split is valid for it. It is not valid with temporal data or with multiple rows for the same person."
+        },
+        {
+          "ar": "التقسيم الطبقي",
+          "en": "Stratified split",
+          "def": "A split that preserves the proportion of each class in every part. If fraud is 1% of the data, it will be 1% of the training set and 1% of the test set."
+        },
+        {
+          "ar": "التقسيم الزمني",
+          "en": "Time-based split",
+          "def": "Training on the older period and testing on the more recent one, so that the model is tested on a future it has not seen."
+        },
+        {
+          "ar": "التقسيم بالمجموعة",
+          "en": "Group split",
+          "def": "Placing all the rows of a single entity (customer, patient, device) in just one part of the split."
+        },
+        {
+          "ar": "تسرّب العملاء",
+          "en": "Churn",
+          "def": "A customer leaving the service, such as cancelling a subscription. Predicting it is a common task in telecoms and banking."
+        },
+        {
+          "ar": "التحقق المتقاطع",
+          "en": "k-fold cross-validation",
+          "def": "Splitting the data into k parts and training the model k times, each time testing on a different part, then taking the average. Useful when the data is small."
+        },
+        {
+          "ar": "المعاملات الفائقة",
+          "en": "Hyper-parameters",
+          "def": "Settings we choose ourselves before training, such as the depth of a tree or the learning rate. They differ from the parameters that the model learns by itself."
+        }
+      ]
+    },
+    "1.2": {
+      "simple": [
+        "**Leakage** is when the model sees, during training, a “hint” about the answer that will not exist in reality. The result: excellent scores in the test, then failure in production.",
+        "Leakage has two routes. The first is a **feature that carries the answer**: a column that is known only after what we want to predict has happened. The second is a **wrong order of steps**: processing all the data (computing the mean, for example) before the split, so that information enters training from the test data without our noticing."
+      ],
+      "example": "You want to predict how many days a patient will stay in hospital, on the day of admission. You put “discharge date” among the features. The model will compute the difference and give a perfect answer! But on the day of admission we do not know the discharge date at all, so the model is useless in reality. An example of the wrong order: computing the mean age from all the data to fill in missing ages, then splitting. The mean here has “seen” the test data.",
+      "terms": [
+        {
+          "ar": "تسريب البيانات",
+          "en": "Data leakage",
+          "def": "The presence in training of information that will not be available at real prediction time, so the model looks far better than it is."
+        },
+        {
+          "ar": "الاعتراض على العملية",
+          "en": "Chargeback",
+          "def": "A customer disputing a card transaction and getting the amount refunded. It happens days or weeks after the transaction, so it counts as leakage if used as a feature to predict fraud."
+        },
+        {
+          "ar": "التطبيع / التوحيد",
+          "en": "Normalisation",
+          "def": "Converting numbers to a common scale, such as subtracting the mean and dividing by the standard deviation. It needs the mean to be computed, which is why it must be computed from the training data only."
+        },
+        {
+          "ar": "تعويض القيم المفقودة",
+          "en": "Imputation",
+          "def": "Filling empty cells with an estimated value, such as the median. The value must be computed from the training data only."
+        },
+        {
+          "ar": "الطيّة",
+          "en": "Fold",
+          "def": "A part of the data in cross-validation. The “training fold” is the part used for learning in that round."
+        },
+        {
+          "ar": "ترميز الهدف",
+          "en": "Target encoding",
+          "def": "Converting a text category (such as a city name) into a number that is the target mean for that category, such as the fraud rate in each city. If it is computed with the row itself participating, it leaks the answer, which is why it is computed “out-of-fold”."
+        }
+      ]
+    },
+    "1.3": {
+      "simple": [
+        "If you discover leakage, the remedy is three steps in order: remove the leaking feature, make all processing learn from the training data alone, then re-run the test with a correct split.",
+        "The trap in the exam: options such as “collect more data” or “use a stronger model” seem logical because they address “poor performance”. But they do not touch the cause. The new data will carry the same leaking column, and the stronger model will exploit it more."
+      ],
+      "example": "A student scored 100% because the answers were written on the back of the question sheet. Is the fix to give him more questions? No, because the answers will be on the back of those too. The fix is to remove the answers from the back of the sheet, then test him again.",
+      "terms": [
+        {
+          "ar": "خط المعالجة",
+          "en": "Pipeline",
+          "def": "A chain of processing steps linked together (imputation, then normalisation, then model) that is always applied in the same order. It guarantees that each step learns from the training data only, and prevents leakage automatically."
+        },
+        {
+          "ar": "التنظيم",
+          "en": "Regularisation",
+          "def": "Constraints added during training that stop the model from becoming too complex and memorising details. A remedy for overfitting, but it does not treat leakage."
+        }
+      ]
+    },
+    "1.4": {
+      "simple": [
+        "To find out what is wrong with a model, compare three numbers: its performance in training, in validation, and in production. Each pattern has a different diagnosis, just as a doctor diagnoses from a set of symptoms.",
+        "The most important pattern in the exam: training and validation are **both excellent**, but production is poor. Many people think it is overfitting, and it is not. Overfitting shows up as a gap between training and validation. Here there is no gap between them, and the problem is that all the evaluation data “knows something” that reality does not: leakage, or a difference between past data and present data."
+      ],
+      "example": "Three students. The first scores 98 on the question bank and 70 on the mock exam: he memorised and did not understand, and this is overfitting. The second scores 55 on both: he did not study enough, and this is underfitting. The third scores 95 on both, then 60 on the final exam: the mock exam's questions were leaked to him, or the final came from a different syllabus. This is leakage or shift.",
+      "terms": [
+        {
+          "ar": "الانحياز (في النماذج)",
+          "en": "Bias",
+          "def": "The error resulting from simplifying the model more than necessary. High bias means underfitting. It differs from “bias against a group” in fairness."
+        },
+        {
+          "ar": "التباين",
+          "en": "Variance",
+          "def": "The model's sensitivity to the specific details of the training data. High variance means it has memorised the noise, that is, overfitting."
+        },
+        {
+          "ar": "زيادة البيانات",
+          "en": "Data augmentation",
+          "def": "Creating additional training examples by simple modifications to the existing ones, such as rotating an image or changing its lighting, so that the model learns a more general pattern."
+        },
+        {
+          "ar": "L1 / L2 / Dropout",
+          "en": "Regularisation methods",
+          "def": "Types of regularisation. L1 and L2 penalise large weights. Dropout switches off random neurons during training so that the network does not depend on a single neuron."
+        },
+        {
+          "ar": "الإيقاف المبكر",
+          "en": "Early stopping",
+          "def": "Stopping training when validation performance stops improving and begins to decline, before the model starts to memorise the training set."
+        },
+        {
+          "ar": "الانزياح في التوزيع",
+          "en": "Distribution shift",
+          "def": "Real-world data differing from the training data, such as new customers or new behaviour. It makes the model weaker in production than it was in the test."
+        },
+        {
+          "ar": "الخسارة",
+          "en": "Loss",
+          "def": "A number that measures how much error the model makes during training. The lower it is, the better."
+        }
+      ]
+    },
+    "2.1": {
+      "simple": [
+        "Each problem has a metric that suits it, and the question that decides it is one: **which error is more expensive?** If missing the case is catastrophic (disease, fraud), we measure recall. If the false alarm is annoying or costly (blocking an innocent account), we measure precision.",
+        "The long table in this section links each “cue” in the question text to its metric. Do not memorise all the names at once. Understand the idea: classification has metrics, continuous numbers (regression) have metrics, and search and ranking have metrics."
+      ],
+      "example": "A spam filter: if it wrongly hid an important message from your manager (a false positive), that is a big problem. If an advertising message got through (a false negative), it is not a great matter. So we care about precision. Cancer screening is exactly the opposite: missing a single patient is a catastrophe, so we care about recall.",
+      "terms": [
+        {
+          "ar": "Fβ وF2",
+          "en": "F-beta score",
+          "def": "A version of F1 that gives more weight to one of the two metrics. F2 gives recall more weight than precision, and is used when the miss is more expensive."
+        },
+        {
+          "ar": "ROC-AUC",
+          "en": "Area Under the ROC Curve",
+          "def": "A number between 0.5 and 1 that measures the model's ability to rank positive cases above negative ones, regardless of the threshold. 0.5 means random guessing, and 1 means perfect ranking."
+        },
+        {
+          "ar": "PR-AUC",
+          "en": "Area Under the Precision–Recall Curve",
+          "def": "Like ROC-AUC but built on precision and recall. More reliable than it when the target case is very rare."
+        },
+        {
+          "ar": "المعايرة",
+          "en": "Calibration",
+          "def": "That the probability the model gives matches reality. If it says “70%” for a hundred cases, about 70 of them should really be positive. Important when we use the probability itself, as in loan pricing."
+        },
+        {
+          "ar": "درجة Brier",
+          "en": "Brier score",
+          "def": "A measure of the quality of probabilities: the mean of the squared difference between the predicted probability and the actual outcome (0 or 1). The lower it is, the better."
+        },
+        {
+          "ar": "RMSE وMAE وMAPE",
+          "en": "Regression errors",
+          "def": "Metrics for the error in predicting numbers. MAE: the mean absolute difference (in the target's own units). RMSE: penalises large errors more. MAPE: the error as a percentage, and it fails if there are zeros in the true values."
+        },
+        {
+          "ar": "Macro-F1 وWeighted-F1",
+          "en": "Multi-class F1",
+          "def": "When there are several classes: Macro computes F1 for each class then takes the average with equal weights, so it exposes the small, weak class. Weighted weights by the size of each class, so the large classes dominate."
+        },
+        {
+          "ar": "MRR وnDCG",
+          "en": "Ranking metrics",
+          "def": "Metrics for the quality of ranking search results. MRR: how early the first correct result appears. nDCG: whether the most important results are at the top. You will see them worked through with numbers in Unit 03."
+        }
+      ]
+    },
+    "2.2": {
+      "simple": [
+        "You saw this in Unit 00: when the target case is rare, the model that “does nothing” gets a very high overall accuracy. So any option in the exam that says “the model is successful because its overall accuracy is 99%” on data with rare cases is a distractor.",
+        "Note a wording warning: the word “precision” has two meanings in the exam. The first is the classification metric TP/(TP+FP), and it is the more common. The second is the “numerical precision” inside the model (FP16 and INT8). The context determines which is meant: if the talk is about memory and quantisation, it is numerical precision."
+      ],
+      "example": "In 1,000 transactions containing 5 frauds (0.5%), a model that says “legitimate” for all of them is right 995 times: overall accuracy of 99.5%. Its recall is 0 of 5 = 0%. An impressive number for a model that does not catch a single fraudster.",
+      "terms": [
+        {
+          "ar": "مفارقة الدقة الكلية",
+          "en": "Accuracy paradox",
+          "def": "The phenomenon whereby a useless model achieves very high overall accuracy when the target class is rare."
+        },
+        {
+          "ar": "دقة الأرقام",
+          "en": "Numerical precision",
+          "def": "The number of bits used to store each number in the model (FP32, FP16, INT8). A completely different meaning from the precision metric."
+        }
+      ]
+    },
+    "2.3": {
+      "simple": [
+        "The model gives a score, and we choose the threshold above which we say “yes”. Moving the threshold is like moving a switch between two ends: the side of “catch everything even if I err a lot” and the side of “do not say yes unless you are sure”.",
+        "The lesson: when people complain about too many false alarms or too many misses, **try moving the threshold first**. It needs no retraining, and costs almost nothing. We retrain only if no threshold achieves what is required."
+      ],
+      "example": "A security guard at a gate. If he searches every visitor (a low threshold), no one will slip past him, but the queue will grow long and the visitors will get angry. If he searches only those who look very suspicious (a high threshold), everyone will pass quickly, but he may miss a dangerous person. We do not need a new guard. We need to tell him when to search.",
+      "terms": [
+        {
+          "ar": "الدرجة",
+          "en": "Score",
+          "def": "The number a classifier outputs for each case, usually between 0 and 1. The higher it is, the more confident the model is that the case is positive."
+        },
+        {
+          "ar": "منحنى الدقة–الاستدعاء",
+          "en": "Precision–Recall curve",
+          "def": "A plot showing precision and recall at every possible threshold. You choose from it the point that suits your requirements."
+        }
+      ]
+    },
+    "2.4": {
+      "simple": [
+        "When the target case is rare (0.5% fraud) the model tends to ignore it, because ignoring it makes it “right” most of the time. There are several ways to treat that, and the rule is: **start with the cheapest**.",
+        "The cheapest: we tell the model that its error on the rare case is more expensive (class weights), then we tune the threshold. There are methods that change the data itself: reducing the common cases, or creating extra copies of the rare cases. The big trap: creating the extra copies **before** the split, so that copies of test examples move into training, and this is leakage."
+      ],
+      "example": "A teacher in a class with 99 high-achieving students and one student who needs help. If he evaluates himself by “how many students passed”, he will look excellent even if he ignores the weak student. Class weights mean telling him: “This student's success counts for you as a hundred students”. So he starts to pay attention to him.",
+      "terms": [
+        {
+          "ar": "أوزان الفئات",
+          "en": "Class weights",
+          "def": "Making the model's error on the rare class count more heavily in the loss function, so that it cares about it more during training. The cheapest way to treat imbalance."
+        },
+        {
+          "ar": "تقليص الأغلبية",
+          "en": "Undersampling",
+          "def": "Deleting some of the examples of the common class to balance it with the rare one. Fast, but it throws away information."
+        },
+        {
+          "ar": "زيادة الأقلية / SMOTE",
+          "en": "Oversampling / SMOTE",
+          "def": "Increasing the examples of the rare class by repeating them or by creating nearby synthetic examples (SMOTE). It must be applied to the training data only."
+        },
+        {
+          "ar": "كشف الشذوذ",
+          "en": "Anomaly detection",
+          "def": "A model that learns only what “normal” looks like, then flags anything different from it. Useful when examples of the problem are very rare or non-existent."
+        },
+        {
+          "ar": "التعلم النشط",
+          "en": "Active learning",
+          "def": "The model choosing the examples it is least sure about for humans to label, instead of random labelling. It saves a great deal of labelling effort."
+        }
+      ]
+    },
+    "2.5": {
+      "simple": [
+        "Bank fraud is a scenario that recurred in the accounts of people who sat the exam, because it brings together many problems in a single story. This section lists six characteristics of it, and each characteristic leads you to a decision.",
+        "Memorise them as a checklist: **rare** (do not trust overall accuracy), **temporal** (split by time), **its adversary adapts** (fraudsters change their methods, so we need monitoring), **fast** (the decision comes before the payment is completed), **labels are delayed** (we learn the truth after weeks), and **regulated** (we must explain the reason for a decline)."
+      ],
+      "example": "A customer pays by card in a shop. The bank has less than a second to decide “approve or decline”, so there is no room for a huge, slow model. The fraudsters the model caught last month will change their method this month. The customer whose transaction was declined has a right to know the reason: “an unusual amount from an unusual country”.",
+      "terms": [
+        {
+          "ar": "عدائي",
+          "en": "Adversarial",
+          "def": "An environment in which a party deliberately tries to deceive the model and adapt to it, such as fraudsters or spammers."
+        },
+        {
+          "ar": "انجراف المفهوم",
+          "en": "Concept drift",
+          "def": "A change in the relationship itself between the features and the answer. For example, a new fraud method that makes the old fraud signs insufficient."
+        },
+        {
+          "ar": "الأشجار المعززة",
+          "en": "Gradient-boosted trees",
+          "def": "A model made up of hundreds of small decision trees, each tree correcting the errors of the ones before it. Fast and very accurate on tabular data. Among its best-known libraries are XGBoost and LightGBM."
+        },
+        {
+          "ar": "مخزن الميزات",
+          "en": "Feature store",
+          "def": "A central system that computes features and stores them so they are used with the same definition in training and operation, such as “the number of the customer's transactions in the last 10 minutes”."
+        },
+        {
+          "ar": "المقياس البديل",
+          "en": "Proxy metric",
+          "def": "A metric available immediately that we monitor instead of the real, delayed metric. For example the rate of declined transactions, until the chargeback results arrive after weeks."
+        },
+        {
+          "ar": "رموز الأسباب",
+          "en": "Reason codes",
+          "def": "Short, understandable reasons attached to each decision, such as “an amount five times higher than usual”. Regulators require them, and the customer has a right to know them."
+        }
+      ]
+    },
+    "2.6": {
+      "simple": [
+        "A single number on a single test set is not enough for a launch decision. This section lists practices that complete the picture.",
+        "The most important is **evaluation by slice**: a model may be excellent on average and very poor for a particular group, such as users of a particular dialect or region, and the average hides that. The second is **confidence intervals**: a small improvement on a small sample may be chance."
+      ],
+      "example": "A restaurant with an average rating of 4.5 out of 5. But in detail: lunch customers give it 4.9, and dinner customers 3.1, because the evening chef is weak. The average alone will not tell you this. Similarly, a model with 92% accuracy may have only 70% accuracy on the southern dialect.",
+      "terms": [
+        {
+          "ar": "الشريحة",
+          "en": "Slice / segment",
+          "def": "A part of the data that shares a trait, such as a region, an age group, a channel or a dialect. We measure performance for each slice separately."
+        },
+        {
+          "ar": "فترة الثقة",
+          "en": "Confidence interval",
+          "def": "A range in which we expect the true value to lie. “Accuracy 90% ± 2%” means it is probably between 88% and 92%. If the intervals of two models overlap, one of them may not really be better."
+        },
+        {
+          "ar": "المجموعة الذهبية",
+          "en": "Golden set",
+          "def": "A carefully chosen set of examples with trusted correct answers, on which every new release is tested."
+        },
+        {
+          "ar": "اختبار التراجع",
+          "en": "Regression test",
+          "def": "A test that makes sure the new release has not broken what worked in the previous release. The word “regression” here means going backwards, not statistical regression."
+        },
+        {
+          "ar": "BLEU / ROUGE",
+          "en": "Text overlap metrics",
+          "def": "Automatic metrics that compare generated text with a reference text by the number of shared words. Cheap, but they do not measure correctness or usefulness well."
+        },
+        {
+          "ar": "تحليل الأخطاء",
+          "en": "Error analysis",
+          "def": "Reading dozens of the model's actual errors by hand to understand their types before deciding what to change."
+        },
+        {
+          "ar": "التقييم غير المتصل والحي",
+          "en": "Offline / online evaluation",
+          "def": "Offline: on data held back before launch. Live: on real users after launch. Success in the first does not guarantee success in the second."
+        }
+      ]
+    },
+    "3.1": {
+      "simple": [
+        "Real data is messy: empty cells, strange numbers, duplicate records, and multiple sources that do not agree. This table gives each problem its preferred remedy.",
+        "The two most important ideas in it: (1) **a strange value is not always an error**. In fraud, the strange transaction is exactly what we are looking for, so do not delete it. (2) **An empty cell may be information**: sometimes the very reason for the emptiness is useful for prediction."
+      ],
+      "example": "In a survey, high earners leave the income field empty more than others. If we filled the gap with the mean we would hide an important piece of information: “whoever left the field empty probably has a high income”. The fix is to add a new column called “was it empty?” with a value of yes or no.",
+      "terms": [
+        {
+          "ar": "القيم الشاذة",
+          "en": "Outliers",
+          "def": "Values very far from the rest of the data, such as a salary of 5 million in a table whose salaries are around 10,000. It may be a data-entry error or a genuinely rare event."
+        },
+        {
+          "ar": "الالتواء",
+          "en": "Skewness",
+          "def": "An asymmetric distribution: most values are small and a few are very large, such as income or purchase amounts. A logarithmic transform brings it closer to symmetry."
+        },
+        {
+          "ar": "كثرة القيم الفئوية",
+          "en": "High cardinality",
+          "def": "A categorical column with thousands of different values, such as a merchant number or a product code. Simple encoding does not suit it, and it needs special methods."
+        },
+        {
+          "ar": "ضوضاء التسميات",
+          "en": "Label noise",
+          "def": "Wrong answers in the training data, such as a legitimate message wrongly labelled as fraud. The model learns mistakes from them."
+        },
+        {
+          "ar": "المخطط",
+          "en": "Schema",
+          "def": "A description of the shape of the data: the column names, their types (number, text, date) and their constraints."
+        },
+        {
+          "ar": "تتبّع الأصل",
+          "en": "Lineage",
+          "def": "A record showing where each piece of data came from and which transformations it passed through. Essential for auditing and for deleting a person's data on request."
+        },
+        {
+          "ar": "الأسماء المستعارة",
+          "en": "Pseudonymisation",
+          "def": "Replacing direct identifiers (name, national ID number) with a token, so that the person can be identified only by a key stored separately."
+        }
+      ]
+    },
+    "3.2": {
+      "simple": [
+        "Imagine that “customer age” is computed in training precisely from the date of birth, whereas in the real-time system it is computed from the year of birth only. The name is the same and the number is slightly different. The model receives in reality numbers it did not learn on, so its performance gets worse.",
+        "This is called **training–serving skew**. The problem here is not that the world changed, nor that the model is bad, but that we have **two ways of computing the same thing**. The fix: one place that defines the feature once and serves training and operation together, and that is the feature store."
+      ],
+      "example": "A restaurant with two branches cooking “the same recipe”, but each branch measures the salt its own way, so the taste differs. The fix is not to retrain the cooks, but one recipe book with specified quantities that both branches use.",
+      "terms": [
+        {
+          "ar": "انحراف التدريب عن الخدمة",
+          "en": "Training–serving skew",
+          "def": "A difference in how features are computed between the training environment and the live operating environment, so that the model sees in reality data different from what it learned."
+        },
+        {
+          "ar": "الدفعات",
+          "en": "Batch",
+          "def": "Processing a large amount of data at once at a set time, such as every night, instead of processing each request as soon as it arrives."
+        },
+        {
+          "ar": "المخزن غير المتصل والمتصل",
+          "en": "Offline / online store",
+          "def": "The two parts of the feature store. Offline: keeps a long history for training. Online: gives the latest value of the feature within fractions of a second for real-time operation."
+        },
+        {
+          "ar": "الربط الصحيح زمنيًا",
+          "en": "Point-in-time correct join",
+          "def": "When building training data, we take the value of each feature as it was at the **moment** of the event, not its value today, so that the future does not leak into the past."
+        }
+      ]
+    },
+    "3.3": {
+      "simple": [
+        "Data passes through stages like any product: it is collected, then enters the systems, then is checked, then stored, then prepared, then labelled, then versioned, then used, then monitored, then either retained or destroyed.",
+        "The idea for the exam: **the problem appears at one stage and its cause lies at an earlier stage**. The model errs today (the usage stage), but the cause is that the data source changed the unit a week ago (the ingestion stage)."
+      ],
+      "example": "A meal in a restaurant tastes spoiled. The problem appeared at the table, but the cause may be a supplier who sent old vegetables two days ago, and no one checked them on receipt. Fixing the way the food is served will not solve the problem.",
+      "terms": [
+        {
+          "ar": "الاستيعاب",
+          "en": "Ingestion",
+          "def": "The stage of bringing data from its sources into our systems. The best place to check it before it spreads."
+        },
+        {
+          "ar": "إدارة الإصدارات",
+          "en": "Versioning",
+          "def": "Keeping numbered copies of the data and the models, so that we know exactly which data each model was trained on, and can go back to any version."
+        },
+        {
+          "ar": "الإتلاف",
+          "en": "Destruction / deletion",
+          "def": "Deleting data permanently when the need for it ends or the statutory retention period ends."
+        }
+      ]
+    },
+    "3.4": {
+      "simple": [
+        "“Data quality” is not one thing. This section divides it into eight dimensions, each dimension asking a different question: Are the values correct? Are they complete? Do they agree across systems? Are they recent? Are they in the right form? Is there duplication? Do they represent all the people the model will serve? Do we know their source?",
+        "Two quick cues from the exam: if the question says “the model is weak for a particular group”, think **representativeness**. If it says “audit” or “a request to delete a person's data”, think **lineage**."
+      ],
+      "example": "A voice-recognition model trained only on men's voices from Riyadh. The data is “accurate”, “complete” and “recent”, but it is not **representative**. The model will be weak with women's voices and with the dialects of other regions.",
+      "terms": [
+        {
+          "ar": "الدقة (في جودة البيانات)",
+          "en": "Accuracy (data quality)",
+          "def": "The recorded value matching reality. A meaning that differs from the model's overall accuracy metric."
+        },
+        {
+          "ar": "الاكتمال",
+          "en": "Completeness",
+          "def": "All the required fields and records being present without gaps."
+        },
+        {
+          "ar": "الاتساق",
+          "en": "Consistency",
+          "def": "The same piece of information being identical in all systems. For example: the customer's date of birth is the same in the accounts system and the loans system."
+        },
+        {
+          "ar": "الحداثة",
+          "en": "Timeliness / freshness",
+          "def": "The data being available in time and recent enough for the decision."
+        },
+        {
+          "ar": "الصلاحية",
+          "en": "Validity",
+          "def": "The values conforming to the allowed form and range. Age is never negative, and the date is in a valid format."
+        },
+        {
+          "ar": "التفرّد",
+          "en": "Uniqueness",
+          "def": "Not having the same record twice or more by accident."
+        },
+        {
+          "ar": "التمثيل",
+          "en": "Representativeness",
+          "def": "The data covering all the groups the model will serve, in reasonable proportions."
+        },
+        {
+          "ar": "فهرس البيانات",
+          "en": "Data catalog",
+          "def": "A central guide describing the datasets available in the organisation: their owner, source, meaning and classification."
+        }
+      ]
+    },
+    "3.5": {
+      "simple": [
+        "One team sends the data, and another team builds a model on it. One day the first team changes something small, such as converting the amount from riyals to halalas, without telling anyone. The model does not break with an error message, but simply starts giving wrong results silently.",
+        "A **data contract** prevents this: a written agreement on the shape of the data, its meaning and its units. An automated check on every arrival of data that stops any batch that violates the contract before it reaches the model. It is checked at three points: on receipt, before training, and during operation."
+      ],
+      "example": "A transaction amount of 150 riyals started arriving as 15,000 because it became in halalas. The model thinks all the transactions are huge and suspicious, so it fires thousands of alerts in a single day. Had the contract said “unit: riyal, and the amount between 1 and 500,000”, the automated check would have stopped the batch immediately and sent an alert.",
+      "terms": [
+        {
+          "ar": "عقد البيانات",
+          "en": "Data contract",
+          "def": "An explicit, versioned agreement between the producer of the data and its consumer: the shape, the meaning, the units, the ranges, the arrival time, the owner, and the way of making changes."
+        },
+        {
+          "ar": "المنتِج والمستهلِك",
+          "en": "Producer / consumer",
+          "def": "The producer: the team or system that creates the data and sends it. The consumer: the one who uses it, such as the model team."
+        },
+        {
+          "ar": "العزل",
+          "en": "Quarantine",
+          "def": "Setting violating data aside instead of deleting it or using it, until someone reviews it."
+        },
+        {
+          "ar": "السلامة المرجعية",
+          "en": "Referential integrity",
+          "def": "Every reference pointing to something that really exists. For example: every transaction is linked to a customer number that exists in the customers table."
+        }
+      ]
+    },
+    "3.6": {
+      "simple": [
+        "**Drift** is when reality changes away from the data the model learned from. But “what exactly changed?” determines the remedy. This table distinguishes five types of change.",
+        "The most important distinction for the exam: a **sudden change on a specific day** usually means a fault in the data, such as a changed unit or a column that became empty, and the fix is to repair the data, not to retrain. A **gradual deterioration** over weeks means real drift that may need retraining."
+      ],
+      "example": "The types of change, with a clothes-shop example. (1) Younger customers started coming: the inputs changed, and this is data drift. (2) The same customers started preferring different colours: the relationship changed, and this is concept drift. (3) At Eid the number of buyers doubles: the base rate changed, and this is label drift. (4) The cashier started recording sizes in a different system from the warehouse: a data fault.",
+      "terms": [
+        {
+          "ar": "انجراف البيانات / المتغيرات",
+          "en": "Data / covariate drift",
+          "def": "A change in the distribution of the inputs (features) while the relationship between them and the answer stays as it is. Written P(X)."
+        },
+        {
+          "ar": "انجراف المفهوم",
+          "en": "Concept drift",
+          "def": "A change in the relationship itself between the inputs and the answer: the same features came to mean something different. Written P(Y|X)."
+        },
+        {
+          "ar": "انجراف التسميات / المعدل الأساسي",
+          "en": "Label / prior drift",
+          "def": "A change in the proportion of positive cases, such as fraud doubling in the busy seasons. Written P(Y)."
+        },
+        {
+          "ar": "مؤشر استقرار المجتمع",
+          "en": "Population Stability Index — PSI",
+          "def": "A number that measures how much the distribution of a feature differs between two periods. The common rule: below 0.1 is stable, 0.1 to 0.25 is a moderate change, and above 0.25 is a large change. You will see it in detail in Unit 07."
+        },
+        {
+          "ar": "اختبار KS",
+          "en": "Kolmogorov–Smirnov test",
+          "def": "A statistical test that compares two distributions and says whether they differ. With very large data it detects trivial differences, so it is not sufficient on its own."
+        },
+        {
+          "ar": "عطل في المصدر",
+          "en": "Upstream break",
+          "def": "An unintended change in data coming from another system: a new unit, an empty column, or a different format."
+        }
+      ]
+    },
+    "4.1": {
+      "simple": [
+        "Supervised learning needs “correct answers” to learn from, that is, labels. Where do we get them from? Four sources, each with a price and a flaw.",
+        "**Humans** are more accurate but expensive and slow. **Behaviour** (clicks, purchases) is cheap and plentiful but biased. **Rough rules** are fast but error-prone. **Models** suggest and humans confirm, and this is fast, but humans tend to accept the suggestion without thinking."
+      ],
+      "example": "You want to know which products customers like. The behavioural label: “what the customer clicked”. But the customer clicks only on what we showed him in the first place. A wonderful product we never showed will not get a click, and the model will think no one wants it. This is **bias from the existing system**.",
+      "terms": [
+        {
+          "ar": "التوسيم / التسمية",
+          "en": "Labelling / annotation",
+          "def": "Putting the correct answer on each training example, such as writing “fraud” or “legitimate” beside each transaction."
+        },
+        {
+          "ar": "المُوسِّم",
+          "en": "Annotator / labeller",
+          "def": "The person who assigns the labels. They may be a domain expert, such as a doctor, or a trained annotator following written guidelines."
+        },
+        {
+          "ar": "الإشراف الضعيف",
+          "en": "Weak supervision",
+          "def": "Creating rough labels with automatic rules, such as “every message containing the word ‘free’ is spam”. Fast and broad, but error-prone."
+        },
+        {
+          "ar": "انحياز الأتمتة",
+          "en": "Automation bias",
+          "def": "The human tendency to accept what an automated system suggests without sufficient scrutiny, even when it is wrong."
+        }
+      ]
+    },
+    "4.2": {
+      "simple": [
+        "How do we know the labels are good? We give the same sample to two or more annotators and see how far they agree. If the experts themselves disagree a lot, the problem is in the **task definition**: the guidelines are vague, or the case itself is ambiguous. The model will not learn what humans have not agreed on.",
+        "But agreement can happen by chance. If 90% of messages are legitimate, two annotators who always say “legitimate” will agree 90% of the time without any understanding. That is why we use **kappa**: a measure that subtracts the agreement that happens by chance and keeps only the real agreement."
+      ],
+      "example": "Two referees judge 100 incidents: is it a foul or not? They agreed on 80 incidents. But if 75 incidents were very clear and no one disputes them, the “real” agreement on the difficult incidents is small. Kappa reveals this. A kappa below 0.4 means: sit down first and agree on what counts as a foul.",
+      "terms": [
+        {
+          "ar": "الاتفاق بين المُوسِّمين",
+          "en": "Inter-annotator agreement",
+          "def": "A measure of how far several people agree on labelling the same examples. An indicator of how clear the task is and of the quality of the labels."
+        },
+        {
+          "ar": "كابا كوهين",
+          "en": "Cohen's Kappa",
+          "def": "A measure of agreement between two annotators that subtracts the agreement expected by chance. 1 is perfect agreement, and 0 is agreement at chance level only."
+        },
+        {
+          "ar": "كابا فلايس وألفا كريبندورف",
+          "en": "Fleiss' Kappa / Krippendorff's Alpha",
+          "def": "Agreement measures like Cohen's kappa but suitable for more than two annotators."
+        }
+      ]
+    },
+    "4.3": {
+      "simple": [
+        "Labelling is expensive, so how do we save? **Active learning**: instead of labelling a thousand random examples, we label the hundred the model is most unsure about. The easy examples teach it nothing new. **synthetic data**: we generate examples by computer for the rare cases. Useful for training, but **we never test on it**, because it carries the biases of whoever made it and gives optimistic results.",
+        "In Arabic there are labelling challenges of its own: multiple dialects, mixing with English in the same sentence, writing Arabic in Latin letters (“3arabizi”), and diacritics. The labelling guidelines must say explicitly how each is to be handled."
+      ],
+      "example": "A student studying for the exam. The clever student does not re-solve the problems he has mastered, but focuses on those he gets wrong. That is active learning. An Arabic example: [[ar:ابغى اكنسل الاشتراك]] (“I want to cancel the subscription”) is a colloquial sentence with an Arabised English word. Does the annotator label it a “cancellation request”? The guidelines must answer that in advance.",
+      "terms": [
+        {
+          "ar": "أخذ العينات بعدم اليقين",
+          "en": "Uncertainty sampling",
+          "def": "Choosing the examples on which the model is least confident (its probability close to 50%) to send for human labelling."
+        },
+        {
+          "ar": "البيانات الاصطناعية",
+          "en": "Synthetic data",
+          "def": "Data generated by computer, by simulation or by a generative model, instead of being collected from reality. Useful for rare cases and for protecting privacy."
+        },
+        {
+          "ar": "التبديل اللغوي",
+          "en": "Code-switching",
+          "def": "Switching between two languages within the same sentence, such as mixing Arabic and English in a conversation."
+        },
+        {
+          "ar": "العربيزي",
+          "en": "Arabizi",
+          "def": "Writing Arabic in Latin letters and numbers, such as “7abibi” and “3ala”. Common in messages and social media."
+        }
+      ]
+    },
+    "4.4": {
+      "simple": [
+        "**Feature engineering** means converting raw data into a form that the model understands and benefits from. In tabular data, good features often matter more than the choice of algorithm.",
+        "The table is long, but its pattern is one: for each data type there is a suitable transformation, **and each transformation has a trap**. The trap is what the exam asks about. The most frequent traps: computing anything from the test data, or using information from the future."
+      ],
+      "example": "The date “2026-03-15” as it stands does not help the model much. But we extract from it: is it a Friday? Is it in Ramadan? Is it two days after salaries are paid? These are strong features for predicting demand in shops. The trap: “the number of the customer's purchases in the last 7 days” must be computed only up to the moment of prediction, not up to the end of the week.",
+      "terms": [
+        {
+          "ar": "هندسة الميزات",
+          "en": "Feature engineering",
+          "def": "Making useful features out of raw data, such as extracting the day of the week from the date, or computing the debt-to-income ratio."
+        },
+        {
+          "ar": "التوحيد القياسي",
+          "en": "Standardisation (z-score)",
+          "def": "Converting the number into “how many standard deviations it is from the mean”. It puts different features on a single scale."
+        },
+        {
+          "ar": "الترميز الأحادي",
+          "en": "One-hot encoding",
+          "def": "Converting a categorical column (such as city: Riyadh, Jeddah, Dammam) into several yes/no columns, one column for each city."
+        },
+        {
+          "ar": "الترتيبية",
+          "en": "Ordinal",
+          "def": "Categories with a natural order, such as: primary, then intermediate, then secondary, then university. They are converted to numbers that preserve the order."
+        },
+        {
+          "ar": "التجزئة",
+          "en": "Hashing",
+          "def": "Converting a text value into a number in a limited range by a mathematical function. A solution for categorical columns with very many values."
+        },
+        {
+          "ar": "TF-IDF",
+          "en": "Term Frequency–Inverse Document Frequency",
+          "def": "A way of converting text to numbers: it gives a word a higher weight if it is repeated in this text and rare in the rest of the texts."
+        },
+        {
+          "ar": "البديل عن سمة محمية",
+          "en": "Proxy for a protected attribute",
+          "def": "A feature that seems neutral but indirectly reveals a sensitive attribute, such as the residential neighbourhood, which may reveal income or origin. It may cause unfairness."
+        }
+      ]
+    },
+    "4.5": {
+      "simple": [
+        "Three ideas in this section. **The first: why is the data missing?** There are three reasons, and each reason has a remedy: missing by pure chance, or missing because of something else we know, or missing because of its own value.",
+        "**The second: feature selection.** Many unhelpful features slow the model down and confuse it, so we remove them. **The third, and the most important for the exam: the serving constraint.** A feature is valid only if it can be computed **at the moment of prediction**, **at the required speed**, and from data **we are permitted to use**."
+      ],
+      "example": "The three types with a survey example. (1) **MCAR**: the server crashed and random answers were lost. The missingness has no relation to anything. (2) **MAR**: young people skip the income question more, and age is recorded with us. The missingness is related to age, which we know, so we can impute with the help of age. (3) **MNAR**: very high earners hide their income. The missingness is related to the missing value itself, so the gap is information in itself.",
+      "terms": [
+        {
+          "ar": "MCAR / MAR / MNAR",
+          "en": "Missingness types",
+          "def": "Types of missingness: missing completely at random, missing at random because of other known variables, and missing for a reason related to the value itself."
+        },
+        {
+          "ar": "اختيار الميزات",
+          "en": "Feature selection",
+          "def": "Removing unhelpful or duplicated features to reduce overfitting, slowness and maintenance burden."
+        },
+        {
+          "ar": "المعلومات المتبادلة",
+          "en": "Mutual information",
+          "def": "A measure of how much a feature tells us about the answer. If it is zero, the feature is of no use in prediction."
+        },
+        {
+          "ar": "أهمية التبديل",
+          "en": "Permutation importance",
+          "def": "We shuffle the values of one feature randomly and see how much the model's performance gets worse. The more it worsens, the more important the feature."
+        },
+        {
+          "ar": "قيد الخدمة",
+          "en": "Serving constraint",
+          "def": "The condition that the feature can be computed at prediction time, within the permitted time, and from data that is legally permitted for use."
+        }
+      ]
+    },
+    "4.6": {
+      "simple": [
+        "Which model do we choose? This table gives the “strong default choice” for each type of data. For tables: boosted trees. For images: pretrained image networks. For text with few examples: a fine-tuned small language model, or a large model with examples.",
+        "The governing principle: **build a simple baseline first**. A simple model that you measure well tells you how much complexity is worth. If the huge deep model beats it by a trivial margin, it is not worth its cost in speed, operation and interpretation."
+      ],
+      "example": "You want to predict tomorrow's sales. The baseline: “tomorrow's sales = sales on the same day of last week”. This needs no AI at all, and its error may be 12%. After it you build a complex model, and if its error is 11.5%, is it worth it? Without the baseline you would not know at all.",
+      "terms": [
+        {
+          "ar": "خط الأساس",
+          "en": "Baseline",
+          "def": "The simplest reasonable solution, built first so that more complex solutions can be measured against it. If the complex model does not clearly beat it, there is no need for it."
+        },
+        {
+          "ar": "الانحدار اللوجستي",
+          "en": "Logistic regression",
+          "def": "A simple classification model that gives a probability and is easy to interpret, because each feature has a clear weight. Preferred when regulators require interpretation."
+        },
+        {
+          "ar": "SHAP",
+          "en": "SHapley Additive exPlanations",
+          "def": "A method that explains each prediction by how much each feature contributed to it. For example: “Loan declined: income −0.3, existing debts −0.2”."
+        },
+        {
+          "ar": "التعلم بالنقل",
+          "en": "Transfer learning",
+          "def": "Starting from a model pretrained on huge data, then adapting it to your task with little data, instead of starting from scratch."
+        },
+        {
+          "ar": "BERT",
+          "en": "BERT encoder family",
+          "def": "A family of language models that understand text, but do not generate it. Excellent for classification and information extraction, and they have Arabic versions."
+        },
+        {
+          "ar": "التعلم بأمثلة قليلة",
+          "en": "Few-shot",
+          "def": "Giving a large language model a few solved examples inside the prompt so that it understands the task, without any training."
+        },
+        {
+          "ar": "ميزات التأخير",
+          "en": "Lag features",
+          "def": "Past values as features to predict the future, such as “yesterday's sales” and “last week's sales”."
+        },
+        {
+          "ar": "النموذج المقطَّر",
+          "en": "Distilled model",
+          "def": "A small model trained to imitate a large model. Faster and cheaper with a small loss in quality."
+        }
+      ]
+    }
+  }
+}

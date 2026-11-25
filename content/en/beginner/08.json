@@ -1,0 +1,817 @@
+{
+  "before": [
+    "This unit is about **where and how the system runs**: do we run the model online or overnight? On which machine? How many machines do we need? Where in the Kingdom do we host it? How do we make it fast and cut its bill? It is Domain 5 (about 19 questions out of 150), and it holds the calculations that recur most often in the exam: memory and the number of machines.",
+    "You do not need to be a network engineer. You will need three skills: to ask “is anyone waiting for the answer?”, to work out “how much memory and how many machines?” by multiplying and dividing, and to look for “where do the time and the money actually go?”.",
+    "Before this, you need: Unit 00 (Section 2.6 and the whole of Chapter 5), Unit 01 (Sections 3.5 and 4.5), and Unit 04 (Sections 2.4 and 2.7: KV-cache memory and generation speed)."
+  ],
+  "sections": {
+    "1.1": {
+      "simple": [
+        "The first decision: **when does the model run?** There are five modes. **Online**: the user is waiting now (a fraud score at the moment of payment, or a chat). **Batch**: once a day for all the data (scores for every customer overnight). **Streaming**: it follows the data as it arrives, within seconds or minutes. **Edge**: on the device itself, with no internet. **Pre-computation then lookup**: we compute all the results in advance and read them from a table on request.",
+        "The two questions that settle the decision: **is anyone waiting for the answer right now?** and **are the inputs known in advance?** If nobody is waiting, there is no sense paying for machines that run all the time."
+      ],
+      "example": "A bank wants a “probability of leaving” score for each of 10 million customers, for the sales staff to see in the morning. The distractor: “an online endpoint running 24 hours with autoscaling”. The correct answer: a nightly job on cheap machines that computes the 10 million scores and writes them to a table, and in the morning the system reads the score from the table in a fraction of a second. The cost is a small fraction of the online option, and the result is the same.",
+      "terms": [
+        {
+          "ar": "الاستدلال الفوري",
+          "en": "Online / real-time inference",
+          "def": "Running the model at the moment the request arrives, with the user waiting for the result for fractions of a second or a few seconds."
+        },
+        {
+          "ar": "الاستدلال الدفعي",
+          "en": "Batch inference",
+          "def": "Running the model once, at a set time, on a large amount of data, with nobody waiting."
+        },
+        {
+          "ar": "الاستدلال التدفقي",
+          "en": "Streaming inference",
+          "def": "Running the model on events as they flow continuously, with a delay of seconds to minutes."
+        },
+        {
+          "ar": "الحساب المسبق",
+          "en": "Pre-computation",
+          "def": "Computing the results before anyone asks for them and saving them, then reading them instantly when needed."
+        },
+        {
+          "ar": "الميكروثانية",
+          "en": "Microsecond (µs)",
+          "def": "One millionth of a second, that is, one thousandth of a millisecond."
+        }
+      ]
+    },
+    "1.2": {
+      "simple": [
+        "How do we carry a bigger load? **Horizontally**, with more replicas behind a request distributor, or **vertically**, with a bigger machine that has a ceiling. **Autoscaling** adds replicas when the load rises. **Scheduled scaling** adds them before known peaks. **Scale-to-zero** keeps no replica when unused, but the first request after it is slow.",
+        "An important point about **load balancing**: the “round-robin” method (one request per replica in turn) is bad for language models, because one request takes half a second and another twenty seconds. Better is “send to the replica that is least busy right now”. The availability rule: **at least two replicas in two different zones**."
+      ],
+      "example": "A restaurant with 3 cashiers. With the “round-robin” method: the first customer goes to cashier 1, the second to 2, the third to 3, then the fourth to 1… But the first customer ordered for a family of 15 people and takes 10 minutes, so cashier 1’s queue piles up while 2 and 3 are empty. The smarter way: “go to the shortest queue”. That is “least outstanding requests”.",
+      "terms": [
+        {
+          "ar": "موازن الحمل",
+          "en": "Load balancer",
+          "def": "A component that receives all the requests and distributes them across the service’s replicas."
+        },
+        {
+          "ar": "HPA / KEDA",
+          "en": "Kubernetes autoscalers",
+          "def": "Tools in Kubernetes that add or remove replicas automatically: HPA by metrics such as CPU or custom metrics, and KEDA by events such as queue length, and it supports scale-to-zero."
+        },
+        {
+          "ar": "التقليص إلى الصفر",
+          "en": "Scale-to-zero",
+          "def": "Stopping all replicas when there are no requests, so you pay nothing, in exchange for a slow first request afterwards."
+        },
+        {
+          "ar": "التناوب الدائري",
+          "en": "Round-robin",
+          "def": "Distributing requests across the replicas in turn, without looking at how busy each one is."
+        },
+        {
+          "ar": "أقل الطلبات المعلقة",
+          "en": "Least outstanding requests",
+          "def": "Sending the new request to the replica that has the fewest requests currently in progress."
+        },
+        {
+          "ar": "تسوية الحمل بالطابور",
+          "en": "Queue-based load levelling",
+          "def": "Putting requests in a queue that absorbs sudden bursts, so the replicas process them at a steady pace."
+        },
+        {
+          "ar": "التجزئة",
+          "en": "Sharding",
+          "def": "Dividing the data or the index into parts on different machines, each machine responsible for one part."
+        }
+      ]
+    },
+    "1.3": {
+      "simple": [
+        "**Cold start**: a new replica of a large model needs minutes before it can answer. It downloads the weights file (gigabytes), then loads it into GPU memory, then warms up. So if the service is “scaled to zero”, the first user in the morning waits minutes or times out.",
+        "The fix is not “a stronger machine” (it does not speed up download and loading), nor “a longer timeout” (it only hides the problem). The fix: **at least one replica always running**, **pre-warming** before the peak, and **faster loading** (keeping the model on the machine itself, or a smaller quantised file)."
+      ],
+      "example": "A car in bitter winter: after a cold night it needs minutes to warm up before it moves comfortably. If you were an ambulance driver, you would not switch the car off completely between shifts. Buying a bigger engine will not make it warm up faster. The fix is to keep it warm, or to start it ten minutes before the departure time.",
+      "terms": [
+        {
+          "ar": "البداية الباردة",
+          "en": "Cold start",
+          "def": "The delay when starting a new replica from zero: downloading the model, loading it and warming it up, which can reach minutes with large models."
+        },
+        {
+          "ar": "التسخين",
+          "en": "Warm-up",
+          "def": "Sending trial requests to a new replica to prepare its memory and libraries before it receives user requests."
+        },
+        {
+          "ar": "الحد الأدنى للنسخ",
+          "en": "Minimum replicas",
+          "def": "The number of replicas that autoscaling never goes below, even in the quietest periods."
+        }
+      ]
+    },
+    "1.4": {
+      "simple": [
+        "Where do we run the system? There are many options, each with an advantage and a price. **Managed model API**: the fastest start with no machines, but the data leaves your boundary. **Managed platform**: ready-made tools at an extra cost. **Self-hosting**: full control and cheaper at high, steady volume, and it needs a skilled team. **In-Kingdom cloud regions**: for regulated data. **Serverless**: you pay only when you use it, with cold starts.",
+        "The pricing options: **Spot** is 60–90% cheaper but can be reclaimed suddenly, so it suits only training and batches. **Reserved** is 30–60% cheaper with a commitment of a year or more, so it suits the permanent minimum. The rule: **small or uncertain volume → a managed service. High, steady volume, sensitive data and a capable team → self-hosting inside the Kingdom**."
+      ],
+      "example": "Commuting to work every day. **A taxi app** (a managed API): you own no car and no maintenance, you pay per trip, and it is excellent if you travel little. **Buying a car** (self-hosting): investment, maintenance and insurance, but if you drive 100 kilometres a day it is far cheaper in the long run. The break-even point: the number of trips at which the two costs are equal.",
+      "terms": [
+        {
+          "ar": "الخدمة المُدارة",
+          "en": "Managed service",
+          "def": "A service that the provider runs on your behalf (the machines, the updates, the scaling), and you pay for use."
+        },
+        {
+          "ar": "السحابة السيادية",
+          "en": "Sovereign cloud",
+          "def": "Cloud infrastructure inside the country’s borders and under its regulations, for hosting government and regulated data."
+        },
+        {
+          "ar": "المحجوز / الاستخدام الملتزم",
+          "en": "Reserved / committed use",
+          "def": "A commitment to use a certain capacity for one or three years in return for a large discount; you pay even if you do not use it."
+        },
+        {
+          "ar": "القابل للاسترداد",
+          "en": "Preemptible",
+          "def": "Another name for Spot capacity: very cheap, and the provider can take it back at short notice."
+        },
+        {
+          "ar": "نقطة التعادل",
+          "en": "Break-even point",
+          "def": "The volume at which the costs of two options are equal, such as paying per token versus self-hosting."
+        }
+      ]
+    },
+    "1.5": {
+      "simple": [
+        "In Saudi Arabia, **the hosting location is not a technical detail but a legal requirement**, because of data classification and the Personal Data Protection Law (PDPL). Four patterns: (1) **Everything inside the Kingdom**: the model, the index, the logs, the backups and the recovery site. (2) **Classification-based routing**: public data may go to an approved external service, and everything else stays inside the Kingdom. (3) **Hybrid with redaction**: personal data is removed before anything is sent outside. (4) **Bring the model to the data** instead of the reverse.",
+        "Two warnings that recur in the exam. **The backups and the recovery site are part of the requirement**, not the model alone. **pseudonymised data is still personal data**. SDAIA’s generative-AI principles for government entities: **a government employee uses generative tools only with public data**."
+      ],
+      "example": "A government entity said “our whole system is inside the Kingdom”. The auditor’s check: the model is inside the Kingdom ✓, and the vector database is inside the Kingdom ✓, but **the nightly backups** are sent to a data centre in another country “because it is cheaper”, and the logs (which contain citizens’ questions) are analysed by an external service. So the system is not actually “entirely inside the Kingdom”. The five questions in the checklist reveal this.",
+      "terms": [
+        {
+          "ar": "إقامة البيانات",
+          "en": "Data residency",
+          "def": "A requirement that data be stored and processed inside specified geographical borders, such as the Kingdom."
+        },
+        {
+          "ar": "تصنيف البيانات",
+          "en": "Data classification",
+          "def": "Dividing data by its sensitivity (public, restricted, secret, top secret) to determine its protection controls and where it is hosted. You will see it in Unit 10."
+        },
+        {
+          "ar": "النماذج مفتوحة الأوزان",
+          "en": "Open-weight models",
+          "def": "Models whose weights are published, so they can be downloaded and run inside your environment without sending data to any provider."
+        },
+        {
+          "ar": "الهيئة الوطنية للأمن السيبراني",
+          "en": "National Cybersecurity Authority — NCA",
+          "def": "The Saudi authority responsible for cybersecurity; it issues controls, including the cybersecurity controls for cloud computing."
+        }
+      ]
+    },
+    "1.6": {
+      "simple": [
+        "**Edge AI** means running the model on the device itself (a phone, a camera, or a machine in a factory) instead of sending it to the cloud. Four reasons for this: **speed** (no trip across the network), **working offline**, **privacy** (the data does not leave the device), and **saving bandwidth** (sending only the important events instead of the full video).",
+        "But the edge has constraints: small memory, limited compute, battery, varied devices, and difficult updating. The solutions: small models (SDAIA’s guide: fewer than about 5 billion parameters suit phones), quantisation, runtimes specific to each device, and over-the-air updates. The common pattern is **hybrid**: the device handles the easy cases and sends the hard ones to the server."
+      ],
+      "example": "A factory with 200 cameras monitoring the production line for defects. Sending 200 video streams to the cloud is very expensive and slow. The solution: each camera has a small chip running a small model that inspects each piece in fractions of a second, and it sends the cloud only “piece number 4521 is defective” with its image. If the small model is not sure, it sends the image to a larger model on the server.",
+      "terms": [
+        {
+          "ar": "الطرفي / على الجهاز",
+          "en": "Edge / on-device AI",
+          "def": "Running the model on the device close to the data instead of on the central server."
+        },
+        {
+          "ar": "وحدة المعالجة العصبية",
+          "en": "Neural Processing Unit — NPU",
+          "def": "A chip specialised in neural-network operations, found in modern phones and computers."
+        },
+        {
+          "ar": "التعلم الاتحادي",
+          "en": "Federated learning",
+          "def": "Improving the model by learning across many devices without collecting their data centrally: each device learns locally and sends only the update."
+        },
+        {
+          "ar": "التحديث عن بُعد",
+          "en": "Over-the-air (OTA) update",
+          "def": "Sending a new version of the model to the devices over the network without needing to reach them by hand."
+        },
+        {
+          "ar": "عرض النطاق",
+          "en": "Bandwidth",
+          "def": "The amount of data that can be moved across the network per second."
+        }
+      ]
+    },
+    "1.7": {
+      "simple": [
+        "Three “ready-made blueprints” cover most scenarios. **Real-time scoring service**: the request passes through a gateway, then a service fetches the features from a fast store, runs the model together with hard rules, and returns the decision and its reasons. **Enterprise RAG assistant**: documents are ingested when they change, and the user passes through sign-in, then the model gateway, then permission-filtered search, then the model inside the Kingdom, then the guardrails. **Batch scoring pipeline**: a nightly job on cheap machines, with quality checks, an alert if it is late, and a fallback (yesterday’s scores).",
+        "How to use them: **determine the shape from the waiting question**. “Someone is waiting” → online. “Documents and questions” → RAG. “Every customer every night” → batch. Then check each component: where is the data? How does it scale? What if it fails? What does it cost?"
+      ],
+      "example": "Read the first blueprint as a story of a card transaction. The customer pays in a shop → the request passes through a gateway that verifies the shop → the scoring service fetches “the number of card transactions in the last hour” from a fast store in under 5 ms → the model computes the probability of fraud → and fixed rules (“the card is reported stolen” → immediate refusal) → the decision is returned with the reason → and the transaction is logged for future models to learn from.",
+      "terms": [
+        {
+          "ar": "المعمارية المرجعية",
+          "en": "Reference architecture",
+          "def": "A proven standard design for a particular type of system, used as a starting point and adapted to each case."
+        },
+        {
+          "ar": "محرك القواعد",
+          "en": "Rules engine",
+          "def": "A component that executes fixed, explicit rules alongside the model, such as “refuse every reported card”."
+        },
+        {
+          "ar": "مفتاح–قيمة",
+          "en": "Key–value store",
+          "def": "A very fast, simple database: you give it a key (the customer number) and it instantly returns the value linked to it."
+        },
+        {
+          "ar": "تدفق الأحداث",
+          "en": "Event stream",
+          "def": "A channel in which events (every transaction, every decision) are published for other systems to use, such as monitoring and training."
+        }
+      ]
+    },
+    "2.1": {
+      "simple": [
+        "You saw in Unit 00 why GPUs excel: thousands of simple workers in parallel. Here is a deeper idea: **speed is often set by memory, not by computation**. There are memory “layers”: very small and very fast inside the chip, then GPU memory (tens of gigabytes, fast), then server memory (bigger and slower), then the disks, then the network.",
+        "When a language model writes a single word, it must read **all the weights** from GPU memory. So speed here is set by **the speed of reading from memory**, which is called “memory-bound”. Reading a long question in one go, and training, are limited by the speed of **computation**. That is why every technique that reduces the data moved (quantisation, FlashAttention, GQA) speeds things up."
+      ],
+      "example": "A very skilled cook can chop 100 vegetables a minute, but the fridge is in another room, and he can carry only 10 at a time. His real speed is set by the trips to the fridge, not by his chopping skill. If you gave him smaller pieces (quantisation), he would carry more per trip and become faster. If we put the vegetables in a very distant fridge (offloading the weights to server memory), he becomes much slower.",
+      "terms": [
+        {
+          "ar": "هرمية الذاكرة",
+          "en": "Memory hierarchy",
+          "def": "The layers of memory from the smallest and fastest (inside the chip) to the largest and slowest (the disks and the network)."
+        },
+        {
+          "ar": "HBM",
+          "en": "High Bandwidth Memory",
+          "def": "The GPU’s main memory: tens of gigabytes with a very high read speed (terabytes per second)."
+        },
+        {
+          "ar": "مقيّد بالذاكرة ومقيّد بالحوسبة",
+          "en": "Memory-bound / compute-bound",
+          "def": "Memory-bound: speed is set by the speed of moving data (such as generating words). Compute-bound: it is set by the speed of computation (such as training and reading a long question)."
+        },
+        {
+          "ar": "TFLOPS",
+          "en": "Tera floating-point operations per second",
+          "def": "A trillion arithmetic operations per second. A measure of computing power, and not enough on its own to estimate generation speed."
+        },
+        {
+          "ar": "PCIe",
+          "en": "PCI Express",
+          "def": "The ordinary link between the GPU and the rest of the server. Much slower than the dedicated links between GPUs."
+        },
+        {
+          "ar": "NVLink / InfiniBand",
+          "en": "High-speed interconnects",
+          "def": "NVLink: a very fast link between GPUs inside a single server. InfiniBand: a very fast network between servers."
+        },
+        {
+          "ar": "TPU",
+          "en": "Tensor Processing Unit",
+          "def": "A chip from Google specialised in neural-network operations, an alternative to GPUs."
+        }
+      ]
+    },
+    "2.2": {
+      "simple": [
+        "GPUs come in classes, and each class has a role. **The large data-centre ones** (40 to 192 GB of memory): for training and large models. **Inference-oriented ones** (24 to 48 GB): cost-efficient serving of small and medium models. **The older and smaller ones** (16 GB): for light work. **The CPU**: for classical and small models. **NPU**: for edge devices.",
+        "A warning: the exact figures change with each generation, so use the numbers written in the question. What matters is **the selection logic**, in four steps in order: **does the model fit in memory?** → **does it meet the speed?** → **does it withstand the load at peak?** → **which is cheapest per unit of useful work?**"
+      ],
+      "example": "Choosing a car to move furniture. First: does the furniture fit in it? (memory). A small car that does not fit is not discussed, however cheap. Second: does it arrive in the required time? (speed). Third: is one trip enough or do we need several cars? (load). Fourth: of the options that succeed, which costs least per move?",
+      "terms": [
+        {
+          "ar": "المسرِّع",
+          "en": "Accelerator",
+          "def": "Any specialised chip that speeds up AI computations: GPU, TPU and NPU."
+        },
+        {
+          "ar": "فئات A100 / H100 / L4 / T4",
+          "en": "GPU class names",
+          "def": "Names of generations and classes of GPUs from a common provider. Do not memorise their figures: the exam gives you the spec table."
+        }
+      ]
+    },
+    "2.3": {
+      "simple": [
+        "Each need has a suitable machine. **Classical models** (boosted trees): the CPU is enough, and a GPU here is a waste. **Small models and embeddings**: a CPU with optimised software, or a share of a GPU. **Language models**: sized with the memory table. **Training large models**: several GPUs with fast links. **Fine-tuning on a limited budget**: LoRA on a single GPU.",
+        "The most important idea in cost: **utilisation multiplies the cost**. A machine you pay for in full and that works 15% of the time means you pay about **6.7 times** as much per useful hour. The remedies, in order: a right-sized machine → batching requests → sharing the machine between models → autoscaling → Spot for interruptible work."
+      ],
+      "example": "The calculation: a machine at $4 an hour that actually works 15% of the time. You pay $4 and get 0.15 of an hour of useful work. So the useful hour costs you 4 ÷ 0.15 ≈ $26.7, which is 6.7 times the advertised price. Like a 50-seat bus running with 7 passengers: the cost per passenger is seven times what it would be if it were full.",
+      "terms": [
+        {
+          "ar": "نسبة الاستخدام",
+          "en": "Utilisation",
+          "def": "The proportion of time or capacity in which the machine is actually working. Lower means a higher cost per unit of useful work."
+        },
+        {
+          "ar": "توازي الموترات",
+          "en": "Tensor parallelism",
+          "def": "Splitting each layer of the model across several GPUs that compute their parts together, to fit models that do not fit on a single GPU."
+        },
+        {
+          "ar": "اختيار الحجم المناسب",
+          "en": "Right-sizing",
+          "def": "Choosing a machine of the size you actually need, not a larger one for safety."
+        },
+        {
+          "ar": "MIG",
+          "en": "Multi-Instance GPU",
+          "def": "Dividing a large GPU into several isolated parts, each running an independent model."
+        }
+      ]
+    },
+    "2.4": {
+      "simple": [
+        "A GPU spec table has columns, and each column answers a question. **Memory**: does the model fit, together with the memory of the conversations? This is a hard requirement. **Memory bandwidth**: how many words per second can it write for one user? **Compute power**: the speed of reading long questions, and of training. **Interconnects**: is it suitable for splitting a model across several GPUs? **Partitioning (MIG)**: can several small models run on it? **Price**: but compare by the cost per unit of useful work, not per machine.",
+        "The calculation rule from Unit 04: **generation speed for one user ≤ bandwidth ÷ model size**. **batching** raises the aggregate throughput (more users together), but it **does not speed up** a single user."
+      ],
+      "example": "An 8-billion-parameter model at INT8 (one byte per parameter) is 8 × 1 = 8 GB in size. A machine reads 2,000 GB per second from its memory. For every word it reads the whole model, so the maximum speed for a single user ≈ 2,000 ÷ 8 = 250 words per second. Does batching make a single user faster? No. It only allows more users to be served at the same time with one reading of the weights.",
+      "terms": [
+        {
+          "ar": "التدفق",
+          "en": "Stream",
+          "def": "One conversation or one generation in progress for a single user."
+        },
+        {
+          "ar": "الإنتاجية الإجمالية",
+          "en": "Aggregate throughput",
+          "def": "The total of the tokens the machine generates per second for all users together."
+        },
+        {
+          "ar": "TB/s",
+          "en": "Terabytes per second",
+          "def": "Terabytes per second: a unit for the speed of moving data from memory. 1 TB/s = 1,000 GB/s."
+        }
+      ]
+    },
+    "2.5": {
+      "simple": [
+        "Techniques to make LLM serving faster and cheaper. **Continuous batching**: it brings new requests into the batch whenever one finishes, so nobody waits. **PagedAttention**: it manages the memory of the conversations efficiently, like the pages of a book. **Quantisation**: a smaller model. **Prefix caching**: reusing the fixed part of the prompt. **Speculative decoding**: a small model proposes words and the large one verifies them. **Tensor parallelism**: splitting the model across several GPUs. **A smaller model**: the biggest lever if its quality is enough. **A limit on answer length**. **Routing**: the easy ones go to a small model.",
+        "The basic trade-off: **batching increases throughput, and may slow each request**. Note a point the exam asks about: **speculative decoding does not change the outputs** (it preserves their distribution), whereas switching to a smaller model or heavy quantisation may change them."
+      ],
+      "example": "**Continuous batching** is like an airport shuttle bus passing through stops. The old way: the bus waits until its 40 seats are full and then leaves, and waits until everyone gets off before returning. The continuous way: whenever a passenger gets off at a stop, another boards in their place immediately, so there are no empty seats and no long waiting. **speculative decoding**: a fast assistant writes a draft of 5 words, and the expert reviews them all at once and accepts the correct ones. The result is as if the expert had written it alone, but faster.",
+      "terms": [
+        {
+          "ar": "التجميع المستمر",
+          "en": "Continuous / in-flight batching",
+          "def": "Adding new requests to the batch in progress and removing finished ones at every generation step, so the machine is always busy."
+        },
+        {
+          "ar": "التوليد التخميني",
+          "en": "Speculative decoding",
+          "def": "A small, fast model proposes several tokens, and the large model verifies them in one go. Faster, with the same outputs preserved."
+        },
+        {
+          "ar": "التتالي",
+          "en": "Cascade",
+          "def": "Sending the request first to a small model, and escalating to a large model only if confidence is low."
+        },
+        {
+          "ar": "TGI / TensorRT-LLM",
+          "en": "LLM serving engines",
+          "def": "Specialised serving software for language models such as vLLM, with continuous batching and efficient memory management."
+        }
+      ]
+    },
+    "2.6": {
+      "simple": [
+        "For language models, **measure capacity in tokens per second, not in requests per second**, because one request may need 50 words and another 2,000. The calculation: **required tokens per second = number of concurrent conversations × the speed of each conversation**. Then you divide by what one machine can sustain (from the load test), and add one spare.",
+        "Three types of load test: **ramp** (increase the load gradually until the target breaks, to learn the limit), **spike** (a sudden load, to test the speed of scaling), and **soak** (hours at a steady load, to reveal memory leaks). They must use realistic texts, **including Arabic texts**, which need more tokens."
+      ],
+      "example": "The calculation: 500 users are talking to the assistant at the same moment, and each needs 20 words per second for comfortable reading. Required = 500 × 20 = 10,000 words per second. The load test showed that one machine sustains 2,500 words per second while the time to first word stays under a second. So 10,000 ÷ 2,500 = 4 machines, and +1 spare = 5.",
+      "terms": [
+        {
+          "ar": "اختبار الحمل",
+          "en": "Load test",
+          "def": "Sending many artificial requests to the system to measure its speed and its limits under pressure before real users arrive."
+        },
+        {
+          "ar": "نقطة الانكسار",
+          "en": "Breaking point / knee",
+          "def": "The load at which performance starts to degrade quickly, such as the response time exceeding the target."
+        },
+        {
+          "ar": "تسرب الذاكرة",
+          "en": "Memory leak",
+          "def": "A software defect that makes a program reserve memory and not release it, so its consumption rises slowly until it crashes after hours or days."
+        }
+      ]
+    },
+    "2.7": {
+      "simple": [
+        "This is the most important calculation example in the unit, and it brings together everything before it in five steps. **(1) Memory**: how much do the weights take? How much does each conversation take? How many conversations fit? **(2) Throughput**: can the machine sustain the writing speed required for all the conversations? **(3) Number of machines**: conversations at peak ÷ conversations per machine, then +1 and spreading across two zones. **(4) Scaling policy**: on what do we scale? When? What are the minimum and maximum? **(5) Cost**: reserved for the permanent load, and on-demand for the peak.",
+        "The last lesson is important: **the biggest variable in capacity is the prompt length**. If the search sends 10 chunks instead of 4, the prompt doubles, so each conversation’s memory doubles, so the number of conversations per machine falls, so you need more machines. **Prompt discipline is capacity planning**."
+      ],
+      "example": "The calculation step by step. **Memory**: a 48 GB machine. The weights are 8, and the software itself about 6, so 48 − 8 − 6 = 34 GB remains for the conversations. Each conversation: 2,000 tokens × 64 KB ≈ 128 MB. So 34,000 ÷ 128 ≈ 265 conversations in theory, and we plan for 150 as a safety margin. **Throughput**: 150 conversations × 15 tokens per second = 2,250, and the machine sustains 3,000 ✓. **Machines**: 300 conversations at peak ÷ 150 = 2 machines, and +1 for spare and spreading = 3.",
+      "terms": [
+        {
+          "ar": "تخطيط السعة",
+          "en": "Capacity planning",
+          "def": "Calculating the resources required (machines and memory) to serve the expected load at peak with a safety margin."
+        },
+        {
+          "ar": "التعبئة",
+          "en": "Prefill",
+          "def": "Processing the whole prompt text before starting to write the answer. The longer the prompt, the more work it has and the longer the time to first token."
+        },
+        {
+          "ar": "تخفيف الحمل",
+          "en": "Load shedding",
+          "def": "Rejecting some requests or diverting them to a lighter fallback when maximum capacity is exceeded, instead of the system failing for everyone."
+        }
+      ]
+    },
+    "3.1": {
+      "simple": [
+        "When training is too big for one machine, we distribute it across several machines. This table lists the methods by **what we split**. **Data parallelism**: each machine has the whole model and trains on a different part of the data. **ZeRO/FSDP**: we split even the optimiser state and the weights themselves across the machines. **Tensor parallelism**: we split each layer. **Pipeline parallelism**: we split the layers into stages.",
+        "Note a difference in terminology: **gradient checkpointing** is a **memory** technique (we recompute some values instead of storing them), and **checkpointing to storage** saves the state of the job to disk to survive failures. The two names are similar and the two meanings are different."
+      ],
+      "example": "Marking 10,000 exam papers. **Data parallelism**: 10 markers, each with the complete model answer, and each marks 1,000 papers, then they meet to unify their notes. **Pipeline parallelism**: one marker for the first question, another for the second question, and so on, and the paper moves between them. **Tensor parallelism**: a single question is very long, so each marker marks a paragraph of it.",
+      "terms": [
+        {
+          "ar": "التدريب الموزّع",
+          "en": "Distributed training",
+          "def": "Training one model on several GPUs or several servers together, to speed it up or because it does not fit on one."
+        },
+        {
+          "ar": "توازي البيانات",
+          "en": "Data parallelism (DDP)",
+          "def": "Each machine holds the complete model and trains on a different part of the batch, and then the gradients are unified across the machines."
+        },
+        {
+          "ar": "توازي خط الأنابيب",
+          "en": "Pipeline parallelism",
+          "def": "Distributing the model’s consecutive layers across different machines, and passing the data between them like a production line."
+        },
+        {
+          "ar": "حفظ نقاط التدريب",
+          "en": "Training checkpointing",
+          "def": "Saving the complete training state to disk periodically, so that it can resume after any failure or reclaiming of the machine."
+        }
+      ]
+    },
+    "3.2": {
+      "simple": [
+        "**Data parallelism in detail**: after each step, each machine has computed slightly different adjustments because it saw different data. So the machines come together in an operation called **all-reduce** and take the average of the adjustments, so the model stays identical on all of them. It works well as long as the model fits on one machine.",
+        "**ZeRO** solves the problem of “why does every machine hold a complete copy of everything?”. Three stages: **the first** splits the optimiser state across the machines, **the second** splits the gradients as well, and **the third** (also called FSDP) splits the weights themselves, so each machine holds a part and fetches the rest when needed. So the memory per machine falls roughly by the number of machines, in exchange for more communication between them."
+      ],
+      "example": "Four students solving an exercise book together. **Ordinary data parallelism**: each has a complete copy of the book and all the notes, and solves a different chapter, then they exchange what they learned. This wastes paper. **ZeRO stage 3**: the book is divided into 4 parts, each student carries only a quarter of it, and when one needs a page from another quarter, he asks his colleague for it. Far less paper, and more exchange.",
+      "terms": [
+        {
+          "ar": "all-reduce",
+          "en": "All-reduce",
+          "def": "A collective operation that gathers values from all the machines (such as the gradients), computes their average, and distributes the result to everyone."
+        },
+        {
+          "ar": "ZeRO / FSDP",
+          "en": "Zero Redundancy Optimizer / Fully Sharded Data Parallel",
+          "def": "Splitting the optimiser state, the gradients and the weights across the machines instead of copying them in full, so the memory per machine falls."
+        },
+        {
+          "ar": "التفريغ",
+          "en": "Offloading",
+          "def": "Moving part of the data from GPU memory to server memory or disk when it is not enough. Slower, but it allows larger models."
+        },
+        {
+          "ar": "الدفعات المصغّرة",
+          "en": "Micro-batches",
+          "def": "Small batches passed in sequence through the stages of pipeline parallelism, to reduce the waiting time of each stage."
+        },
+        {
+          "ar": "توازي الخبراء",
+          "en": "Expert parallelism",
+          "def": "Distributing the “experts” of an MoE model across different machines."
+        }
+      ]
+    },
+    "3.3": {
+      "simple": [
+        "Long training on many machines **will inevitably meet failures**. So save the complete training state periodically (the model, the optimiser, where you got to in the data, and the random numbers), and use **elastic** training that resumes with a different number of machines. With Spot machines save often, so that recovery costs you minutes, not hours.",
+        "**MFU** is a measure of training efficiency: how much of the machines’ theoretical capability are you actually using? Good large-scale training reaches **only 30–60%**. If the ratio is very low and the machines are waiting, the cause is usually **slow data loading**, not weak machines."
+      ],
+      "example": "Writing a doctoral thesis on a computer that may switch off suddenly. If you save only once a week, a power cut loses you a week. If you save every 10 minutes, it loses you only 10 minutes. With Spot machines that “may switch off” at any moment, frequent saving is a necessity, not a luxury.",
+      "terms": [
+        {
+          "ar": "تحمّل الأعطال",
+          "en": "Fault tolerance",
+          "def": "The ability of a system to continue or resume after some of its components fail."
+        },
+        {
+          "ar": "التدريب المرن",
+          "en": "Elastic training",
+          "def": "Training that can continue when the number of available machines changes, up or down."
+        },
+        {
+          "ar": "النوى المدمجة",
+          "en": "Fused kernels",
+          "def": "Merging several consecutive computational operations into one operation on the GPU to reduce data movement and speed up computation."
+        },
+        {
+          "ar": "نسبة استخدام عمليات النموذج",
+          "en": "Model FLOPs Utilisation — MFU",
+          "def": "The proportion of computational operations actually achieved out of the machines’ theoretical maximum capability. 30–60% is considered good in large-scale training."
+        }
+      ]
+    },
+    "3.4": {
+      "simple": [
+        "**Kubernetes** is a system that manages running “containers” across a group of servers. You tell it “I want 3 replicas of the model service at all times”, and it runs them, and if one fails it runs a replacement, and if the load rises it adds more. This table lists its basic concepts and their relevance to AI.",
+        "The most important concepts: **Pod** (the container that runs), **Deployment** (keeps the required number of replicas running), **Job** (a task that runs until it finishes, like training), **requests and limits** (how many resources are guaranteed and what the maximum is), **taints** (keep the expensive GPUs for GPU work only), **HPA and KEDA** (autoscaling), **probes**, and **spreading replicas across zones**."
+      ],
+      "example": "Kubernetes is like the manager of a big restaurant with many kitchens. You tell him: “I want 3 pizza chefs at all times, and a chef to work on delivery orders until they are finished, and put nobody but dessert chefs in the expensive dessert kitchen, and if the queue grows add chefs, and do not start sending orders to a new chef until he has got his tools ready, and spread the chefs across two branches”.",
+      "terms": [
+        {
+          "ar": "Kubernetes",
+          "en": "Kubernetes (K8s)",
+          "def": "An open-source system for managing the running of containers across a group of servers: scheduling, scaling, restarting and distribution."
+        },
+        {
+          "ar": "Pod",
+          "en": "Pod",
+          "def": "The smallest unit of execution in Kubernetes: one or more containers running together on a single server."
+        },
+        {
+          "ar": "الطلبات والحدود",
+          "en": "Requests / limits",
+          "def": "The request: the resources guaranteed to the container. The limit: the most it can use. Together they prevent a container from consuming its neighbours’ resources."
+        },
+        {
+          "ar": "Taints / Tolerations",
+          "en": "Taints and tolerations",
+          "def": "Labels on servers that prevent any container being scheduled on them except those carrying a matching “toleration”. They are used to reserve GPU servers for their own workloads."
+        },
+        {
+          "ar": "موسّع العنقود / Karpenter",
+          "en": "Cluster autoscaler",
+          "def": "A tool that adds new servers to the cluster when containers find no place, and removes them when idle."
+        },
+        {
+          "ar": "PodDisruptionBudget",
+          "en": "Pod disruption budget",
+          "def": "A rule that guarantees a minimum number of replicas stay running during planned maintenance."
+        },
+        {
+          "ar": "Secrets / ConfigMaps",
+          "en": "Kubernetes config objects",
+          "def": "Ways of passing settings (ConfigMaps) and passwords and keys (Secrets) to containers without writing them in the code."
+        }
+      ]
+    },
+    "3.5": {
+      "simple": [
+        "A very frequent trap in the exam. The language-model server **runs on a GPU**, and its CPU stays almost idle even while it is under full pressure. So if autoscaling is set to “add a replica when CPU reaches 70%”, **it will never add anything**, while the queue grows and users wait.",
+        "The fix: **change the scaling metric** to the number of requests in progress or the queue length. Not “a bigger machine”, and not “lowering the CPU threshold”. Remember also that adding a new GPU server may take minutes, and loading the model several more. So keep a permanent margin, scale ahead of known peaks, and keep the model locally on the servers."
+      ],
+      "example": "The scenario: GPU utilisation 98%, a queue with hundreds of requests, and response time rising, while CPU is at 25%, so scaling adds no replicas. It is as if a restaurant manager decided the number of chefs by “how much the cashier talks” instead of “how many orders are waiting in the kitchen”. The cashier is calm and the kitchen is swamped. The wrong metric gives a wrong decision.",
+      "terms": [
+        {
+          "ar": "مقياس التوسع",
+          "en": "Scaling metric",
+          "def": "The number that autoscaling watches to decide whether to add or remove replicas. It must reflect the real pressure on the service."
+        },
+        {
+          "ar": "المقاييس المخصصة",
+          "en": "Custom metrics",
+          "def": "Metrics specific to your application (such as requests in progress or queue length) on which scaling is set, instead of CPU and memory."
+        },
+        {
+          "ar": "الهامش",
+          "en": "Headroom",
+          "def": "Permanent spare capacity above the current need, to absorb sudden increases while scaling completes."
+        }
+      ]
+    },
+    "3.6": {
+      "simple": [
+        "**Where do we keep the vectors?** Up to a few million vectors, and with an existing Postgres database, adding vectors to it (pgvector) is often enough. For very large volume, many requests or complex filtering: a dedicated vector database.",
+        "The **memory calculation** for vectors is easy: **count × dimensions × 4 bytes**. If the result is large there are two levers: **vector quantisation** (cuts 4 to 32 times) or **reducing the dimensions**. The other places to store things: **object storage** for large files, the **lake** for raw data, and the **warehouse** for analytics."
+      ],
+      "example": "The calculation: 10 million chunks, each chunk a vector of 1,024 numbers, and each number 4 bytes. 10,000,000 × 1,024 × 4 = 40,960,000,000 bytes ≈ 41 GB, and that is before counting the index itself. If we reduced the dimensions to 512 it would be half (≈ 20 GB). If we quantised each number to one byte instead of 4, it would be a quarter (≈ 10 GB).",
+      "terms": [
+        {
+          "ar": "pgvector",
+          "en": "pgvector",
+          "def": "An add-on for the Postgres database that allows vectors to be stored and searched. Simple if Postgres already exists."
+        },
+        {
+          "ar": "HNSW",
+          "en": "Hierarchical Navigable Small World",
+          "def": "A type of vector index in the form of a multi-layer network of links. Very fast and accurate, and needs more memory."
+        },
+        {
+          "ar": "IVF / PQ",
+          "en": "Inverted file / product quantisation",
+          "def": "IVF: divides the vectors into groups and searches only the nearest of them. PQ: compresses the vectors. Together they reduce memory with a slight loss of accuracy."
+        },
+        {
+          "ar": "تخزين الكائنات",
+          "en": "Object storage",
+          "def": "Cheap, huge storage for files (datasets, models, images) reached by an address, like S3 services."
+        },
+        {
+          "ar": "سياسة دورة الحياة",
+          "en": "Lifecycle policy",
+          "def": "Rules that automatically move old files to cheaper storage or delete them after a period."
+        }
+      ]
+    },
+    "3.7": {
+      "simple": [
+        "Vector indexes have **tuning dials**. In HNSW: **M** (the number of links per point) and **efSearch** (how wide the search is). In IVF: **nprobe** (how many groups we search). The rule: **higher → more accuracy, and more slowness and memory**. The right method: measure accuracy on a sample against the full search, and choose the **lowest value** that meets the target.",
+        "Three notes. **Very selective filtering** (for one small tenant) can weaken approximate search; the fix is indexes that support filtering, or an index per tenant. **Sharding** increases capacity, and **replication** increases requests and availability. **heavy deletion** can weaken some indexes, so they need periodic rebuilding, and deletion is necessary for the Personal Data Protection Law (PDPL)."
+      ],
+      "example": "Looking for a book in a huge library. **Low efSearch**: you check only two nearby shelves, fast but you may miss the book. **High efSearch**: you check twenty shelves, slower but you usually find it. The skill: try it on 100 books whose places you know, and choose the smallest number of shelves that finds 95% of them. **sharding versus replication**: sharding is a library divided across 3 buildings (it holds more books), and replication is 3 identical copies of the library (it serves more visitors, and if one is closed two remain).",
+      "terms": [
+        {
+          "ar": "efSearch / nprobe",
+          "en": "Search-time recall knobs",
+          "def": "Settings that determine how wide the search of the index is for each query: higher means more accuracy and more slowness."
+        },
+        {
+          "ar": "الاستدعاء مقابل البحث الكامل",
+          "en": "Recall vs exact search",
+          "def": "The proportion of the results that approximate search finds out of the results the slow full search would have found."
+        },
+        {
+          "ar": "DiskANN",
+          "en": "DiskANN-style indexes",
+          "def": "Vector indexes that keep most of the data on SSD drives instead of memory, for billions of vectors."
+        },
+        {
+          "ar": "إعادة بناء الفهرس",
+          "en": "Index rebuild",
+          "def": "Building the index afresh after deletions and modifications have accumulated, to restore performance and accuracy."
+        }
+      ]
+    },
+    "4.1": {
+      "simple": [
+        "Every trip across the network takes time, and the time grows with distance. Inside the machine itself: microseconds. In the same zone: under a millisecond. Between the zones of a single region: 1–2 milliseconds. Between continents: **tens to over 100 milliseconds**.",
+        "So if your whole budget is 50 milliseconds (like a fraud decision), the request cannot go to another continent and come back. This makes **hosting inside the Kingdom a performance decision too**, not only a compliance decision, for users in Saudi Arabia. The tips: keep services that talk to each other in the same place, reuse connections, and put the feature store beside the model."
+      ],
+      "example": "You need a paper from a colleague. If he is at the next desk, seconds. If he is on the fifth floor, two minutes. If he is at the company’s branch in another city, a whole day by post. If you needed 10 papers from him for every decision, his being in another city makes the work impossible however fast you are.",
+      "terms": [
+        {
+          "ar": "زمن الذهاب والإياب",
+          "en": "Round-trip time — RTT",
+          "def": "The time a request takes to reach the other end and the reply to return."
+        },
+        {
+          "ar": "تجميع الاتصالات",
+          "en": "Connection pooling",
+          "def": "Keeping a set of open connections ready and reusing them, instead of opening a new connection for every request."
+        },
+        {
+          "ar": "إبقاء الاتصال حيًّا",
+          "en": "Keep-alive",
+          "def": "Keeping the network connection open after the request so that it can be used for later requests, which saves the time of opening a new connection."
+        },
+        {
+          "ar": "التجاور",
+          "en": "Co-location",
+          "def": "Placing services that communicate a lot in the same place (the same zone) to reduce network time."
+        }
+      ]
+    },
+    "4.2": {
+      "simple": [
+        "When the system is slow, **look for where the time actually goes** before any remedy. This table lists nine places where time can disappear, each with its remedy: waiting in the queue, reading a long prompt, slow writing, long answers, search, tools, the network, cold starts, and the slow tail.",
+        "The rule: **diagnose from the trace first**. A bigger machine does not cure queue waiting, nor long network trips, nor long prompts. An important point: **perceived time** (when the user sees something) differs from **actual time** (when the answer is complete). Streaming, showing sources first, and a progress indicator improve the perceived time at no cost."
+      ],
+      "example": "A patient complains of a long wait at the hospital: 3 hours. By tracing: registration 10 minutes, waiting before the doctor **2.5 hours**, the examination 15 minutes, and the pharmacy 5 minutes. Hiring a cleverer doctor (a stronger machine) will not solve the problem, since the examination is only 15 minutes. The problem is in the **queue**, and the fix is more doctors in peak hours or organised appointments.",
+      "terms": [
+        {
+          "ar": "التحكم بالقبول",
+          "en": "Admission control",
+          "def": "Rejecting or deferring new requests when the system is full, instead of accepting them all and then failing for everyone."
+        },
+        {
+          "ar": "التعبئة المقسّمة",
+          "en": "Chunked prefill",
+          "def": "Processing a long prompt in chunks interleaved with the generation of other requests, so that one long prompt does not stop everyone."
+        },
+        {
+          "ar": "الحجب في رأس الطابور",
+          "en": "Head-of-line blocking",
+          "def": "A single slow request at the front of the queue holding up all the requests behind it."
+        },
+        {
+          "ar": "الطلبات الاحتياطية",
+          "en": "Hedged requests",
+          "def": "Sending a second copy of the request to another server if the first is late, and taking the fastest reply. Safe only for requests that change nothing."
+        },
+        {
+          "ar": "الزمن المحسوس",
+          "en": "Perceived latency",
+          "def": "The time until the user sees the first response, which differs from the actual time until the work is complete."
+        }
+      ]
+    },
+    "4.3": {
+      "simple": [
+        "Classical models (boosted trees and linear models) are very fast by nature: a few milliseconds on an ordinary processor. If the service is slow, the cause is usually **not the model**, but **feature retrieval**: slow database queries before the model starts.",
+        "The remedies: compute the features in advance and keep them in a fast store, batch the queries, export the model to a fast runtime format, avoid slow Python in the critical path, group requests close in time into small batches, and if all the inputs are known in advance, **compute all the results in advance** and read them from a table."
+      ],
+      "example": "A model computes the result in 2 ms, but before it there are 40 ms of database queries to fetch “the customer’s average spending”, “the number of their transactions” and “the age of their account”. The total is 42 ms, 95% of it in the data. Speeding up the model itself will change almost nothing. Computing these features in advance and keeping them in a key–value store makes fetching them take under one millisecond.",
+      "terms": [
+        {
+          "ar": "المسار الحرج",
+          "en": "Critical path",
+          "def": "The chain of steps that must complete before replying to the user. Any slowness in it slows the reply directly."
+        },
+        {
+          "ar": "التجميع المصغّر",
+          "en": "Micro-batching",
+          "def": "Gathering the requests that arrive within a few milliseconds and processing them together, with a maximum wait."
+        },
+        {
+          "ar": "الإفراط في الاشتراك",
+          "en": "Oversubscription",
+          "def": "Running more processes or threads than the processor’s cores can handle, so they crowd each other and slow each other down."
+        }
+      ]
+    },
+    "4.4": {
+      "simple": [
+        "Caching can sit in many layers: at the user, the API, the semantic, the search, the embeddings, the prefix and the features. Each layer has **what it keeps**, **when it is invalidated**, and **its risk**.",
+        "The most important rule: **the cache key must include everything that changes the answer**: the user’s or tenant’s permissions, the language, the model version, the prompt version and the index version. A cache shared between different permissions is **a leakage vulnerability, not an optimisation**. For prefix caching: the fixed part first, because any change at the start, **even today’s date**, invalidates the cache."
+      ],
+      "example": "**The cache key**: the question “what is my leave balance?” from different employees has different answers. If the key were only “the question text”, the second employee would get the first one’s balance! The right key: (question text + user identity + …). **prefix caching**: a prompt that starts with “Today: 2026-11-02. You are an assistant…”. The date changes every day so the start of the prompt differs, so the caching never works. Move the date to the end of the prompt.",
+      "terms": [
+        {
+          "ar": "شبكة توزيع المحتوى",
+          "en": "Content Delivery Network — CDN",
+          "def": "Geographically distributed servers that keep copies of public content close to users to speed up its delivery."
+        },
+        {
+          "ar": "مفتاح التخزين المؤقت",
+          "en": "Cache key",
+          "def": "The identifier under which a result is saved and looked up. It must include everything that makes the answer different."
+        },
+        {
+          "ar": "الإبطال",
+          "en": "Invalidation",
+          "def": "Deleting saved copies that are no longer valid after the source or the version changes."
+        }
+      ]
+    },
+    "4.5": {
+      "simple": [
+        "**FinOps** is managing cloud cost with discipline. **Pricing types**: on-demand (flexible and more expensive) for peaks, reserved (a commitment with a large discount) for the permanent minimum, Spot (very cheap and may be reclaimed) for interruptible work, and serverless for rare traffic. The **hidden costs**: data transfer between regions, forgotten storage, idle resources, and tokens.",
+        "**unit economics**: express the cost **per useful outcome** (per resolved conversation, or per processed document), not per request. An important signal: **a bill that grows while traffic is flat** = one of the hidden lines."
+      ],
+      "example": "Model “A” costs 100 riyals per 1,000 conversations and resolves 90% of them. Model “B” is 30% cheaper (70 riyals) but resolves only 80%. An unresolved conversation is escalated to a staff member and costs 5 riyals. “A”: 100 + (100 × 5) = 600 riyals for 900 resolved conversations ≈ 0.67 riyal per resolved conversation. “B”: 70 + (200 × 5) = 1,070 riyals for 800 conversations ≈ 1.34 riyals. The “cheaper” one became double the cost per outcome. (Illustrative figures.)",
+      "terms": [
+        {
+          "ar": "FinOps",
+          "en": "Cloud financial operations",
+          "def": "A practice that brings together engineering and finance to manage cloud cost: visibility, accountability and continuous optimisation."
+        },
+        {
+          "ar": "نقل البيانات الخارج",
+          "en": "Egress",
+          "def": "Fees the provider charges for moving data out of its region or to the internet. A common hidden line."
+        },
+        {
+          "ar": "اقتصاديات الوحدة",
+          "en": "Unit economics",
+          "def": "Calculating cost per unit of business value (a resolved conversation, or a processed document) instead of total cost or cost per request."
+        },
+        {
+          "ar": "العرض والتحميل",
+          "en": "Showback / chargeback",
+          "def": "Showback: showing each team its cost. Chargeback: actually deducting it from its budget. It makes teams care about their cost."
+        },
+        {
+          "ar": "الموارد اليتيمة",
+          "en": "Orphaned resources",
+          "def": "Servers, disks or addresses that are still billed but nobody uses, often forgotten after an experiment."
+        }
+      ]
+    },
+    "4.6": {
+      "simple": [
+        "Energy is not only a cost issue. The **“Social and Environmental Benefits”** principle in SDAIA’s principles, and the **environmental impacts** category in the national risk framework (energy consumption and carbon footprint), make efficiency a **governance topic** as well.",
+        "The levers are the same as the cost levers: the smallest model that suffices, quantisation and distillation, efficient batching, avoiding unnecessary retraining, scheduling flexible training when the energy is cleaner (within the residency constraints), measuring energy, and reusing ready-made models instead of training from scratch."
+      ],
+      "example": "A team wants to train a huge model “because it is the latest” for a simple classification task that a small model would handle. The argument against is twofold: **cost** (weeks of expensive GPUs) and **ethics** (large energy consumption with no notable added benefit, contrary to the spirit of the environmental-benefits principle). Like running central air conditioning for a whole building to cool a single room.",
+      "terms": [
+        {
+          "ar": "البصمة الكربونية",
+          "en": "Carbon footprint",
+          "def": "The quantity of greenhouse gases produced by an activity, such as the electricity consumed in training."
+        },
+        {
+          "ar": "المنافع الاجتماعية والبيئية",
+          "en": "Social and environmental benefits",
+          "def": "One of SDAIA’s seven AI ethics principles: that the system serves society and the environment and does not harm them. You will see it in Unit 10."
+        }
+      ]
+    }
+  }
+}

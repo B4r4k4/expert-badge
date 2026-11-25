@@ -1,0 +1,1223 @@
+{
+  "num": 3,
+  "title": "Algorithms, Statistics & Model Evaluation",
+  "english": "Algorithms, Statistics & Model Evaluation",
+  "subtitle": "From the map of algorithms and applied statistics to metrics worked through with numbers, search systems and time series",
+  "domain": "Domain 1 · 17.3%",
+  "deliverable": "Choose the right algorithm family, calculate metrics from a confusion matrix and error tables, and judge whether the difference between two models is real.",
+  "intro": "The exam does not ask you to derive algorithms. It asks: which family suits this situation, and why? Is the difference between the two models real or noise? What is the value of precision, recall, F1, MAE and nDCG in this table? Which threshold is correct given the analyst capacity available? This unit continues what the previous unit began: the map of supervised, unsupervised and specialised algorithms; the statistics an engineer needs to read results correctly; hyper-parameter tuning, model selection and interpretability; then metrics worked through with complete numbers, the design of the evaluation set, data engineering, and search, recommendation and time-series systems in production.",
+  "outcomes": [
+    "Distinguish the supervised and unsupervised algorithm families by their core idea, strengths, weaknesses and the scenario signals that point to each.",
+    "Calculate precision, recall, specificity, F1 and false-positive rate from a confusion matrix, and choose a feasible threshold according to capacity and cost.",
+    "Calculate Macro-F1, Weighted-F1, MAE, RMSE, WAPE, bias, Precision@k, Recall@k, MRR and nDCG, and interpret what each one reveals.",
+    "Estimate the uncertainty in metrics using the standard error and confidence intervals, and interpret the p-value, statistical power and the pitfalls of A/B tests.",
+    "Choose a hyper-parameter tuning method, compare models on criteria that go beyond the leaderboard, and choose the interpretability technique that suits the audience.",
+    "Design an evaluation set that is representative, stratified, isolated, versioned and tied to release gates.",
+    "Design data engineering components, the search and recommendation funnel, and time-series and streaming-learning practices in production."
+  ],
+  "method": "This is a unit of calculation and discrimination. In Chapter 3, redo every calculation by hand before reading the result, so that reading a confusion matrix and an error table becomes a habit that needs no thought on exam day. In the algorithm tables, memorise the “Choose when” column and the “Weaknesses” column, because distractors are usually built from a strong algorithm used in the wrong place. In statistics, practise stating the p-value in one correct sentence and calculating the approximate confidence interval; these two skills are enough to eliminate half the options in “which model is better?” questions.",
+  "chapters": [
+    {
+      "title": "The Algorithm Map and Domain Patterns",
+      "sections": [
+        {
+          "title": "1.1 Supervised Learning",
+          "blocks": [
+            {
+              "p": "For each family: the core idea, what it does well and what it does not, and the scenario signals that point to it. The general rule: on tabular data, boosted trees are the strong default; when interpretability for regulators is a requirement, logistic regression comes first; when the data is unstructured and very large, neural networks come first."
+            },
+            {
+              "table": [
+                [
+                  "Family",
+                  "Core idea",
+                  "Strengths",
+                  "Weaknesses",
+                  "Choose when"
+                ],
+                [
+                  "Linear regression",
+                  "Weighted sum of features minimising squared error",
+                  "Fast, interpretable coefficients, strong baseline",
+                  "Misses non-linearity unless features are engineered; sensitive to outliers and multicollinearity",
+                  "Continuous target, need for interpretation, small data"
+                ],
+                [
+                  "Logistic regression",
+                  "Linear score passed through a sigmoid function → probability",
+                  "Roughly calibrated probabilities, interpretable, tiny latency",
+                  "Linear decision boundary",
+                  "Credit scorecards, regulated decisions, baselines"
+                ],
+                [
+                  "Decision tree",
+                  "Sequential if/else splits",
+                  "Human-readable rules, handles mixed types",
+                  "Overfits; unstable",
+                  "Explaining rules to non-specialists"
+                ],
+                [
+                  "Random forest",
+                  "Many trees on bootstrap samples and random feature subsets, averaged (bagging)",
+                  "Robust, little tuning, reduces variance",
+                  "Larger and slower than one tree; less accurate than boosting on many tasks",
+                  "Quick, strong baseline"
+                ],
+                [
+                  "Gradient-boosted trees (XGBoost, LightGBM, CatBoost)",
+                  "Trees added sequentially, each correcting the errors of the previous ones",
+                  "Best available for tabular data; handles missing values; fast inference on CPU",
+                  "Need tuning; can overfit noisy labels",
+                  "Fraud, churn, credit, pricing — most tabular scenarios"
+                ],
+                [
+                  "Support vector machines (SVM)",
+                  "Maximum-margin boundary, with kernels for non-linearity",
+                  "Strong on small, high-dimensional data",
+                  "Scale poorly to millions of rows; probabilities need calibration",
+                  "Small datasets, text with sparse features"
+                ],
+                [
+                  "k-nearest neighbours (k-NN)",
+                  "Predict from the most similar stored examples",
+                  "No training; intuitive",
+                  "Slow at prediction time; needs scaling; suffers in high dimensions",
+                  "Small data, similarity-based recommendations"
+                ],
+                [
+                  "Naive Bayes",
+                  "Bayes' rule with an assumption of feature independence",
+                  "Extremely fast; good text baseline",
+                  "The independence assumption is rarely true",
+                  "Spam and text baselines with little compute"
+                ],
+                [
+                  "Neural networks",
+                  "Layers of learned non-linear transformations",
+                  "Best on images, audio, text and very large data",
+                  "Data-hungry, costly, less interpretable",
+                  "Unstructured data; very large datasets"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.2 Unsupervised Learning and Anomaly Detection",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Family",
+                  "Core idea",
+                  "Use",
+                  "Watch out"
+                ],
+                [
+                  "k-means",
+                  "Partition into k clusters by distance to the centroids",
+                  "Customer segmentation",
+                  "Must choose k (elbow method, silhouette coefficient); assumes round clusters; scale the features"
+                ],
+                [
+                  "DBSCAN / HDBSCAN",
+                  "Density-based clusters; marks outliers as noise",
+                  "Irregular clusters, anomaly discovery",
+                  "Sensitive to density parameters"
+                ],
+                [
+                  "Hierarchical clustering",
+                  "Merge or split clusters in a tree (dendrogram)",
+                  "Exploring structure at several levels of granularity",
+                  "Slow on large data"
+                ],
+                [
+                  "Gaussian mixture models (GMM)",
+                  "Soft probabilistic clusters",
+                  "Overlapping segments",
+                  "Assume Gaussian components"
+                ],
+                [
+                  "Principal component analysis (PCA)",
+                  "Linear projection onto the directions of maximum variance",
+                  "Compression, de-noising, speeding up models",
+                  "Components are hard to interpret; linear only"
+                ],
+                [
+                  "t-SNE / UMAP",
+                  "Non-linear embeddings for visualisation",
+                  "Inspecting embedding spaces and clusters",
+                  "For visualisation, not as model features; distances are not globally meaningful"
+                ],
+                [
+                  "Isolation Forest / One-class SVM / autoencoders",
+                  "Model “normal” and flag deviations from it",
+                  "Fraud with few labels, equipment failure, intrusion",
+                  "Many false positives without tuning; need a feedback loop from analysts"
+                ]
+              ]
+            },
+            {
+              "p": "A recurring trap: using t-SNE or UMAP output as features for a model, or reading the distances between clusters in them as if they were meaningful. They are visualisation tools only."
+            }
+          ]
+        },
+        {
+          "title": "1.3 Specialised Problem Types",
+          "blocks": [
+            {
+              "p": "**Recommender systems** combine collaborative filtering (users who behave alike like similar items — matrix factorisation, two-tower neural models) with content-based signals (item attributes, text and image embeddings). The **cold-start problem** — new users or items with no history — is solved with content features, popularity priors and onboarding questions. Production recommenders usually work in two stages: fast candidate retrieval (approximate nearest-neighbour (ANN) search over the embeddings), then a heavier ranking model, then business rules (diversity, freshness, compliance). Offline metrics (Recall@k, nDCG) must be confirmed by live A/B tests because of feedback loops: the system only learns about what it chose to show."
+            },
+            {
+              "p": "**Time-series forecasting** ranges from classical statistical models (exponential smoothing, ARIMA/SARIMA) to boosted trees with lag and calendar features, to deep models for many related series. The strongest practical baseline is often the seasonal naive forecast (“same as last week”) — any model must beat it. Saudi calendar effects (Ramadan, which moves forward by about 11 days each Gregorian year, the Eids, salary day, school terms and the summer season) must be encoded explicitly, usually with Hijri-calendar features. Always validate forward in time; the metrics are MAE, RMSE, MAPE (unsafe near zero) and sMAPE/MASE."
+            },
+            {
+              "p": "**Ranking and search** optimise the order, not the labels: learning-to-rank with pointwise, pairwise or listwise approaches, evaluated with nDCG, MRR and Precision@k — the same metrics used for RAG retrievers."
+            },
+            {
+              "table": [
+                [
+                  "Computer vision task",
+                  "Output",
+                  "Note"
+                ],
+                [
+                  "Classification",
+                  "One label per image",
+                  "—"
+                ],
+                [
+                  "Detection",
+                  "Boxes + labels",
+                  "The YOLO and DETR families"
+                ],
+                [
+                  "Segmentation",
+                  "A label per pixel",
+                  "—"
+                ],
+                [
+                  "Optical character recognition (OCR)",
+                  "Text extraction",
+                  "Critical for scanned Arabic documents; right-to-left layout, ligatures and diacritics need Arabic-capable OCR"
+                ]
+              ]
+            },
+            {
+              "p": "**Speech pipelines** chain automatic speech recognition (ASR), then optionally diarisation (who spoke and when), then text models. In Arabic call centres, dialect coverage is the decisive factor in accuracy."
+            }
+          ]
+        },
+        {
+          "title": "1.4 Domain Patterns That Recur in Scenarios",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Domain",
+                  "Data reality",
+                  "Model and metric",
+                  "Operational must-haves"
+                ],
+                [
+                  "Bank fraud",
+                  "Extreme imbalance, delayed labels, adversaries adapt",
+                  "Boosted trees + real-time aggregates; recall at the available capacity; expected cost",
+                  "Scoring in under 100 ms, drift monitoring, reason codes, analyst feedback loop"
+                ],
+                [
+                  "Credit scoring",
+                  "Selection bias (only approved loans have outcomes), regulation",
+                  "Logistic regression or boosted trees with monotonic constraints; AUC + calibration; fairness by group",
+                  "Explainable reasons, human review, model documentation, periodic validation"
+                ],
+                [
+                  "Churn",
+                  "The definition matters (contract end versus inactivity)",
+                  "Boosted trees; Precision@k for a fixed campaign budget; uplift modelling to learn “who will respond”",
+                  "Weekly batch scoring, campaign feedback, A/B test to prove the causal effect"
+                ],
+                [
+                  "Demand forecasting",
+                  "Seasonality, Hijri calendar, promotions; stock-outs hide true demand",
+                  "Boosted trees with lag features, or statistical models; MAE/WAPE by product tier",
+                  "Hierarchical consistency (store → region), forward-in-time validation"
+                ],
+                [
+                  "Predictive maintenance",
+                  "Few failures, sensor noise, censored data",
+                  "Anomaly detection or survival models; recall on failures",
+                  "Edge inference, alert-fatigue management"
+                ],
+                [
+                  "Document processing",
+                  "Scanned Arabic forms, varied layouts",
+                  "OCR + layout models or vision-language models; field-level accuracy",
+                  "Human in the loop when confidence is low, handling of personal data"
+                ],
+                [
+                  "Customer-service text",
+                  "Dialects, code-switching, short noisy messages",
+                  "Fine-tuned Arabic encoder or a large language model; Macro-F1 per intent",
+                  "Escalation to humans, multilingual normalisation"
+                ],
+                [
+                  "Healthcare",
+                  "Sensitive data, label quality, distribution shift between hospitals",
+                  "Calibrated models; sensitivity/specificity; performance on subgroups",
+                  "Data protection impact assessment (DPIA), clinician oversight (the Reliability & Safety principle), validation at a held-out site"
+                ]
+              ]
+            },
+            {
+              "p": "Use this table as a checklist: when a scenario mentions a domain, ask yourself about the four cells. The correct option is often the one that respects the “data reality” (such as selection bias in credit) or the “operational must-have” (such as latency in fraud)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Statistics, Tuning, Model Selection and Interpretability",
+      "sections": [
+        {
+          "title": "2.1 Sampling and Uncertainty",
+          "blocks": [
+            {
+              "p": "Every metric computed on a sample is an estimate that carries uncertainty. For a proportion such as accuracy p measured on n examples, the standard error is approximately:"
+            },
+            {
+              "formula": "SE ≈ √( p(1 − p) / n )        95% CI ≈ p ± 1.96 × SE"
+            },
+            {
+              "formula": "p = 0.90, n = 1,000 → SE ≈ 0.0095 → 95% CI ≈ ±1.9 points"
+            },
+            {
+              "formula": "p = 0.90, n = 100   → SE ≈ 0.030  → 95% CI ≈ ±5.9 points"
+            },
+            {
+              "p": "So the statement “model B is 1 point better than A on 1,000 test cases” is usually not evidence of a real difference. Before declaring a winner, use confidence intervals, bootstrap resampling, or paired tests (McNemar's test for two classifiers on the same examples)."
+            },
+            {
+              "quote": "A difference smaller than the confidence interval is not a win; it is noise until proven otherwise."
+            }
+          ]
+        },
+        {
+          "title": "2.2 Hypothesis Testing in A/B Tests",
+          "blocks": [
+            {
+              "ul": [
+                "**Null hypothesis:** “no difference”.",
+                "**p-value:** the probability of seeing a difference at least this large **if the null hypothesis were true** — not the probability that the new variant is better.",
+                "**Significance level of 0.05:** accepts a 5% false-positive rate per test.",
+                "**Statistical power** — commonly 80%: the probability of detecting a real effect of a given size; it determines the sample size.",
+                "Small effects need very large samples: detecting a rise in conversion from 5.0% to 5.5% needs tens of thousands of users in each arm."
+              ]
+            },
+            {
+              "p": "A correct statement for p = 0.03: “If there were no real difference, a gap this large or larger would appear in about 3% of runs.” Options that say “there is a 97% probability that the new model is better” or “there is a 3% probability that the null hypothesis is true” are wrong."
+            }
+          ]
+        },
+        {
+          "title": "2.3 Classic A/B Test Pitfalls",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Pitfall",
+                  "What happens",
+                  "Remedy"
+                ],
+                [
+                  "Peeking",
+                  "Checking results daily and stopping at p < 0.05 inflates false positives",
+                  "Fix the sample size in advance or use sequential testing methods"
+                ],
+                [
+                  "Multiple comparisons",
+                  "Testing 20 metrics or segments at 0.05 produces about one false “win”",
+                  "Correct with Bonferroni or Benjamini–Hochberg, or pre-specify a primary metric"
+                ],
+                [
+                  "Novelty and primacy effects",
+                  "Users react to the change itself",
+                  "Run the experiment long enough (often at least one or two full weekly cycles)"
+                ],
+                [
+                  "Sample ratio mismatch",
+                  "A 50/50 split produced 52/48, so the assignment is broken",
+                  "Check the assignment mechanism before reading the results"
+                ],
+                [
+                  "Interference",
+                  "Users in the two arms influence one another (marketplaces, social networks)",
+                  "Randomise by cluster or region"
+                ],
+                [
+                  "Statistical versus practical significance",
+                  "A small, statistically significant lift",
+                  "May not justify the cost or risk of the new model"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.4 Correlation, Causation and Base Rates",
+          "blocks": [
+            {
+              "p": "**Correlation is not causation.** Observational data show associations confounded by other variables (ice-cream sales and drownings both rise in summer). **Simpson's paradox:** a trend present in every subgroup can reverse when the groups are combined, because their sizes differ — so always look at the slices."
+            },
+            {
+              "p": "Causal questions such as “did the retention campaign reduce churn?” need randomised experiments or causal-inference methods (difference-in-differences, propensity matching, uplift modelling), not just a predictive model."
+            },
+            {
+              "h": "Base Rates"
+            },
+            {
+              "p": "With a disease prevalence of 1% and a test with 95% sensitivity and 95% specificity, a positive result means only about a 16% probability of disease, because the false positives from the healthy majority (99%) outnumber the true positives. Out of 10,000 people:"
+            },
+            {
+              "formula": "sick = 100 → TP = 0.95 × 100 = 95"
+            },
+            {
+              "formula": "healthy = 9,900 → FP = 0.05 × 9,900 = 495"
+            },
+            {
+              "formula": "P(disease | positive) = 95 / (95 + 495) ≈ 0.16"
+            },
+            {
+              "quote": "This is the arithmetic behind low precision in rare-event detection such as fraud."
+            }
+          ]
+        },
+        {
+          "title": "2.5 Hyper-parameter Tuning",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Method",
+                  "How",
+                  "When"
+                ],
+                [
+                  "Grid search",
+                  "Every combination of the listed values",
+                  "Very few parameters; cheap models"
+                ],
+                [
+                  "Random search",
+                  "Random combinations within ranges",
+                  "The default choice; finds good regions faster than grid search when only some parameters matter"
+                ],
+                [
+                  "Bayesian optimisation (Optuna, Hyperopt)",
+                  "Models the score surface and tries promising points next",
+                  "Expensive training runs"
+                ],
+                [
+                  "Successive halving / Hyperband",
+                  "Start many configurations cheaply, keep the best and give them a larger budget",
+                  "Deep learning with large search spaces"
+                ],
+                [
+                  "Early stopping",
+                  "Stop when the validation loss stops improving",
+                  "Boosting and neural networks — saves compute and reduces overfitting"
+                ],
+                [
+                  "Nested cross-validation",
+                  "An inner loop tunes and an outer loop estimates performance",
+                  "Small datasets where an unbiased estimate matters"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.6 Model Selection Beyond the Leaderboard",
+          "blocks": [
+            {
+              "p": "The best offline score is only one criterion. An expert engineer compares candidates on:"
+            },
+            {
+              "ul": [
+                "Performance on critical slices.",
+                "Calibration.",
+                "Latency and memory at the required throughput.",
+                "Cost to train and serve.",
+                "Robustness to drift and noise.",
+                "The interpretability that regulation requires.",
+                "Maintenance burden (dependencies, retraining time).",
+                "Fairness."
+              ]
+            },
+            {
+              "quote": "A model that is half a point better but ten times more expensive, opaque and slower than the SLA is the wrong choice — the same logic as in spec-matching questions."
+            },
+            {
+              "p": "**Ensembles** — averaging, stacking and blending — usually add a little accuracy at the price of latency, cost and complexity. They are worth it in competitions, and often not worth it in production unless the gain has business value."
+            }
+          ]
+        },
+        {
+          "title": "2.7 Interpretability for Classical Models",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Technique",
+                  "Scope",
+                  "What it tells you",
+                  "Caveat"
+                ],
+                [
+                  "Coefficients (linear/logistic)",
+                  "Global",
+                  "The direction and size of each feature's effect",
+                  "Comparable only after scaling; misleading with multicollinearity"
+                ],
+                [
+                  "Impurity-based importance (trees)",
+                  "Global",
+                  "Which features the trees split on most",
+                  "Biased towards high-cardinality features"
+                ],
+                [
+                  "Permutation importance",
+                  "Global",
+                  "The drop in score when a feature is shuffled",
+                  "Correlated features share the importance or understate it"
+                ],
+                [
+                  "Partial dependence / ICE",
+                  "Global / per instance",
+                  "How predictions change with one feature",
+                  "Assumes independence between features"
+                ],
+                [
+                  "SHAP values",
+                  "Local and global",
+                  "Each feature's contribution to a single prediction (Shapley values)",
+                  "Computationally heavier; explains the model, not the world"
+                ],
+                [
+                  "LIME",
+                  "Local",
+                  "A simple surrogate model around a single prediction",
+                  "Unstable across runs"
+                ],
+                [
+                  "Counterfactuals",
+                  "Local",
+                  "The smallest change that flips the decision",
+                  "Must suggest changes that are actionable and feasible"
+                ],
+                [
+                  "Reason codes",
+                  "Local",
+                  "The top factors reported to the customer (credit declines)",
+                  "Must be faithful to the actual model"
+                ]
+              ]
+            },
+            {
+              "p": "Interpretability serves three audiences:"
+            },
+            {
+              "ul": [
+                "**Developers:** debugging and leakage detection — a suspiciously dominant feature is often a leak.",
+                "**Regulators and auditors:** the Transparency & Explainability principle, and documentation.",
+                "**Affected individuals:** the reasons for a decision and a path to contest it."
+              ]
+            },
+            {
+              "quote": "The more consequential the decision, the more the exam favours inherently interpretable models, or faithful local explanations with human review."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Metrics Worked Through with Numbers and Evaluation-Set Design",
+      "sections": [
+        {
+          "title": "3.1 Reading a Confusion Matrix",
+          "blocks": [
+            {
+              "p": "A fraud model is evaluated on 100,000 transactions, 500 of which are fraud. The model flags 1,250 transactions, of which 400 are actually fraud."
+            },
+            {
+              "table": [
+                [
+                  "",
+                  "Predicted fraud",
+                  "Predicted legitimate",
+                  "Total"
+                ],
+                [
+                  "Actual fraud",
+                  "TP = 400",
+                  "FN = 100",
+                  "500"
+                ],
+                [
+                  "Actual legitimate",
+                  "FP = 850",
+                  "TN = 98,650",
+                  "99,500"
+                ],
+                [
+                  "Total",
+                  "1,250",
+                  "98,750",
+                  "100,000"
+                ]
+              ]
+            },
+            {
+              "table": [
+                [
+                  "Metric",
+                  "Calculation",
+                  "Value",
+                  "Meaning"
+                ],
+                [
+                  "Accuracy",
+                  "(400 + 98,650) / 100,000",
+                  "99.05%",
+                  "Looks excellent — and says almost nothing here"
+                ],
+                [
+                  "Precision",
+                  "400 / 1,250",
+                  "32%",
+                  "About 1 in 3 fraud alerts is real"
+                ],
+                [
+                  "Recall",
+                  "400 / 500",
+                  "80%",
+                  "4 out of every 5 frauds are caught"
+                ],
+                [
+                  "Specificity",
+                  "98,650 / 99,500",
+                  "99.15%",
+                  "Legitimate transactions are rarely flagged"
+                ],
+                [
+                  "False-positive rate (FPR)",
+                  "850 / 99,500",
+                  "0.85%",
+                  "A tiny rate, but 850 customers were affected"
+                ],
+                [
+                  "F1",
+                  "2 × 0.32 × 0.80 / (0.32 + 0.80)",
+                  "0.457",
+                  "A balanced view of precision and recall"
+                ],
+                [
+                  "Baseline accuracy of “never fraud”",
+                  "99,500 / 100,000",
+                  "99.5%",
+                  "Higher than the model's accuracy!"
+                ]
+              ]
+            },
+            {
+              "quote": "The “always predict legitimate” baseline has a higher overall accuracy than the useful model. Rates hide volumes: 0.85% means 850 reviews, and capacity questions are about volumes."
+            }
+          ]
+        },
+        {
+          "title": "3.2 Moving the Threshold",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Threshold",
+                  "Alerts",
+                  "TP",
+                  "FP",
+                  "Precision",
+                  "Recall"
+                ],
+                [
+                  "0.90",
+                  "300",
+                  "240",
+                  "60",
+                  "80%",
+                  "48%"
+                ],
+                [
+                  "0.70",
+                  "600",
+                  "330",
+                  "270",
+                  "55%",
+                  "66%"
+                ],
+                [
+                  "0.50",
+                  "1,250",
+                  "400",
+                  "850",
+                  "32%",
+                  "80%"
+                ],
+                [
+                  "0.30",
+                  "2,800",
+                  "455",
+                  "2,345",
+                  "16%",
+                  "91%"
+                ],
+                [
+                  "0.10",
+                  "7,000",
+                  "485",
+                  "6,515",
+                  "7%",
+                  "97%"
+                ]
+              ]
+            },
+            {
+              "p": "Lowering the threshold trades precision for recall. Which row is “best” depends on costs and capacity:"
+            },
+            {
+              "ul": [
+                "Capacity of 3,000 reviews, and a missed fraud costs far more than a review → threshold **0.30** (2,800 alerts, 91% recall) is the best feasible operating point; 0.10 exceeds capacity (7,000).",
+                "Capacity of 700 reviews → threshold **0.70** (600 alerts) is the limit; 0.50 exceeds capacity (1,250)."
+              ]
+            },
+            {
+              "quote": "Same model, different correct thresholds — which is why the answer changes in scenarios where only the operational constraint changes."
+            }
+          ]
+        },
+        {
+          "title": "3.3 Averaging in Multi-Class Classification",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Class",
+                  "Support",
+                  "Precision",
+                  "Recall",
+                  "F1"
+                ],
+                [
+                  "Billing",
+                  "6,000",
+                  "0.95",
+                  "0.96",
+                  "0.955"
+                ],
+                [
+                  "Network",
+                  "3,000",
+                  "0.90",
+                  "0.92",
+                  "0.910"
+                ],
+                [
+                  "Legal threat",
+                  "100",
+                  "0.60",
+                  "0.30",
+                  "0.400"
+                ],
+                [
+                  "Safety incident",
+                  "50",
+                  "0.50",
+                  "0.20",
+                  "0.286"
+                ]
+              ]
+            },
+            {
+              "formula": "Macro-F1 = (0.955 + 0.910 + 0.400 + 0.286) / 4 ≈ 0.638"
+            },
+            {
+              "formula": "Weighted-F1 = (6,000×0.955 + 3,000×0.910 + 100×0.400 + 50×0.286) / 9,150 ≈ 0.930"
+            },
+            {
+              "ul": [
+                "**Macro-F1** is the mean of the class F1 scores with equal weights — it exposes the failing rare classes.",
+                "**Weighted-F1** is the mean weighted by the number of cases — large classes dominate it, so it looks healthy.",
+                "**Micro metrics** pool all decisions and behave like overall accuracy."
+              ]
+            },
+            {
+              "p": "If the rare classes are the ones that matter (legal threats, safety incidents), report Macro-F1 and per-class recall, and consider separate detectors for them or higher class weights."
+            }
+          ]
+        },
+        {
+          "title": "3.4 Regression Metrics Side by Side",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Day",
+                  "Actual",
+                  "Forecast",
+                  "Error"
+                ],
+                [
+                  "1",
+                  "100",
+                  "90",
+                  "−10"
+                ],
+                [
+                  "2",
+                  "120",
+                  "125",
+                  "+5"
+                ],
+                [
+                  "3",
+                  "80",
+                  "85",
+                  "+5"
+                ],
+                [
+                  "4",
+                  "200",
+                  "140",
+                  "−60"
+                ],
+                [
+                  "5",
+                  "0",
+                  "5",
+                  "+5"
+                ]
+              ]
+            },
+            {
+              "formula": "MAE = (10 + 5 + 5 + 60 + 5) / 5 = 17 units"
+            },
+            {
+              "formula": "RMSE = √((100 + 25 + 25 + 3,600 + 25) / 5) = √755 ≈ 27.5"
+            },
+            {
+              "formula": "WAPE = Σ|error| / Σ|actual| = 85 / 500 = 17%"
+            },
+            {
+              "formula": "Bias = Σerror / n = (−10 + 5 + 5 − 60 + 5) / 5 = −11"
+            },
+            {
+              "ul": [
+                "**MAE = 17 units:** the average miss, in the units of the target itself.",
+                "**RMSE ≈ 27.5:** inflated by the single large miss on day 4; use it when large errors are especially costly.",
+                "**MAPE:** undefined on day 5 (actual = 0) and explodes near zero — unsafe for intermittent demand.",
+                "**WAPE = 17%:** robust and easy to explain to the business.",
+                "**Bias = −11:** the model under-forecasts on average, which causes stock-outs."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.5 Ranking and Retrieval Metrics",
+          "blocks": [
+            {
+              "p": "A query has 3 relevant documents in the corpus. The system returns 5 results, and the relevant ones are at ranks 2 and 4."
+            },
+            {
+              "formula": "Precision@5 = 2 / 5 = 0.40"
+            },
+            {
+              "formula": "Recall@5 = 2 / 3 ≈ 0.67   (one relevant document never retrieved)"
+            },
+            {
+              "formula": "MRR = 1 / rank of first relevant = 1 / 2 = 0.50   (averaged over many queries)"
+            },
+            {
+              "formula": "DCG@5 = 1/log₂(3) + 1/log₂(5) ≈ 0.631 + 0.431 = 1.062"
+            },
+            {
+              "formula": "IDCG@5 (relevant at ranks 1–3) = 1 + 0.631 + 0.5 = 2.131  →  nDCG@5 ≈ 1.062 / 2.131 ≈ 0.50"
+            },
+            {
+              "p": "nDCG rewards relevant results more the higher they are ranked, using a logarithmic discount (the document at rank i is divided by log₂(i+1))."
+            },
+            {
+              "quote": "In RAG, the retriever's Recall@k is usually the first metric to fix: if the right passage never reaches the model, no prompt can save the answer. Precision and ranking come after that, to reduce noise and tokens."
+            }
+          ]
+        },
+        {
+          "title": "3.6 Calibration in Numbers",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Predicted probability bin",
+                  "Customers",
+                  "Observed default rate",
+                  "Calibrated?"
+                ],
+                [
+                  "0–10%",
+                  "40,000",
+                  "4%",
+                  "✓"
+                ],
+                [
+                  "10–20%",
+                  "12,000",
+                  "8%",
+                  "Over-predicts"
+                ],
+                [
+                  "20–40%",
+                  "6,000",
+                  "14%",
+                  "Over-predicts"
+                ],
+                [
+                  "40%+",
+                  "2,000",
+                  "31%",
+                  "Over-predicts"
+                ]
+              ]
+            },
+            {
+              "p": "The ranking may be good (the higher bins default more), but probabilities above 10% are roughly double the observed rates — which is common after up-weighting the minority class. Good ranking (a high AUC) does not mean correct probabilities."
+            },
+            {
+              "p": "If these probabilities set interest rates or provisions, apply Platt scaling or isotonic calibration on a recent held-out period, and track the Brier score and a reliability curve over time."
+            }
+          ]
+        },
+        {
+          "title": "3.7 Designing the Evaluation Set",
+          "blocks": [
+            {
+              "p": "An evaluation set is a specification written in data: it defines what “good” means, so it must be designed, not merely sampled."
+            },
+            {
+              "ol": [
+                "**Representative:** it matches the production population in channels, regions, dialects, devices and time; refresh it when the population changes.",
+                "**Stratified for what matters:** enough examples of rare but critical cases (fraud types, safety incidents, minority classes, unanswerable questions) to measure them with useful confidence, even if that means over-representing them relative to production; report both the overall figures and the per-slice figures.",
+                "**Clean labels:** labelled by experts following guidelines, with agreement measured; ambiguous cases are resolved or flagged.",
+                "**Isolated:** never used for training or tuning; access-controlled so that it does not leak into prompts or fine-tuning data; keep a development set for iteration separate from a test set that is rarely used.",
+                "**Versioned:** results are comparable only on the same version; record the version on which each model was evaluated.",
+                "**Linked to decisions:** each metric has a threshold agreed in advance (a release gate) and an owner."
+              ]
+            },
+            {
+              "h": "Golden Sets for LLM Systems"
+            },
+            {
+              "p": "These add: real user queries (anonymised), multi-turn conversations, adversarial prompts, questions that require refusal, dialect and mixed-language variants, and expected properties (must cite source X, must refuse, must ask a clarifying question) instead of single exact answers."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Data Engineering, Search, Recommendation and Time-Series Systems",
+      "sections": [
+        {
+          "title": "4.1 Data Engineering Components for AI",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Component",
+                  "Role",
+                  "Notes for AI scenarios"
+                ],
+                [
+                  "Data lake",
+                  "Cheap storage for raw files (Parquet, JSON, images, PDFs)",
+                  "Training sets and RAG document sources; needs a catalogue to avoid a “data swamp”"
+                ],
+                [
+                  "Data warehouse",
+                  "Structured, governed analytical tables",
+                  "Reporting, and features from transaction history"
+                ],
+                [
+                  "Lakehouse (Delta, Iceberg, Hudi)",
+                  "Table formats on top of the lake, with ACID transactions and time travel",
+                  "Reproducible training snapshots (“the data as of version N”)"
+                ],
+                [
+                  "Batch ETL/ELT",
+                  "Scheduled transformations (Spark, SQL)",
+                  "Daily features, inputs to nightly scoring"
+                ],
+                [
+                  "Streaming (Kafka, Flink, Spark Streaming)",
+                  "Continuous event processing",
+                  "Real-time features (fraud velocity), and change data capture (CDC) into indexes"
+                ],
+                [
+                  "Data catalogue",
+                  "Discoverability, ownership, classification, lineage",
+                  "Essential for applying classification and the obligations of the Personal Data Protection Law (PDPL) at scale"
+                ],
+                [
+                  "Quality checks",
+                  "Automated expectations on every load",
+                  "Block corrupt data before it reaches the models"
+                ],
+                [
+                  "Access control",
+                  "Row/column-level security, masking",
+                  "Data scientists see pseudonymised data by default"
+                ],
+                [
+                  "Retention automation",
+                  "Lifecycle policies that delete or anonymise",
+                  "Enforce legal retention periods across the lake, the warehouse and backups"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.2 Batch versus Streaming, and Reproducibility",
+          "blocks": [
+            {
+              "p": "**Batch versus streaming for features:** streaming pipelines offer freshness in seconds but are harder to build, test and backfill. Use them only when freshness changes the decision (fraud, real-time personalisation); otherwise batch is cheaper and more reliable. The common hybrid pattern: long-window features computed in batch alongside a few short-window streaming features, all served from the connected feature store."
+            },
+            {
+              "p": "**Reproducibility:** every training run must point to a fixed data snapshot (table version, file fingerprints) together with the code version (commit) and the parameters."
+            },
+            {
+              "quote": "“We cannot reproduce last quarter's model” is a governance failure: auditors, incident investigations and PDPL deletion requests all depend on knowing exactly which data the model saw."
+            }
+          ]
+        },
+        {
+          "title": "4.3 The Multi-Stage Search and Recommendation Funnel",
+          "blocks": [
+            {
+              "p": "Search and recommendation appear in e-commerce, media, government portals and internal knowledge bases. Both follow a multi-stage funnel: retrieve a few hundred candidates cheaply from millions of items, then rank them with a stronger model, then apply business rules."
+            },
+            {
+              "table": [
+                [
+                  "Stage",
+                  "Search",
+                  "Recommendation",
+                  "Latency budget"
+                ],
+                [
+                  "Candidate generation",
+                  "BM25 + vector (hybrid) over the index",
+                  "ANN over user/item embeddings, co-visitation, most popular in the region",
+                  "10–30 ms"
+                ],
+                [
+                  "Ranking",
+                  "Learning-to-rank or a cross-encoder on query–document features",
+                  "Boosted trees or a neural ranker on user, item and context features",
+                  "20–50 ms"
+                ],
+                [
+                  "Re-ranking and rules",
+                  "Freshness, authority, permissions",
+                  "Diversity, novelty, stock availability, compliance, fairness to sellers",
+                  "< 10 ms"
+                ],
+                [
+                  "Logging",
+                  "Queries, clicks, dwell time",
+                  "Impressions, clicks, purchases",
+                  "Asynchronous"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.4 Feedback, Cold Start, Arabic Search and Metrics",
+          "blocks": [
+            {
+              "p": "**Feedback and bias:** users click only on what was shown, and they click the top positions more (position bias). Naive training on clicks reinforces whatever the current system displays. The remedy:"
+            },
+            {
+              "ul": [
+                "Log impressions together with their positions.",
+                "Use counterfactual training or a position-bias corrector.",
+                "Reserve a small share of traffic for exploration.",
+                "Validate with A/B tests on business outcomes (conversion, satisfaction, retention), not on click-through rate alone."
+              ]
+            },
+            {
+              "p": "**Cold start:** new items gain exposure through content embeddings and exploration slots; new users get “most popular in their segment” recommendations and the preferences they give at onboarding."
+            },
+            {
+              "p": "**Arabic search specifics:** normalisation (the forms of alef, yaa and taa marbuta, and diacritics), light stemming or morphological analysis for keyword search, synonyms and dialectal forms (different names for the same product between regions), literal transliteration of brand names, and queries that mix Arabic and English. Hybrid search is usually the strongest baseline."
+            },
+            {
+              "table": [
+                [
+                  "Type",
+                  "Metrics"
+                ],
+                [
+                  "Offline",
+                  "Recall@k for candidate generation; nDCG/MRR for ranking"
+                ],
+                [
+                  "Online",
+                  "Click-through and conversion rates, and also the zero-result rate, the query-reformulation rate, time to success and long-term retention"
+                ],
+                [
+                  "Regression monitoring",
+                  "Specific slices: Arabic versus English queries, new versus returning users"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.5 Time Series and Streaming Learning in Production",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Aspect",
+                  "Practice"
+                ],
+                [
+                  "Hierarchy",
+                  "Forecasts for product → store → region must aggregate consistently; reconcile them (bottom-up, top-down, or optimal reconciliation)"
+                ],
+                [
+                  "Intermittent demand",
+                  "Many zeros: use specialised methods, or classification + a size model; avoid MAPE"
+                ],
+                [
+                  "Events and calendar",
+                  "Explicit features for the Hijri calendar, promotions, holidays and weather; keep the event calendar as data"
+                ],
+                [
+                  "Uncertainty",
+                  "Produce prediction intervals/quantiles; decisions (safety stock) use the quantile, not the mean"
+                ],
+                [
+                  "Backtesting",
+                  "Rolling-origin evaluation that reproduces what was known at each forecast date"
+                ],
+                [
+                  "Streaming features",
+                  "Window aggregations computed in the stream processor; exactly-once semantics; late events handled with watermarks"
+                ],
+                [
+                  "Real-time anomaly detection",
+                  "Seasonal baselines, adaptive thresholds, alert suppression to avoid fatigue"
+                ],
+                [
+                  "Monitoring",
+                  "Forecast error by horizon and category, bias, prediction-interval coverage, pipeline lag"
+                ]
+              ]
+            },
+            {
+              "quote": "Safety stock is built on the forecast quantile, not on its mean, and validation in time series always goes forward in time."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Apply calculation, statistics and model selection to a real decision: should we replace the current credit-scoring model with a new one? At what threshold, and with what safeguards?",
+    "scenario": [
+      "A Saudi financing company uses logistic regression to score personal-finance applications. The data science team proposed a stacking ensemble of three boosted-tree models that achieved an AUC of 0.842, against 0.836 for the current model, on a test set of 1,000 applications; its latency is 180 ms against an SLA of 100 ms. The team trained the new model with up-weighting of the defaulter class.",
+      "When calibration was checked, the observed default rate in the 20–40% probability bin was about 14%, and in the 40%+ bin about 31%. The probabilities are used directly to set the profit margin. The team also ran a small A/B test on the app channel; it checked the results daily and stopped on day 4, when p = 0.04 appeared on one metric out of the 15 being monitored, and the actual split between the two arms was 53/47 although the design was 50/50."
+    ],
+    "steps": [
+      "Estimate the uncertainty: a difference of 0.006 in AUC on 1,000 examples is not sufficient evidence of superiority — for comparison, a proportion near 0.90 measured on 1,000 examples carries a confidence interval of about ±1.9 points on its own. Calculate a confidence interval for the AUC difference by bootstrap resampling on the same examples before making any claim.",
+      "Evaluate the candidates on criteria beyond the leaderboard: the new model violates the latency SLA, is more opaque and more complex, and its gain is unproven — so it is the wrong choice by the logic of spec matching.",
+      "Read the calibration: the probabilities are roughly double the observed rates above 10%, which is expected after up-weighting the minority class. If either model is used for pricing, apply Platt or isotonic calibration on a recent held-out period and monitor the Brier score and a reliability curve.",
+      "Reject the A/B test result: peeking and early stopping inflate false positives; 15 metrics at 0.05 produce an expected false win; the sample ratio mismatch (53/47) means a broken assignment that must be investigated before reading anything; and 4 days is less than one full weekly cycle.",
+      "Redesign the experiment: a primary metric fixed in advance, a sample size calculated for 80% power, a duration of at least one or two weekly cycles, and a correction for multiple comparisons on the secondary metrics.",
+      "Check regulatory compliance: credit is a high-impact decision, so keep an interpretable model, or boosted trees with monotonic constraints and faithful reason codes (SHAP), fairness by group and human review; and remember that the training data contains selection bias (outcomes are known only for approved loans).",
+      "Fix the evaluation set: a specific version, critical slices with sufficient representation, and a release gate agreed in advance for each metric, with an owner."
+    ],
+    "traps": [
+      "Treating a small difference in AUC or accuracy on 1,000 examples as evidence of superiority without confidence intervals.",
+      "Interpreting p = 0.04 as “a 96% probability that the new model is better”.",
+      "Choosing the highest-scoring ensemble despite its violation of latency, interpretability and cost.",
+      "Confusing ranking quality (AUC) with the correctness of the probabilities (calibration) when the probabilities are used for pricing.",
+      "Calculating MAPE for intermittent demand that contains zeros, or reporting Weighted-F1 when the rare classes are the ones that matter.",
+      "Choosing a threshold that produces more alerts than the available review capacity."
+    ],
+    "deliverable": "A decision documented with numbers: keep the current model with calibration, or rerun a correctly designed experiment, with statistical, operational and regulatory justification for every step."
+  },
+  "review": [
+    {
+      "q": "Tabular churn data with half a million rows. What is the strong default choice, and why?",
+      "a": "Boosted trees (XGBoost/LightGBM/CatBoost): the best available for tabular data, they handle missing values, and they have fast inference on CPU. Deep networks do not usually win on this type of data."
+    },
+    {
+      "q": "A model has 90% accuracy on 100 test examples. What is the approximate 95% confidence interval?",
+      "a": "The standard error is √(0.9×0.1/100) = 0.03, so the confidence interval is about ±5.9 points. Any difference smaller than that between two models on this set is not evidence."
+    },
+    {
+      "q": "What is the correct interpretation of the p-value p = 0.03 in an A/B test?",
+      "a": "If there were no real difference, a gap this large or larger would appear in about 3% of runs. It is not the probability that the new variant is better, nor the probability that the null hypothesis is true."
+    },
+    {
+      "q": "A disease has a prevalence of 1%, and the test has 95% sensitivity and 95% specificity. What is the probability of disease given a positive result?",
+      "a": "Only about 16%: out of 10,000 people, there are 95 true positives against 495 false positives from the healthy majority. This is why precision is low in rare-event detection."
+    },
+    {
+      "q": "From a confusion matrix: TP=400, FP=850, FN=100, TN=98,650. Calculate precision, recall and F1.",
+      "a": "Precision is 400/1,250 = 32%, recall is 400/500 = 80%, and F1 = 2×0.32×0.80/1.12 ≈ 0.457. The overall accuracy of 99.05% is lower than the “never fraud” baseline (99.5%)."
+    },
+    {
+      "q": "The review team's capacity is 700 alerts, and the available thresholds produce 300, 600 and 1,250 alerts at 0.90, 0.70 and 0.50. Which threshold?",
+      "a": "0.70: the lowest threshold that does not exceed capacity, giving 66% recall against 48% at 0.90. The 0.50 threshold produces 1,250 alerts, which exceeds capacity."
+    },
+    {
+      "q": "Why was Macro-F1 ≈ 0.638 while Weighted-F1 ≈ 0.930 in the customer-service ticket example?",
+      "a": "Weighted-F1 is dominated by the large classes (billing and network), so it looks healthy, whereas Macro-F1 gives every class the same weight and so exposes the weakness of the legal-threat class (0.400) and the safety-incident class (0.286)."
+    },
+    {
+      "q": "Why is WAPE preferred to MAPE when forecasting demand that has days with no sales?",
+      "a": "MAPE is undefined when the actual value is zero and explodes near it, whereas WAPE = sum of absolute errors ÷ sum of actuals (85/500 = 17% in the example) is robust and easy to explain to the business."
+    },
+    {
+      "q": "In a RAG system, which retriever metric do you fix first?",
+      "a": "Recall@k: if the right passage never reaches the model, no prompt can save the answer. After that, precision and ranking (nDCG, MRR) are improved to reduce noise and tokens."
+    },
+    {
+      "q": "An A/B test designed as 50/50 produced a 52/48 split. What do you do?",
+      "a": "This is a sample ratio mismatch, which indicates a broken assignment mechanism; investigate and fix it before reading any result, because the comparison itself is no longer reliable."
+    }
+  ],
+  "summary": "You have mastered this unit when you can name the right family for any scenario together with its weakness, from which a distractor may be built; calculate every metric from the confusion matrix, the error tables and the ranking without hesitation; choose the feasible threshold within capacity; reject a “win” that is smaller than the confidence interval or that comes from peeking and multiple comparisons; prefer the model that meets latency, interpretability and cost over the one with the highest score; and then design a representative, isolated evaluation set, reproducible data pipelines, a search and recommendation funnel, and time-series forecasts that are evaluated forward in time and whose decisions are built on quantiles.",
+  "coverage": [
+    "2.12",
+    "2.13",
+    "2.14",
+    "2.15",
+    "2.16",
+    "2.17",
+    "2.18",
+    "2.19",
+    "2.20",
+    "2.21"
+  ]
+}

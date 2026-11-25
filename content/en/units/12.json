@@ -1,0 +1,1733 @@
+{
+  "num": 12,
+  "title": "Case Studies & Final Review",
+  "english": "Case Studies & Final Review",
+  "subtitle": "From a long scenario to an integrated decision that withstands the distractors",
+  "domain": "Serves all domains",
+  "deliverable": "Analyse a long exam scenario, extract its hard requirements, choose the appropriate design, governance and operations, then review quickly with the reflex sheet, the numbers and the names.",
+  "intro": "This unit brings everything together in twelve integrated cases that resemble the long scenarios in the exam: a real business context, the requirements extracted from it, a chosen design, tempting alternatives that fail for a specific reason, governance obligations, and a way to operate and measure the system. The long exam question does not test a single fact; it tests your ability to rank constraints: what eliminates an option immediately, and what decides between two valid ones. The unit ends with the final review sheet: one-line decision reflexes, each pointing to the unit that explains it, the numbers that must be at your fingertips, and the governance names you can write from memory in their official form.",
+  "outcomes": [
+    "Extract the hard requirements (latency, quality, data residency, budget) from a long scenario before looking at the options.",
+    "Eliminate the alternatives that break a hard requirement, then choose between those that remain on cost and operability.",
+    "Determine the minimum sufficient level of autonomy for a system, and where human approval belongs in irreversible or life-related decisions.",
+    "Link data classification, the Personal Data Protection Law (PDPL) and the AI Ethics Principles to the architecture decision and the model choice.",
+    "Choose the metric the business actually needs (expected cost, WAPE by category, causal impact) instead of raw accuracy.",
+    "Plan model releases like software: evaluation gates, shadow deployment, canary, rollback and version pinning.",
+    "Recall the decision reflexes, the numbers and the official governance names quickly on exam day."
+  ],
+  "method": "Read the requirements table in each case first, then stop and decide for yourself before you read the decision: which requirement eliminates the most options, and what decides between the two that remain? Then compare your decision with the explained one, and concentrate on the “Rejected Distractors” section, because the exam builds its wrong options from exactly these alternatives. At the end, read the shared-patterns table to see that the same seven rules recur across all twelve cases. As for the final review sheet, use it in the last few days: cover the “Go to” column and try to recall it from the “If the question says” column, and for anything you hesitate over, go back to the unit it points to.",
+  "chapters": [
+    {
+      "title": "Cases 1–4: Fraud, Changing Knowledge, Arabic Chat, Healthcare",
+      "sections": [
+        {
+          "title": "1.1 How to Read a Long Case Study",
+          "blocks": [
+            {
+              "p": "Every case in this unit walks through a complete decision the way the exam's long scenarios present it: the **context**, then the **requirements** extracted from it, then the **chosen design**, then **why the tempting alternatives lose**, then the **governance obligations**, then **how the system is operated and measured**."
+            },
+            {
+              "ol": [
+                "Read the requirements table and underline every hard number: latency, quality ratio, human capacity, budget, data location.",
+                "Determine the data classification before anything else: does it contain personal, health or restricted data? This alone may eliminate half the options.",
+                "Eliminate every option that breaks a hard requirement, however good its quality.",
+                "Among the options that remain, let cost and operational simplicity decide.",
+                "Add governance and operations: who approves? What do we monitor? How do we release and roll back?"
+              ]
+            },
+            {
+              "quote": "Read the requirements, stop, and decide for yourself before you read the decision."
+            }
+          ]
+        },
+        {
+          "title": "1.2 Case 1 — Real-Time Card-Fraud Detection at a Saudi Bank",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A Saudi bank wants to score every card transaction at the moment of authorisation and return a fraud score that is combined with rules to decide: allow, step-up authentication, decline, or refer for review. The analyst team has limited capacity, and the regulator audits the decisions."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Volume",
+                  "3 million card transactions per day; peak of 400 transactions per second (TPS) on salary days and Ramadan evenings"
+                ],
+                [
+                  "Latency",
+                  "Score returned within 40 ms at p99, inside a total authorisation budget of 200 ms"
+                ],
+                [
+                  "Quality",
+                  "Recall ≥ 0.85 with no more than 8,000 alerts per day (analyst capacity)"
+                ],
+                [
+                  "Cost of errors",
+                  "Missed fraud ≈ SAR 4,500; false alert ≈ SAR 25 for review + customer annoyance"
+                ],
+                [
+                  "Constraints",
+                  "Explainable declines; data stays in the Kingdom; regulator audit"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "A **gradient-boosted trees** model served on CPU replicas behind the authorisation service, fed by an **online feature store** that holds the velocity aggregates: the number of card transactions in the last 10 minutes and the last 24 hours, the number of distinct merchants, and the distance from the last location. **Rules** remain for known patterns and hard blocks, and the model score is combined with the rules into four outcomes: allow / step-up authentication / decline / refer for review."
+            },
+            {
+              "ul": [
+                "The **threshold** is set from expected cost under the analyst-capacity constraint, not at 0.5.",
+                "**Training** uses a time-based split, and validation simulates **label delay**: chargebacks arrive weeks later.",
+                "At a fraud rate of 0.1%, **accuracy is meaningless**; the right metrics are recall within capacity and expected cost."
+              ]
+            },
+            {
+              "h": "Governance and Operations"
+            },
+            {
+              "p": "Card decisions affect customers financially, so they are **high-impact**: reason codes derived from SHAP for declines and step-ups, a complaints channel, fairness checks across customer segments (nationality, age, region) for false-positive burden, model documentation and approval logs for the regulator, data minimisation in the features, and encryption and access control."
+            },
+            {
+              "ul": [
+                "Shadow deployment of every new model for two weeks against the champion, then a canary at 5% → 25% → 100% with **automatic rollback** on anomalies in the alert rate or decline rate.",
+                "Monitoring: input drift (PSI on the key features), score distribution, alert volume, analyst confirmation rate (a fast proxy label), recall based on chargebacks once labels mature, and p99 latency.",
+                "Retrain monthly or on confirmed degradation, and red-team new fraud patterns."
+              ]
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "Deep sequence model",
+                  "It may add a little recall but threatens p99 ≤ 40 ms and explainability"
+                ],
+                [
+                  "Large language model (LLM)",
+                  "Irrelevant to scoring structured data in a fraction of a second"
+                ],
+                [
+                  "Nightly batch model",
+                  "It does not stop fraud while it is happening"
+                ],
+                [
+                  "Judging by accuracy or a 0.5 threshold",
+                  "Meaningless at 0.1% fraud; the criterion is recall within capacity and expected cost"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.3 Case 2 — An HR Policy Assistant over Regulations That Change Periodically",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A government entity wants an assistant that answers its employees' HR policy questions, Arabic first, with an article citation, while the regulations are updated every month and old versions may not be cited after the new ones take effect."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Users",
+                  "25,000 employees of a government entity; Arabic first, some English"
+                ],
+                [
+                  "Knowledge",
+                  "900 policy documents; HR updates 20–40 documents each month; old versions are not cited after the effective date"
+                ],
+                [
+                  "Quality",
+                  "≥ 90% correct and fully supported answers with article-level citations; out-of-scope questions are declined"
+                ],
+                [
+                  "Latency",
+                  "First token ≤ 2 seconds"
+                ],
+                [
+                  "Data",
+                  "Policies classified “Restricted”; employee questions may include personal details"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "**Retrieval-augmented generation (RAG), not fine-tuning.** An open-weight language model and embedding model that support Arabic and are hosted in the Kingdom; Restricted data never goes to public generative tools, because the government generative-AI principles limit those tools to **Public** data."
+            },
+            {
+              "ul": [
+                "**Ingestion:** document-aware chunking per article with the section title prepended to the chunk; metadata: doc_id, version, effective_from, effective_to, department, classification and acl.",
+                "**Freshness:** incremental indexing triggered by change detection when HR publishes a document: update by upsert on doc_id, delete the superseded chunks (or filter with is_current), and invalidate cached answers tied to the document.",
+                "**Retrieval:** hybrid BM25 + vectors with reciprocal rank fusion (RRF), pre-filtering by access permissions (ACL), and reranking with a cross-encoder down to the top 5.",
+                "**Generation:** “Answer only from the provided articles, cite their numbers, otherwise say you do not know and offer to contact HR”, at low temperature. Personal details in questions are redacted from the logs."
+              ]
+            },
+            {
+              "h": "Governance and Operations"
+            },
+            {
+              "ul": [
+                "**Transparency:** users are told they are using an automated assistant, they see the citations, and they can escalate to HR.",
+                "**Accountability:** an owner for the index and an owner for the prompt; a change log for policy versions; human review of answers concerning penalties or financial entitlements.",
+                "**Privacy:** a retention schedule for chat logs; handling of Personal Data Protection Law rights by employee ID.",
+                "**Operations:** a golden set of 300 real questions (dialect phrasings, follow-up questions, unanswerable questions) run with every change to the prompt, model or index; a freshness agreement (“a published policy is searchable within 30 minutes”) with a monitor that compares the HR repository with the index; dashboards for faithfulness to the sources using a judge model calibrated against human review, citation accuracy, escalation rate and user ratings."
+              ]
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "Monthly fine-tuning",
+                  "It cannot cite, lags behind updates, does not enforce each user's permissions, and makes deletion and audit difficult"
+                ],
+                [
+                  "A long-context model with 900 documents in every prompt",
+                  "Slow and expensive, and still exposed to the “lost in the middle” problem"
+                ],
+                [
+                  "Public chatbot",
+                  "Ruled out by the “Restricted” data classification"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.4 Case 3 — An Arabic Chatbot for a Telecom's Customer Service",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A telecom company wants a chatbot that serves customers in the Saudi dialect, reads account data, and withstands a sharp evening peak, within a fixed monthly budget."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Load",
+                  "1.2 million conversations per month; peak 9 pm – 1 am; about 6 turns per conversation"
+                ],
+                [
+                  "Speed",
+                  "Time to first token (TTFT) at p95 ≤ 1.5 seconds, with streaming"
+                ],
+                [
+                  "Quality",
+                  "≥ 85% resolution quality on the internal Arabic evaluation set (Saudi dialect)"
+                ],
+                [
+                  "Data",
+                  "Customer account data must stay in the Kingdom"
+                ],
+                [
+                  "Budget",
+                  "≤ SAR 60,000 per month"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "An instruction-tuned model in the **8-billion-parameter** class that supports Arabic, **quantised to INT8**, hosted in the Kingdom on a vLLM-class **continuous batching** engine, autoscaling on concurrent sequences with **scheduled scale-up before 8:30 pm** and a minimum of two replicas spread across two zones."
+            },
+            {
+              "ul": [
+                "**Tools:** a read-only account query, a plan-catalogue search (RAG), and ticket creation. Any billing change requires customer confirmation and goes through the existing interfaces with idempotency keys.",
+                "**Prompt-growth control:** the conversation history is summarised after 4 turns, and the system prompt stays fixed to benefit from prefix caching.",
+                "**Routing:** a small classifier routes simple intents (balance, invoice date) to canned answers without the language model."
+              ]
+            },
+            {
+              "p": "The logic: the quantised mid-sized model alone meets the three hard requirements (residency, latency, dialect quality) — **then cost decides the details of the service**."
+            },
+            {
+              "h": "Cost Check"
+            },
+            {
+              "formula": "1.2M conversations × 6 turns ≈ 7.2M generations/month  →  routing removes ~30%  →  ≈ 5M LLM calls"
+            },
+            {
+              "p": "With roughly 2,500 total tokens per second per GPU and roughly 250 output tokens per turn, sizing for peak concurrency (Little's law) gives the number of GPUs, and autoscaling keeps the daytime replicas few. **Prompt bloat is the biggest cost risk**, and it is monitored as input tokens per call."
+            },
+            {
+              "h": "Governance"
+            },
+            {
+              "p": "Disclosure that it is a bot; easy handover to a human agent; no dark patterns in customer-retention offers (the **Humanity** principle); logs that are redacted and retained according to the retention schedule; abuse protection through rate limiting; and evaluation for abusive or culturally inappropriate outputs."
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "A frontier API outside the Kingdom",
+                  "Best quality, but it fails the account-data residency requirement"
+                ],
+                [
+                  "A 70-billion-parameter model inside the Kingdom",
+                  "It meets the quality target but exceeds the p95 TTFT at peak within the budget"
+                ],
+                [
+                  "A very small model on CPU",
+                  "It meets cost and latency but fails on dialect quality"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "1.5 Case 4 — Clinical-Note Summarisation in a Hospital",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A hospital wants draft patient-discharge summaries from notes, lab results and medication lists, for doctors to review and sign."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Purpose",
+                  "Draft discharge summaries for doctors to review"
+                ],
+                [
+                  "Quality",
+                  "≥ 95% factual consistency with the source notes; no omission of any allergy or active medication; doctor-rated readability ≥ 4/5"
+                ],
+                [
+                  "Speed",
+                  "≤ 20 seconds per summary"
+                ],
+                [
+                  "Data",
+                  "Health data is sensitive personal data; it must stay inside the hospital's approved environment within the Kingdom"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "A language model deployed inside the Kingdom with a **structured pipeline** instead of a single free-form prompt:"
+            },
+            {
+              "ol": [
+                "Extract structured facts (diagnoses, procedures, medications, allergies) with a constrained JSON schema.",
+                "Verify the extracted facts against the source records; the medication list from the pharmacy system is the reference.",
+                "Generate the narrative text from the verified facts.",
+                "Automated checks: every medication and allergy in the source appears in the summary, and no medication that is absent from the source appears.",
+                "The doctor reviews, edits and signs."
+              ]
+            },
+            {
+              "p": "At low temperature, with citations linking each sentence to the source notes."
+            },
+            {
+              "h": "Governance and Operations"
+            },
+            {
+              "ul": [
+                "A data protection impact assessment (DPIA) before processing; access restricted to the treating team; an audit log of who viewed and who approved.",
+                "A model card stating that the system **drafts and does not decide**; evaluation by doctors on a stratified sample that includes paediatric cases and rare diseases; an incident procedure for any harmful omission.",
+                "Track the **edit distance** between the draft and the signed summary (a proxy indicator of quality), omission alerts, doctor satisfaction and time saved; and re-evaluate when the note templates or the model change."
+              ]
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "A fully autonomous summary sent to the next care provider",
+                  "It removes the human oversight required for life-related decisions (the Reliability and Safety principle)"
+                ],
+                [
+                  "An extractive-only summariser",
+                  "Safe but unreadable for doctors"
+                ],
+                [
+                  "A general-purpose assistant",
+                  "Ruled out: sensitive data, classification and the Personal Data Protection Law"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Cases 5–8: Forecasting, Credit, Scanned Documents, the Approval-Gated Agent",
+      "sections": [
+        {
+          "title": "2.1 Case 5 — Demand Forecasting for a Grocery Chain across Ramadan",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A grocery chain needs daily forecasts that feed the nightly purchase orders, with a Saudi calendar in which the major seasons move across the Gregorian year."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Scope",
+                  "600 branches × 8,000 products, daily forecasts for the next 14 days"
+                ],
+                [
+                  "Usage",
+                  "Purchase orders are generated every night by 02:00"
+                ],
+                [
+                  "Quality",
+                  "Reduce forecast error (WAPE) by 15% relative to the current method; no regression on the top-selling products"
+                ],
+                [
+                  "Calendar",
+                  "Ramadan, Eid al-Fitr, Eid al-Adha, salary days, school terms, national holidays"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "A **global gradient-boosted trees** model trained across all series with lag features, moving averages and Hijri-calendar features (days before and after the start of Ramadan, holiday indicators, proximity to payday), plus promotions, prices and weather, with a **seasonal naive fallback forecast** for new or low-data products."
+            },
+            {
+              "ul": [
+                "It runs as a **nightly batch** on Spot (reclaimable) instances with checkpoints, falling back to on-demand instances if capacity is reclaimed late; results are written to a table that the ordering system reads.",
+                "**Rolling-origin validation** across several years, with particular attention to the Ramadan windows, which move forward about 11 days each Gregorian year, so Gregorian-month features alone are misleading.",
+                "**Stock-outs** are treated as censored demand, not as genuinely low demand."
+              ]
+            },
+            {
+              "h": "Operations"
+            },
+            {
+              "p": "Monitor WAPE by product category and region, bias (systematic over- or under-forecasting), and job completion time; alert if the job has not finished by 01:30; and review each Ramadan period separately as an independent regime."
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "A real-time API for each product",
+                  "Unnecessary — nobody is waiting for the result"
+                ],
+                [
+                  "Deep models for 4.8 million series",
+                  "Far more expensive for uncertain gains"
+                ],
+                [
+                  "ARIMA per series",
+                  "It ignores cross-series learning and scales poorly"
+                ],
+                [
+                  "Random cross-validation",
+                  "It leaks the future into training"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.2 Case 6 — Credit Scoring with Fairness and Explainability",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A bank decides on personal-financing applications by approving, declining or referring them, and needs calibrated default probabilities for pricing, specific reasons for every decline, and monitored fairness across groups."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Decision",
+                  "Approve / decline / refer for personal-financing applications"
+                ],
+                [
+                  "Quality",
+                  "AUC ≥ 0.80; calibrated default probabilities for pricing purposes"
+                ],
+                [
+                  "Fairness",
+                  "Approval-rate ratio between groups ≥ 0.8 at equal risk; monitored monthly"
+                ],
+                [
+                  "Explainability",
+                  "Specific reasons for every decline; the customer has the right to request a review"
+                ],
+                [
+                  "Data",
+                  "Credit-bureau and bank data; national ID number; sensitive attributes excluded"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "A **gradient-boosted trees model with monotonic constraints** — for example, a higher debt-to-income ratio cannot lower risk — **calibrated with isotonic regression** on a hold-out period, producing **SHAP reason codes** phrased in terms the customer can understand. Applications near the threshold or with unusual profiles are **referred to a human underwriter**."
+            },
+            {
+              "p": "**Selection bias is acknowledged:** repayment outcomes exist only for those who were approved, so performance on declined applicants is estimated by cautious methods and by a small, controlled exploration budget where policy allows."
+            },
+            {
+              "h": "Fairness Work"
+            },
+            {
+              "ul": [
+                "Sensitive attributes (and their obvious proxies) are excluded from the features, **but outcomes are measured by group** (gender, age group, nationality, region) to detect the effect of proxy variables.",
+                "The fairness metric and its limit were defined at the design stage with compliance and the business owners.",
+                "Mitigation options (reviewing features, reweighting, tuning constraints) are compared by their effect on fairness and on the default rate together."
+              ]
+            },
+            {
+              "h": "Governance and Operations"
+            },
+            {
+              "p": "A **high-risk** use: documented risk assessments and approvals, a model card, validation by an independent team, periodic review, a complaints and appeals mechanism, Personal Data Protection Law notices, retention rules for application data, and transparent reasons. **Transferring part of the risk to a vendor model does not remove the bank's accountability.**"
+            },
+            {
+              "p": "Operations: monthly PSI on applicant features, approval rates by group, calibration curves on the cohorts whose outcomes have matured, underwriter override rates (and their reasons), and quarterly revalidation."
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "Removing the sensitive attribute is enough for fairness",
+                  "Proxy variables carry the effect; measure by group"
+                ],
+                [
+                  "Buying a model from a vendor to transfer responsibility",
+                  "Accountability stays with the bank"
+                ],
+                [
+                  "Evaluating performance on approved applicants only",
+                  "It ignores selection bias among the declined"
+                ],
+                [
+                  "Uncalibrated scores for pricing",
+                  "Pricing needs calibrated default probabilities, not just a ranking"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.3 Case 7 — Processing Scanned Arabic Government Forms",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A government entity receives tens of thousands of scanned paper forms every day, handwritten and printed, and wants to enter their fields into the case-management system on the same day."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Volume",
+                  "40,000 scanned forms per day (handwritten and printed, Arabic with some English)"
+                ],
+                [
+                  "Output",
+                  "35 structured fields per form, entering the case-management system"
+                ],
+                [
+                  "Quality",
+                  "Field accuracy ≥ 98% on critical fields (ID number, dates, amounts) after review"
+                ],
+                [
+                  "Turnaround time",
+                  "Within the same working day"
+                ],
+                [
+                  "Data",
+                  "Personal data of citizens; classified “Restricted”"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "**An asynchronous pipeline:**"
+            },
+            {
+              "ol": [
+                "Upload → queue.",
+                "Optical character recognition (OCR) that supports Arabic, with layout analysis.",
+                "Field extraction with a layout-aware model, or with a vision–language model inside the Kingdom using a strict JSON schema.",
+                "Validation rules: the ID check digit (checksum), Hijri and Gregorian date formats, amounts matching totals, consistency between fields.",
+                "Confidence-based routing: high-confidence forms pass straight through, and low-confidence fields go to a human verification screen that shows the image crop next to the value.",
+                "Write the results with lineage: the form-image fingerprint and the model versions."
+              ]
+            },
+            {
+              "p": "GPU batch workers that autoscale on **queue depth** during working hours."
+            },
+            {
+              "h": "Governance and Operations"
+            },
+            {
+              "p": "Minimise stored images (retained according to the schedule, then destroyed); access restricted to case staff; measure field accuracy by form type and handwritten versus printed; track **human correction rates** as the quality signal, and feed the corrected samples back into evaluation and periodic fine-tuning."
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "Synchronous processing for every upload",
+                  "It causes timeouts and retry storms"
+                ],
+                [
+                  "Sending the forms to an external OCR API",
+                  "It conflicts with the “Restricted” classification"
+                ],
+                [
+                  "Fully manual entry",
+                  "It cannot keep up with the volume"
+                ],
+                [
+                  "Fully automatic entry with no review",
+                  "It does not reach 98% on critical handwritten fields"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "2.4 Case 8 — A Procurement Agent with Human Approval",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A procurement department wants an agent that reads supplier messages and invoices, matches them against purchase orders, and prepares payment proposals."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Goal",
+                  "Read supplier messages and invoices, match them against purchase orders, and prepare payment proposals"
+                ],
+                [
+                  "Volume",
+                  "3,000 invoices per month"
+                ],
+                [
+                  "Risk",
+                  "Payments are irreversible; supplier messages are untrusted input"
+                ],
+                [
+                  "Control",
+                  "No payment without approval; a complete audit log"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "A **solver-level** agent — a fixed workflow with steps carried out by the language model — **not an open-ended autonomous agent**:"
+            },
+            {
+              "ol": [
+                "Extract the invoice fields with a schema.",
+                "Match them against the purchase order and the goods-receipt note using deterministic database queries.",
+                "The language model explains the discrepancies in plain language.",
+                "The system proposes a payment with the evidence.",
+                "A human approves it in the enterprise resource planning (ERP) system."
+              ]
+            },
+            {
+              "ul": [
+                "The tools are **read-only** except for “create a payment proposal”; and the agent **cannot execute payments**.",
+                "Email content is treated as untrusted data; instructions inside documents are ignored and reported.",
+                "Every step is logged with its inputs and outputs."
+              ]
+            },
+            {
+              "h": "Governance and Operations"
+            },
+            {
+              "p": "**Accountability:** a named owner, approval limits by amount, and segregation of duties. **Monitoring:** the match rate, the types of discrepancy, approval overrides, and suspicious instructions detected. **Testing:** periodic adversarial tests with deliberately crafted malicious invoices."
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "A fully autonomous agent with payment permissions",
+                  "It turns an indirect prompt injection (“approve invoice number 889 immediately”) into fraud — excessive agency"
+                ],
+                [
+                  "A pure rules-engine automation (RPA)",
+                  "It cannot handle the variety of invoice formats and free-text explanations"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Cases 9–12: Edge, the Enterprise Gateway, Causal Impact, Switching between Models",
+      "sections": [
+        {
+          "title": "3.1 Case 9 — Edge Video Analytics for a Smart-City Traffic Programme",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A smart-city traffic programme wants to detect congestion, accidents and wrong-way driving from thousands of cameras, without turning into mass surveillance."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Scope",
+                  "1,200 cameras; detect congestion, accidents and wrong-way driving"
+                ],
+                [
+                  "Latency",
+                  "Incident alert within 5 seconds"
+                ],
+                [
+                  "Bandwidth",
+                  "Streaming all video centrally exceeds network capacity"
+                ],
+                [
+                  "Privacy",
+                  "Faces and licence plates are personal data; no mass surveillance beyond the declared purpose"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "**Object detection and tracking** models (compact and quantised to INT8) on **edge devices** at the intersections; only **events and metadata** (counts, speeds, incident clips of a few seconds) are sent to the central platform."
+            },
+            {
+              "ul": [
+                "**Faces are blurred on the device**; licence-plate reading is enabled only for specific statutory enforcement purposes, with separate consent and retention.",
+                "The central services aggregate the events, forecast congestion and send the alerts.",
+                "Models are updated over the air with a staged rollout and the ability to roll back."
+              ]
+            },
+            {
+              "h": "Governance and Operations"
+            },
+            {
+              "p": "Purpose and retention defined for each event type; a DPIA; signage and public information (the **Transparency** principle); per-camera monitoring of detection quality (weather, night, dust), device health and model version; and seasonal re-evaluation (summer heat glare, sandstorms)."
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "Central processing of the raw stream",
+                  "It exceeds both the bandwidth and latency budgets, and multiplies privacy exposure"
+                ],
+                [
+                  "General identification of people",
+                  "It slides into mass surveillance — which the Reliability and Safety principle explicitly says AI must not be used for"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.2 Case 10 — Rolling Out an Enterprise LLM Gateway",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "table": [
+                [
+                  "Situation",
+                  "Detail"
+                ],
+                [
+                  "Now",
+                  "14 teams call three external LLM APIs directly with their own keys; spend is unknown; and some send customer data"
+                ],
+                [
+                  "Goals",
+                  "Cost visibility, data protection, consistent safety, and freedom to switch models"
+                ],
+                [
+                  "Constraints",
+                  "Mixed data classifications; some teams need in-Kingdom models only"
+                ]
+              ]
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "p": "The requirements here are extracted from the goals and constraints: spend visibility per team, preventing personal and restricted data from leaving to external providers, a single safety layer for everyone, decoupling applications from any one provider, and no way to bypass the controls."
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "**A central LLM gateway** — explained in Unit 06 — that includes:"
+            },
+            {
+              "ul": [
+                "Single sign-on (SSO), and keys and budgets per team.",
+                "A data classifier and a PII redactor on every request.",
+                "**Classification-based routing:** Public data may use approved external models, while Restricted and personal data goes only to models hosted inside the Kingdom.",
+                "Retries, fallbacks and circuit breakers across providers.",
+                "Exact and semantic caching.",
+                "Logging of tokens, cost, latency and model version per team (with redaction and retention rules).",
+                "Guardrails for injection and unsafe outputs.",
+                "**Blocking direct egress** from team networks to provider endpoints, so that the gateway cannot be bypassed."
+              ]
+            },
+            {
+              "h": "Rollout and Expected Results"
+            },
+            {
+              "ol": [
+                "Start in **monitor-only** mode to measure the traffic and data types.",
+                "Onboard the teams one by one.",
+                "Then enforce the policies.",
+                "Publish a model catalogue with the approved use cases for each model.",
+                "Review the monthly cost reports with each team."
+              ]
+            },
+            {
+              "p": "Typical result patterns: spend visibility usually reveals a few heavy users and prompt bloat; caching and routing reduce cost; and requests containing redacted personal data fall sharply once teams have an approved in-Kingdom alternative."
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "Letting each team call providers directly under a written policy",
+                  "No spend visibility, no classification enforcement, and the policy can be bypassed"
+                ],
+                [
+                  "A gateway without blocking direct egress",
+                  "It can be bypassed, so it loses its value"
+                ],
+                [
+                  "Enforcing policies from day one, before monitoring",
+                  "It breaks teams before the traffic and data types are known; the right rollout is monitor, then onboard, then enforce"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.3 Case 11 — A Churn-Reduction Campaign That Actually Works",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "p": "A telecom company wants to reduce subscriber churn with a retention team of limited capacity and offers that carry a cost."
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "table": [
+                [
+                  "Requirement",
+                  "Value"
+                ],
+                [
+                  "Scope",
+                  "9 million mobile subscribers; the retention team can call 20,000 customers per week"
+                ],
+                [
+                  "Goal",
+                  "Reduce monthly churn by 0.3 points; each offer costs SAR 40"
+                ],
+                [
+                  "Data",
+                  "Usage, billing, complaints, network quality"
+                ]
+              ]
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "Two models scored **in a weekly batch**: a **churn-risk** model, and an **uplift** model that estimates how much the offer changes each customer's probability of staying. The 20,000 weekly calls go to the customers with the **highest expected net benefit**, not simply the highest risk:"
+            },
+            {
+              "formula": "expected net benefit = uplift × customer value − offer cost (SAR 40)"
+            },
+            {
+              "p": "Some high-risk customers leave anyway, and some stay without any offer (the “sure things”). The risk model is evaluated with **Precision@20,000**, and a **randomised holdout** that is not contacted is used to measure the **true causal impact** of the campaign."
+            },
+            {
+              "h": "Governance and Operations"
+            },
+            {
+              "p": "Marketing communication respects consent and unsubscribe requests (the direct-marketing provisions of the Personal Data Protection Law); a fairness check to make sure regions or groups are not systematically deprived of offers without a business reason; weekly monitoring of the effect in the holdout group, and monthly model updates."
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "Targeting by churn probability alone",
+                  "It wastes offers on those who will leave regardless or would have stayed anyway"
+                ],
+                [
+                  "Judging success by “customers we called who stayed”",
+                  "It ignores those who would have stayed anyway; there is no causal impact without a holdout"
+                ],
+                [
+                  "A real-time model",
+                  "It adds cost with no benefit for a weekly campaign"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.4 Case 12 — Migrating When a Model Provider Retires a Model",
+          "blocks": [
+            {
+              "h": "The Situation"
+            },
+            {
+              "table": [
+                [
+                  "Situation",
+                  "Detail"
+                ],
+                [
+                  "Trigger",
+                  "The provider will retire the model behind a legal-research assistant within 90 days"
+                ],
+                [
+                  "Risk",
+                  "The new model formats citations differently and is more verbose; the prompts were tuned for the old model"
+                ],
+                [
+                  "Constraint",
+                  "No regression in answer faithfulness to the sources; and the cost per answer must not rise by more than 10%"
+                ]
+              ]
+            },
+            {
+              "h": "Requirements"
+            },
+            {
+              "p": "Faithfulness is a red line, the cost ceiling is +10% per answer, and the deadline is 90 days. The hidden risk is verbosity: a more verbose model raises output tokens and cost."
+            },
+            {
+              "h": "The Decision and Why"
+            },
+            {
+              "p": "**Treat the migration as a release, not a configuration change:**"
+            },
+            {
+              "ol": [
+                "Run the golden set and the adversarial set on the candidate replacement models with the current prompts.",
+                "Adapt the prompts and output schemas for the best candidate, keeping the versions in the prompt registry.",
+                "Compare faithfulness, citation accuracy, refusal behaviour, Arabic quality, latency, and tokens per answer.",
+                "Run the new model in shadow on live traffic and compare the outputs.",
+                "Canary with the ability to roll back.",
+                "Pin the new model version explicitly."
+              ]
+            },
+            {
+              "p": "Output-length limits and prompt trimming address the cost risk caused by verbosity."
+            },
+            {
+              "h": "Lessons"
+            },
+            {
+              "ul": [
+                "Pin versions to avoid silent changes.",
+                "Keep the evaluation harness ready so that migrations become routine.",
+                "Isolate providers behind the gateway so that applications do not change.",
+                "Record the model change in the model card, and tell users if the behaviour changes noticeably."
+              ]
+            },
+            {
+              "h": "Rejected Distractors"
+            },
+            {
+              "table": [
+                [
+                  "Tempting alternative",
+                  "Why it fails"
+                ],
+                [
+                  "Swapping the model name in the configuration, then monitoring",
+                  "A configuration change with no evaluation gate; citations and verbosity may break faithfulness and cost"
+                ],
+                [
+                  "Pointing to the “latest” version without pinning",
+                  "It exposes the system to silent changes"
+                ],
+                [
+                  "Keeping the old prompts as they are",
+                  "They were tuned for the old model; they must be adapted and re-evaluated"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3.5 Shared Patterns across the Cases",
+          "blocks": [
+            {
+              "p": "The twelve cases are not twelve rules; they are seven rules that recur. When a scenario looks new to you, look for the rule it applies."
+            },
+            {
+              "table": [
+                [
+                  "Pattern",
+                  "Appears in cases",
+                  "Rule"
+                ],
+                [
+                  "Constraints before optimisation",
+                  "1, 3, 6, 11",
+                  "Eliminate the options that break a hard requirement, then minimise cost"
+                ],
+                [
+                  "Minimum sufficient autonomy",
+                  "4, 8",
+                  "Draft/propose with human approval for irreversible or life-related decisions"
+                ],
+                [
+                  "RAG for changing knowledge",
+                  "2, 12",
+                  "Index freshness, deletion of superseded content, and citations"
+                ],
+                [
+                  "Batch when nobody is waiting",
+                  "5, 7, 11",
+                  "Queues, Spot capacity, and deadlines with fallbacks"
+                ],
+                [
+                  "Data location drives the architecture",
+                  "2, 3, 4, 7, 10",
+                  "Classification and the Personal Data Protection Law first, model choice second"
+                ],
+                [
+                  "Measure what the business needs",
+                  "1, 5, 11",
+                  "Expected cost, WAPE by category, causal impact — not raw accuracy"
+                ],
+                [
+                  "Release like software",
+                  "1, 12",
+                  "Evaluation gates, shadow deployment, canary, rollback, and pinned versions"
+                ]
+              ]
+            },
+            {
+              "quote": "Eliminate what breaks a hard requirement first, then let cost decide among what remains."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Final Review Sheet",
+      "sections": [
+        {
+          "title": "4.1 Decision Reflexes: Data, Modelling and Measurement",
+          "blocks": [
+            {
+              "p": "One-line reflexes only; each points to the unit that explains it. If you hesitate over a line, go back to its unit instead of memorising it."
+            },
+            {
+              "table": [
+                [
+                  "If the question says…",
+                  "Go to…",
+                  "Reference"
+                ],
+                [
+                  "Documents change often / citation is required",
+                  "RAG + freshness checklist",
+                  "Unit 04, Unit 06"
+                ],
+                [
+                  "A fixed style or format, a narrow task, huge volume",
+                  "Fine-tuning (LoRA/QLoRA) or distillation",
+                  "Unit 04"
+                ],
+                [
+                  "Regulated / personal / government data",
+                  "Classification first → in-Kingdom, data minimisation, audit — even at higher cost",
+                  "Unit 10"
+                ],
+                [
+                  "Limited budget, small team, uncertain demand",
+                  "Managed services, a smaller model, caching",
+                  "Unit 08, Unit 06"
+                ],
+                [
+                  "Missing the positive case is very costly",
+                  "Recall, a lower threshold, expected cost",
+                  "Unit 01, Unit 02"
+                ],
+                [
+                  "A false alarm is costly",
+                  "Precision, a higher threshold",
+                  "Unit 02"
+                ],
+                [
+                  "Fixed review capacity k",
+                  "Precision@k / best recall within capacity",
+                  "Unit 02, Unit 03"
+                ],
+                [
+                  "Imbalanced data",
+                  "PR-AUC, F1, class weights, threshold — and never accuracy",
+                  "Unit 02"
+                ],
+                [
+                  "Excellent in the experiment, poor in production",
+                  "Data leakage or training–serving skew",
+                  "Unit 02"
+                ],
+                [
+                  "A sudden shift on a specific date",
+                  "A change in the source or the pipeline — fix the data, do not retrain",
+                  "Unit 02"
+                ]
+              ]
+            },
+            {
+              "quote": "On imbalanced data: never read accuracy."
+            }
+          ]
+        },
+        {
+          "title": "4.2 Decision Reflexes: Deployment, Architecture, Integration, Security and Governance",
+          "blocks": [
+            {
+              "h": "Deployment, Reliability and Architecture"
+            },
+            {
+              "table": [
+                [
+                  "If the question says…",
+                  "Go to…",
+                  "Reference"
+                ],
+                [
+                  "Validate without exposing users / reduce the blast radius / which wins more / instant rollback",
+                  "Shadow / canary / A/B / blue–green",
+                  "Unit 07"
+                ],
+                [
+                  "An incident in progress",
+                  "Rollback first",
+                  "Unit 07"
+                ],
+                [
+                  "RPO / RTO targets",
+                  "Backup ↔ warm standby ↔ active–active, according to RTO and cost",
+                  "Unit 07"
+                ],
+                [
+                  "Slow at peak only",
+                  "Horizontal autoscaling (on queue depth or concurrency)",
+                  "Unit 01, Unit 08"
+                ],
+                [
+                  "Slow after idle",
+                  "Cold start → a minimum replica count / pre-warming",
+                  "Unit 08"
+                ],
+                [
+                  "Nobody is waiting for the result",
+                  "Batch + Spot instances + checkpoints",
+                  "Unit 08"
+                ],
+                [
+                  "Choosing a GPU from a specification table",
+                  "Fits in memory → single-stream speed → total capacity → the cheapest",
+                  "Unit 08"
+                ]
+              ]
+            },
+            {
+              "h": "Integration and Language Models"
+            },
+            {
+              "table": [
+                [
+                  "If the question says…",
+                  "Go to…",
+                  "Reference"
+                ],
+                [
+                  "A long task over HTTP times out",
+                  "Asynchronous queue + job ID + webhook",
+                  "Unit 06"
+                ],
+                [
+                  "Actions repeated on retry",
+                  "Idempotency keys",
+                  "Unit 06"
+                ],
+                [
+                  "A provider outage brings the application down",
+                  "Timeouts + circuit breaker + fallback",
+                  "Unit 06"
+                ],
+                [
+                  "A blank screen during generation",
+                  "Streaming",
+                  "Unit 01"
+                ],
+                [
+                  "The token bill rises while traffic is steady",
+                  "Prompt bloat → a cap on conversation history, fewer chunks, prefix caching",
+                  "Unit 11"
+                ],
+                [
+                  "Arabic costs more tokens",
+                  "Tokenizer fertility",
+                  "Unit 04"
+                ],
+                [
+                  "The model does not fit on the GPU",
+                  "Quantise, then re-evaluate in Arabic",
+                  "Unit 04"
+                ],
+                [
+                  "Model output goes to SQL / HTML / shell",
+                  "Untrusted input: schema + validation + parameterise",
+                  "Unit 06"
+                ]
+              ]
+            },
+            {
+              "h": "Security and Governance"
+            },
+            {
+              "table": [
+                [
+                  "If the question says…",
+                  "Go to…",
+                  "Reference"
+                ],
+                [
+                  "An agent took an action based on content it read",
+                  "Indirect injection + excessive agency",
+                  "Unit 09"
+                ],
+                [
+                  "One tenant sees another tenant's data",
+                  "Tenant filter in retrieval / separate indexes",
+                  "Unit 06, Unit 09"
+                ],
+                [
+                  "Data kept forever / sent abroad / a leak discovered",
+                  "Retention · transfer basis · 72 hours",
+                  "Unit 10"
+                ],
+                [
+                  "Government employee + generative-AI tool + restricted data",
+                  "Not allowed — generative tools are for public data only",
+                  "Unit 10"
+                ],
+                [
+                  "Risk score and treatment options",
+                  "Likelihood × impact; avoid · mitigate · transfer · accept",
+                  "Unit 10"
+                ],
+                [
+                  "Which principle?",
+                  "Map of scenarios to principles",
+                  "Unit 10"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4.3 Numbers at Your Fingertips",
+          "blocks": [
+            {
+              "table": [
+                [
+                  "Item",
+                  "Value"
+                ],
+                [
+                  "Weight memory",
+                  "Number of parameters × bytes (FP16 = 2 · INT8 = 1 · INT4 = 0.5) + overhead + KV memory"
+                ],
+                [
+                  "Number of replicas",
+                  "⌈peak QPS ÷ (concurrency ÷ latency × target utilisation)⌉ + 1"
+                ],
+                [
+                  "LLM latency",
+                  "TTFT + output tokens × time per token"
+                ],
+                [
+                  "LLM capacity",
+                  "Number of concurrent streams × tokens/second per stream"
+                ],
+                [
+                  "Expected cost",
+                  "FP × C_FP + FN × C_FN"
+                ],
+                [
+                  "99.9% availability",
+                  "≈ 43 minutes of downtime per month; components in series → multiply their ratios"
+                ],
+                [
+                  "Vector memory",
+                  "N × dimensions × 4 bytes (FP32)"
+                ],
+                [
+                  "Personal Data Protection Law",
+                  "Breach notification within 72 hours (where harm is possible) · responding to requests within 30 days (+30) · fines up to SAR 5 million, doubled for repeat offences · disclosure of sensitive data: imprisonment of up to 2 years and/or a fine of up to SAR 3 million"
+                ]
+              ]
+            },
+            {
+              "formula": "weight memory = params × bytes/param + overhead + KV cache"
+            },
+            {
+              "formula": "replicas = ceil( peak QPS / (concurrency / latency × target utilisation) ) + 1"
+            },
+            {
+              "formula": "LLM latency = TTFT + output tokens × time per token"
+            },
+            {
+              "formula": "expected cost = FP × C_FP + FN × C_FN"
+            },
+            {
+              "formula": "vector memory = N × dims × 4 bytes"
+            }
+          ]
+        },
+        {
+          "title": "4.4 Names You Write from Memory",
+          "blocks": [
+            {
+              "p": "These names are tested in their official form; write them exactly as they are, without rephrasing."
+            },
+            {
+              "h": "AI Ethics Principles (SDAIA) — seven"
+            },
+            {
+              "ol": [
+                "Fairness",
+                "Privacy & Security",
+                "Humanity",
+                "Social & Environmental Benefits",
+                "Reliability & Safety",
+                "Transparency & Explainability",
+                "Accountability & Responsibility"
+              ]
+            },
+            {
+              "h": "Risk Levels"
+            },
+            {
+              "p": "Little or No Risk · Limited Risk · High Risk · Unacceptable Risk."
+            },
+            {
+              "h": "Data Subject Rights under the Personal Data Protection Law"
+            },
+            {
+              "p": "The right to be informed · the right of access · the right to obtain a copy · the right to correction · the right to destruction (+ withdrawal of consent)."
+            },
+            {
+              "h": "Data Classification (National Data Management Office)"
+            },
+            {
+              "p": "Top Secret · Secret · Restricted · Public."
+            },
+            {
+              "h": "OWASP Risks for LLM Applications 2025"
+            },
+            {
+              "ol": [
+                "Prompt Injection",
+                "Sensitive Information Disclosure",
+                "Supply Chain",
+                "Data & Model Poisoning",
+                "Improper Output Handling",
+                "Excessive Agency",
+                "System Prompt Leakage",
+                "Vector & Embedding Weaknesses",
+                "Misinformation",
+                "Unbounded Consumption"
+              ]
+            },
+            {
+              "h": "National AI Risk Management Framework (SDAIA)"
+            },
+            {
+              "table": [
+                [
+                  "Stages",
+                  "Levels"
+                ],
+                [
+                  "1. Context & Scope",
+                  "Low: 1–2"
+                ],
+                [
+                  "2. Risk Identification",
+                  "Medium: 3–6"
+                ],
+                [
+                  "3. Risk Assessment",
+                  "High: 8–12"
+                ],
+                [
+                  "4. Risk Treatment",
+                  "Catastrophic: 16"
+                ],
+                [
+                  "5. Monitoring & Review",
+                  ""
+                ]
+              ]
+            },
+            {
+              "h": "NIST AI Risk Management Framework (AI RMF)"
+            },
+            {
+              "p": "Govern · Map · Measure · Manage."
+            }
+          ]
+        },
+        {
+          "title": "4.5 Exam-Day Protocol",
+          "blocks": [
+            {
+              "ul": [
+                "Follow the question-solving procedure explained in Unit 01, and recall the families of distractors you learned there.",
+                "Allow 75–90 seconds per question.",
+                "Flag the long table questions and come back to them later.",
+                "If you hesitate between a theoretical answer and an operational one, re-read the question looking for the **operational symptom**."
+              ]
+            },
+            {
+              "quote": "When you hesitate between the theoretical and the operational: look in the question text for the operational symptom."
+            }
+          ]
+        },
+        {
+          "title": "4.6 The “Devil's Advocate” Review Log",
+          "blocks": [
+            {
+              "p": "An independent, adversarial review went through every chapter of the source material, recalculated every number, and checked samples of the regulatory claims online. This is what it found and what changed — and it is useful to you because it shows where the traps are most likely to be."
+            },
+            {
+              "table": [
+                [
+                  "Finding",
+                  "Action taken"
+                ],
+                [
+                  "The calculations (fraud tables, replicas, availability, Bills A–D) are correct; with two corrections in the bills and one line in Bill D (no N+1 backup at 5 million)",
+                  "Corrected — Unit 11"
+                ],
+                [
+                  "The PDPL penalties were left “to be verified” although they are known: the prison penalty for transfers was abolished in 2023",
+                  "Stated as fact — Unit 10"
+                ],
+                [
+                  "Credit and location data were removed from “sensitive data” in 2023 — a one-word trap",
+                  "Added — Unit 10"
+                ],
+                [
+                  "The 72-hour breach-notification duty is conditional on the possibility of harm; and the October 2026 draft may drop this condition",
+                  "Clarified, and the draft is tagged “Needs verification” — Unit 10"
+                ],
+                [
+                  "The rights deadline (30 days +30), Article 4 versus 5, and legitimate interest",
+                  "Added — Unit 10"
+                ],
+                [
+                  "The National AI Risk Management Framework (2026) was missing",
+                  "A new section rebuilt from the official SDAIA text — Unit 10"
+                ],
+                [
+                  "Matching the governance facts against the SDAIA publications library",
+                  "Confirmed: the principle names, the risk levels, the lifecycle stages in Arabic, the roles of the entities, the social-scoring line under the Reliability and Safety principle, and third-party documentation under the Transparency principle; and the following were added: the official generative-AI rule (Restricted data and above never enter generative tools), the official guide titles, the deepfake principles, the procurement challenges, and the figures for Arabic models and small language models — Unit 10"
+                ],
+                [
+                  "The National Data Management Office rule had no official principle; and the data-sharing principles were missing",
+                  "The official lists of principles — Unit 10"
+                ],
+                [
+                  "The lifecycle stage names differ between the Arabic and English texts",
+                  "Both versions are shown with a warning — Unit 10"
+                ],
+                [
+                  "A translation error in the example “Limited risk: recruitment tools”",
+                  "Corrected and checked against the official Arabic text — Unit 10"
+                ],
+                [
+                  "Fourth edition: the questions were removed at the reader's request and the content was expanded into a complete study reference",
+                  "The training sets were replaced with worked examples (Unit 01), integrated case studies (this unit), and a glossary of terms; and every domain was expanded with official SDAIA material"
+                ],
+                [
+                  "24 repetitions across chapters",
+                  "Each topic in one place with cross-references: the procedure → Unit 01, retention → Unit 10, release signals → Unit 07, caching → Unit 06"
+                ],
+                [
+                  "Gaps: RPO/RTO, reading GPU specifications, token-based capacity and load testing, API security",
+                  "Added — Unit 07, Unit 08, Unit 06"
+                ],
+                [
+                  "Arabic: [[ar:فورية]] (“instant”) was used for both real-time and Spot; [[ar:الدقة]] (“accuracy”) for Precision; and other wordings",
+                  "Spot → “Spot instances”; Precision is kept in English beside [[ar:الدقة]] (“accuracy”); and the terminology was corrected"
+                ],
+                [
+                  "An ambiguous reading of cost (Bill A: “biggest saving” versus “lowest risk”)",
+                  "The two were distinguished — Unit 11"
+                ]
+              ]
+            },
+            {
+              "h": "Still needs checking against the official texts"
+            },
+            {
+              "ul": [
+                "The exam duration and the marking method.",
+                "The official English wording of the ethics lifecycle stages.",
+                "The names of the data-sharing principles at the National Data Management Office.",
+                "The criteria for appointing a data protection officer (DPO) under the Personal Data Protection Law.",
+                "The status of the October 2026 draft of the Personal Data Protection Law (the text of the Law is not in the SDAIA publications library)."
+              ]
+            },
+            {
+              "p": "Each of these items carries the tag “Needs verification” wherever it appears in the units."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "purpose": "Apply the whole case-study method to a new scenario: from extracting the requirements to the decision, governance and rollout plan.",
+    "scenario": [
+      "A regional municipality wants an Arabic assistant that answers citizens' questions about building-permit requirements and cites the article, plus automatic classification of citizen reports and routing to the competent department. The requirements are updated several times a year, and the reports may include names, ID numbers and photos of sites.",
+      "Stated requirements: first token within 2 seconds, about 300,000 conversations per month with a peak after Isha prayer, and 20,000 reports per day whose submitters do not expect an immediate reply, and a human triage team that can review 1,500 reports per day. One vendor proposed using a global LLM API outside the Kingdom because it is “the highest quality”, and another proposed monthly fine-tuning on the requirements."
+    ],
+    "steps": [
+      "Extract the hard requirements: time to first token ≤ 2 seconds, article citation, freshness of the requirements, triage capacity of 1,500 reports per day, and the presence of personal data in the reports.",
+      "Classify the data first: the reports contain personal data, so any processing of them stays inside the Kingdom and does not enter public generative tools. This eliminates the external API for the reports path however good its quality (data location drives the architecture).",
+      "For the assistant: RAG, not fine-tuning, because the knowledge changes and needs citations; with incremental indexing, deletion of superseded chunks or filtering with is_current, hybrid retrieval, and the instruction “answer from the materials only, otherwise say you do not know”.",
+      "For the reports: batch processing through a queue, because nobody is waiting, and a classification model that determines the department and priority; the threshold is set so that the triage team receives the top 1,500 cases that are uncertain or high-priority (Precision@k within capacity), not at 0.5.",
+      "Governance: disclosure of the assistant, easy escalation to a staff member, data minimisation in the logs and a retention schedule, a DPIA for the reports path, and a named owner for the index and for the prompt.",
+      "Rollout: a golden set in citizens' dialects and unanswerable questions, then shadow deployment, then a canary with rollback, with the model version pinned and monitoring of faithfulness to the sources, index freshness, and input tokens per call."
+    ],
+    "traps": [
+      "Choosing the “highest quality” external API despite the presence of personal or restricted data — quality does not compensate for breaking a hard requirement.",
+      "Monthly fine-tuning for changing knowledge that needs citation and deletion.",
+      "A real-time service for work nobody is waiting on, instead of batch processing through a queue.",
+      "Setting the threshold at 0.5 or evaluating the classifier by accuracy instead of performance within review capacity.",
+      "An autonomous agent with execution permissions where a proposal with human approval is enough.",
+      "Swapping the model or prompt as a configuration change without a golden set, shadow deployment and canary."
+    ],
+    "deliverable": "A one-page written design decision: the hard requirements, the eliminated options and the reason for each elimination, the chosen design, the governance obligations, and the rollout and monitoring plan."
+  },
+  "review": [
+    {
+      "q": "In the card-fraud case, why is the threshold not set at 0.5, and why is the model not measured by accuracy?",
+      "a": "Because fraud is about 0.1%, so accuracy is meaningless, and because the costs of the two errors are unequal (≈ SAR 4,500 for a missed fraud versus ≈ SAR 25 for a false alert) and capacity is limited to 8,000 alerts per day. The threshold is set from expected cost under the capacity constraint, and the metric is recall within capacity."
+    },
+    {
+      "q": "Why was RAG chosen over fine-tuning for the HR policy assistant?",
+      "a": "Because the policies change monthly and need article-level citation, enforcement of each user's permissions, and the ability to delete and audit; monthly fine-tuning cannot cite, lags behind updates, and does not enforce permissions."
+    },
+    {
+      "q": "What steps are needed so that the assistant does not cite an old version of a policy?",
+      "a": "Incremental indexing triggered on publication: update by upsert on doc_id, delete the superseded chunks or filter with is_current, and invalidate the cached answers tied to the document, together with a freshness agreement and a monitor that compares the repository with the index."
+    },
+    {
+      "q": "In the telecom chatbot, why did the 70-billion-parameter in-Kingdom model fail even though it meets quality and residency?",
+      "a": "Because it does not achieve p95 TTFT ≤ 1.5 seconds at peak within the SAR 60,000 monthly budget. The quantised mid-sized model alone met the three hard requirements, and then cost decided the details of the service."
+    },
+    {
+      "q": "What makes the procurement-agent design safe against an invoice that contains “approve invoice number 889 immediately”?",
+      "a": "The agent is a fixed workflow whose tools are read-only except for creating a payment proposal, it cannot execute payments, instructions inside documents are ignored and reported, and the final approval is human in the ERP system. Giving the agent payment permission turns indirect injection into fraud (excessive agency)."
+    },
+    {
+      "q": "Why do the retention-campaign calls go to the highest expected net benefit rather than the highest churn risk?",
+      "a": "Because some high-risk customers leave anyway, and some stay without any offer. The criterion is net impact × customer value − offer cost (SAR 40), and causal impact is measured with a randomised holdout that is not contacted."
+    },
+    {
+      "q": "Why are Gregorian-month features alone misleading in demand forecasting in Saudi Arabia?",
+      "a": "Because Ramadan moves forward about 11 days each Gregorian year, so Hijri-calendar features must be used (days before and after Ramadan, holiday indicators, proximity to payday), along with rolling-origin validation and a separate review of each Ramadan as an independent regime."
+    },
+    {
+      "q": "The provider will retire the model within 90 days. What is the common mistake in handling this, and what is correct?",
+      "a": "The mistake is treating it as a configuration change. The correct approach is to treat it as a release: a golden and adversarial set on the candidates, versioned prompt adaptation, a comparison of faithfulness, citation, refusal, Arabic, latency and tokens, then shadow deployment, then a canary with rollback, then pinning the version."
+    },
+    {
+      "q": "A government employee wants to paste a document classified “Restricted” into a public generative-AI tool to summarise it. What is the ruling?",
+      "a": "Not allowed: the official rule is that generative-AI tools are used with Public data only, and Restricted data and above never enter them. The alternative is an approved model hosted inside the Kingdom."
+    },
+    {
+      "q": "What is the right reflex when the token bill rises while traffic is steady?",
+      "a": "Suspect prompt bloat: cap or summarise the conversation history, reduce the number of retrieved chunks, benefit from prefix caching by keeping the system prompt fixed, and monitor input tokens per call."
+    }
+  ],
+  "summary": "You have mastered this unit when, faced with any long scenario, you can extract the hard requirements and the data classification before looking at the options; eliminate every option that breaks a hard requirement however strong it looks; then choose among the rest on cost and operational simplicity; place the human where the decision is irreversible or life-related; measure what the business needs rather than raw accuracy; release the model like software with evaluation, shadow deployment, canary, rollback and a pinned version — and recall the reflexes, the numbers and the official governance names from memory without hesitation.",
+  "coverage": [
+    "Case 1",
+    "Case 2",
+    "Case 3",
+    "Case 4",
+    "Case 5",
+    "Case 6",
+    "Case 7",
+    "Case 8",
+    "Case 9",
+    "Case 10",
+    "Case 11",
+    "Case 12",
+    "11"
+  ]
+}

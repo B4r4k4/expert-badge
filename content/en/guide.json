@@ -1,0 +1,431 @@
+{
+  "title": "Exam Guide & Study Plan",
+  "english": "Exam Guide & Study Plan",
+  "subtitle": "What the exam measures, how to divide your time across it, and how to use this platform right up to exam day",
+  "about": "This platform is preparation material for SDAIA’s Expert AI Engineer badge exam, built on the seven published exam domains and their weights. It consists of 12 units: Unit 01 gives you the solving method and the calculations that serve every question, Units 02–11 cover the seven domains, and Unit 12 brings together the case studies and the final review. Each unit ends with an applied scenario that imitates the exam questions and with review questions with explained answers. It is preparation material drawn from candidates’ reports and published SDAIA releases, and it is not an official curriculum issued by SDAIA.",
+  "audience": "The platform is designed for candidates for SDAIA’s Expert AI Engineer badge: engineers who work, or are preparing to work, on building, deploying and operating AI systems, and who need to make technical decisions that weigh cost, latency, accuracy and compliance together. The material assumes basic working knowledge of machine learning and software, and focuses on choosing between reasonable solutions more than on definitions.",
+  "sections": [
+    {
+      "title": "The Exam at a Glance",
+      "blocks": [
+        {
+          "p": "The information below comes from what candidates reported, not from an official document; anything not stated remains flagged as needing verification."
+        },
+        {
+          "table": [
+            [
+              "Item",
+              "What candidates reported"
+            ],
+            [
+              "Number of questions",
+              "140 (according to one report)"
+            ],
+            [
+              "Format",
+              "Multiple choice, almost all of them business scenarios"
+            ],
+            [
+              "Coding",
+              "None"
+            ],
+            [
+              "Calculations",
+              "Simple only: reading tables, comparing costs and latency budgets"
+            ],
+            [
+              "Difficulty",
+              "Mostly hard, some medium, a few easy; the question texts are long"
+            ],
+            [
+              "Direct definitions",
+              "One or two at most"
+            ],
+            [
+              "Duration",
+              "Not stated — needs verification"
+            ]
+          ]
+        },
+        {
+          "quote": "What is measured is not definitions but the choice between two reasonable solutions on cost, latency, accuracy and compliance together: “What is the right technical decision here, or why was this decision taken?”"
+        }
+      ]
+    },
+    {
+      "title": "Domain Weights",
+      "blocks": [
+        {
+          "table": [
+            [
+              "#",
+              "Domain",
+              "Weight",
+              "≈ questions out of 150",
+              "Units on this platform"
+            ],
+            [
+              "1",
+              "Data, ML Foundations & Model Evaluation",
+              "17.3%",
+              "26",
+              "02, 03"
+            ],
+            [
+              "2",
+              "Core AI, Deep Learning & Generative AI",
+              "16.7%",
+              "25",
+              "04, 05"
+            ],
+            [
+              "3",
+              "AI Software Engineering & Integration",
+              "14.0%",
+              "21",
+              "06"
+            ],
+            [
+              "4",
+              "MLOps, LLMOps, Deployment & Reliability",
+              "18.0%",
+              "27",
+              "07"
+            ],
+            [
+              "5",
+              "Architecture, Infrastructure, Performance & Scalability",
+              "12.7%",
+              "19",
+              "08"
+            ],
+            [
+              "6",
+              "Responsible AI, Security & Governance",
+              "14.7%",
+              "22",
+              "09, 10"
+            ],
+            [
+              "7",
+              "Business, Professional Practice & Collaboration",
+              "6.7%",
+              "10",
+              "11"
+            ],
+            [
+              "—",
+              "Solving method, case studies and review",
+              "—",
+              "—",
+              "01, 12 (serve all domains)"
+            ]
+          ]
+        },
+        {
+          "h": "A 150-question blueprint"
+        },
+        {
+          "p": "The weights match a 150-question blueprint: each weight, rounded to one decimal place, is a multiple of 1/150 (26 + 25 + 21 + 27 + 19 + 22 + 10 = 150). One candidate counted 140 questions (that is, about 24, 23, 20, 25, 18, 21 and 9 respectively): either the count is approximate, or some questions are unscored pilot items. In both cases, **the proportions are what matter**."
+        },
+        {
+          "h": "The centre of gravity is operational"
+        },
+        {
+          "p": "Domains 3 + 4 + 5 together make up 44.7%, and a large part of Domain 6 (security, encryption and data retention) is operational too. This matches the candidates’ advice:"
+        },
+        {
+          "quote": "Everything operational — deployment, monitoring, scaling, cost and security — is heavier than you expect; pure theory is lighter than you expect."
+        }
+      ]
+    },
+    {
+      "title": "Platform Units",
+      "blocks": [
+        {
+          "table": [
+            [
+              "Unit",
+              "Title",
+              "Domain"
+            ],
+            [
+              "01",
+              "Exam Method & Decision Arithmetic",
+              "Serves all domains"
+            ],
+            [
+              "02",
+              "Data & Machine-Learning Foundations",
+              "Domain 1 · 17.3%"
+            ],
+            [
+              "03",
+              "Algorithms, Statistics & Model Evaluation",
+              "Domain 1 · 17.3%"
+            ],
+            [
+              "04",
+              "Deep Learning, Transformers & LLMs",
+              "Domain 2 · 16.7%"
+            ],
+            [
+              "05",
+              "Context Engineering, Agents & GenAI Evaluation",
+              "Domain 2 · 16.7%"
+            ],
+            [
+              "06",
+              "AI Software Engineering & Integration",
+              "Domain 3 · 14.0%"
+            ],
+            [
+              "07",
+              "MLOps, LLMOps, Deployment & Reliability",
+              "Domain 4 · 18.0%"
+            ],
+            [
+              "08",
+              "Architecture, Infrastructure, Performance & Scalability",
+              "Domain 5 · 12.7%"
+            ],
+            [
+              "09",
+              "Responsible AI & Security",
+              "Domain 6 · 14.7%"
+            ],
+            [
+              "10",
+              "SDAIA Governance & the PDPL",
+              "Domain 6 · 14.7%"
+            ],
+            [
+              "11",
+              "Business, Professional Practice & Cost Analysis",
+              "Domain 7 · 6.7%"
+            ],
+            [
+              "12",
+              "Case Studies & Final Review",
+              "Serves all domains"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "The Four Question Patterns",
+      "blocks": [
+        {
+          "p": "According to candidates’ accounts, the exam questions fall into four patterns. Recognise the pattern from the first read, because each pattern has a decisive skill:"
+        },
+        {
+          "table": [
+            [
+              "Pattern",
+              "Share",
+              "What it looks like",
+              "Skill",
+              "Where to practise"
+            ],
+            [
+              "A. Problem → best fix",
+              "Largest",
+              "A running system has a symptom; pick the most appropriate remedy",
+              "Root cause first, then the least disruptive fix",
+              "Units 01, 07, 08"
+            ],
+            [
+              "B. Spec matching",
+              "Hardest",
+              "Scenario → 3 requirements (speed, quality, accuracy) → spec table → A/B/C/D",
+              "Meet all the requirements, then minimise cost",
+              "Unit 01 (the matching grid), Unit 12"
+            ],
+            [
+              "C. Cost analysis",
+              "3–4 questions",
+              "Bill tables and charts: is the spend sensible, where is the waste, what do we cut?",
+              "Spot idle, over-provisioned or wrong-tier resources",
+              "Units 11, 12"
+            ],
+            [
+              "D. Governance & compliance",
+              "Recurring",
+              "An organisation handles data; which principle or standard did it violate?",
+              "Exact official names; one-word differences",
+              "Units 09, 10 and Unit 12"
+            ]
+          ]
+        },
+        {
+          "p": "**How to answer:** the step-by-step procedure (read the ask → extract the requirements before the options → eliminate → pick the cheapest survivor) is in Unit 01. Learn it there once, and apply it to every question."
+        }
+      ]
+    },
+    {
+      "title": "Recurring Themes",
+      "blocks": [
+        {
+          "p": "These are topics that candidates reported recurring in the exam itself. Do not go into the exam until you are comfortable with each of them:"
+        },
+        {
+          "ul": [
+            "Retrieval-augmented generation (RAG) over periodically updated documents, connected to an assistant — it appeared more than once.",
+            "Bank fraud detection.",
+            "Latency in milliseconds (ms).",
+            "Replicas.",
+            "Cost.",
+            "APIs.",
+            "Encryption.",
+            "The Personal Data Protection Law (PDPL) and data retention.",
+            "Large language models (LLMs).",
+            "The tokenizer.",
+            "Precision.",
+            "Time or hours under high load."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Distractor Families",
+      "blocks": [
+        {
+          "p": "The wrong options in the exam are not random; they belong to families that recur. Once you recognise the family, you can eliminate the option with confidence:"
+        },
+        {
+          "table": [
+            [
+              "Family",
+              "How it appears"
+            ],
+            [
+              "Retraining or fine-tuning as a reflex",
+              "When the cause is data freshness, the prompt, the threshold, or a retrieval bug"
+            ],
+            [
+              "“Use a bigger model / more GPUs”",
+              "When batching, caching, quantisation or right-sizing solves it more cheaply"
+            ],
+            [
+              "Accuracy on imbalanced data",
+              "99% accuracy on data with 1% fraud is worthless"
+            ],
+            [
+              "Technically correct but non-compliant",
+              "For example, sending personal data to an API outside the Kingdom to save money"
+            ],
+            [
+              "“Increase the timeout”",
+              "When the design should be asynchronous"
+            ],
+            [
+              "Right idea, wrong order",
+              "Deploying before evaluating, notifying after fixing, or collecting before consent"
+            ],
+            [
+              "Absolute words",
+              "“Always”, “completely eliminates” and “guarantees” are usually wrong"
+            ],
+            [
+              "The longest, most detailed option",
+              "Not automatically right — judge the content, not the length"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Time Management",
+      "blocks": [
+        {
+          "p": "140 to 150 long scenarios means a heavy reading load. Plan three passes:"
+        },
+        {
+          "ol": [
+            "**Pass 1 (≈ 60% of the time):** answer everything you can decide in 90 seconds or less, and flag the table and spec questions that need more time.",
+            "**Pass 2 (≈ 30%):** return to the flagged spec-matching questions and cost tables, and apply the elimination procedure mechanically.",
+            "**Pass 3 (≈ 10%):** review only the flagged items, and do not re-open an answered question without a specific reason."
+          ]
+        },
+        {
+          "p": "Never leave a question blank unless the instructions state a penalty for a wrong answer — and this point **needs verification**, since candidates did not mention it."
+        },
+        {
+          "formula": "3 h = 10,800 s ÷ 140 ≈ 77 s per item"
+        },
+        {
+          "p": "If the duration were, say, 3 hours for 140 questions (the duration itself was not stated and needs verification), your budget is about 77 seconds per question — spend about 45 seconds on the easy ones to save time for the tables."
+        }
+      ]
+    },
+    {
+      "title": "Study Plan by Days Remaining",
+      "blocks": [
+        {
+          "table": [
+            [
+              "Days remaining",
+              "Do this"
+            ],
+            [
+              "21 or more",
+              "Study Units 01–11 in order, one domain per session. For each decision table, explain aloud to yourself why each row’s answer wins."
+            ],
+            [
+              "10",
+              "Units 09–10 (security and governance) in a separate session — the official names to the letter, in Arabic and English. The cost-analysis part of Unit 11 twice."
+            ],
+            [
+              "5",
+              "The case studies in Unit 12: cover the “decision” part and rebuild it from the requirements."
+            ],
+            [
+              "2",
+              "The review sheet in Unit 12, and the glossary."
+            ],
+            [
+              "1",
+              "The review sheet only. Sleep well."
+            ]
+          ]
+        },
+        {
+          "quote": "Any decision table in which you cannot explain why each row wins is one you have not yet learned."
+        }
+      ]
+    },
+    {
+      "title": "Sources and Accuracy Policy",
+      "blocks": [
+        {
+          "p": "The following sources were integrated into this material:"
+        },
+        {
+          "ul": [
+            "Two reports written by two candidates.",
+            "The official weights of the exam domains.",
+            "SDAIA publications: the AI Ethics Principles, the Generative AI guidelines, the Personal Data Protection Law and its Implementing Regulations, the data-management standards issued by the National Data Management Office, and the National Framework for AI Risk Management.",
+            "The previous notes in their corrected version (v2).",
+            "A critical review in the “Devil’s Advocate” style, with a log of its findings.",
+            "A cross-check of the governance content against SDAIA’s own publications library: the Ethics Principles 2025, the Risk Management Framework 2026, the Generative AI Principles 2025, the Deepfake Principles 2025, the AI Procurement Study 2026, and the studies on Arabic language models and small language models (SLMs)."
+          ]
+        },
+        {
+          "p": "As for the community resources that candidates mentioned — SDAIA’s digital library, a shared Google Drive folder, and the “AI-Engineer badge helper” page — they are for additional practice, not an authoritative reference."
+        },
+        {
+          "h": "Accuracy policy"
+        },
+        {
+          "ul": [
+            "No facts, numbers, official names or dates are added that are not in the sources.",
+            "SDAIA names and the Personal Data Protection Law are written in their exact official form, because governance questions test one-word differences.",
+            "What candidates reported is attributed to them as an account, not an official document.",
+            "What is flagged in the source as “needs verification” remains flagged as such — including in this guide: the exam duration, and whether a penalty applies to wrong answers."
+          ]
+        }
+      ]
+    }
+  ]
+}

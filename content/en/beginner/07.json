@@ -1,0 +1,813 @@
+{
+  "before": [
+    "This unit is about **life after the build**: how to move a model from a successful experiment to a system that runs safely every day, how to launch it without harming users, how to monitor it and know when it degrades, what to do when things break, and how to govern and document it. It is **the heaviest domain of the exam** (Domain 4, about 27 questions out of 150).",
+    "The word **MLOps** means \"machine learning operations\": practices that make models get built, deployed and monitored regularly and reliably, as DevOps does for software. **LLMOps** is the version specific to language models.",
+    "You need these from earlier units first: from Unit 00, Section 5.4 (deployment, versioning and monitoring); from Unit 02, Section 3.6 (types of drift); and from Unit 01, Sections 2.4 and 3.5 (availability and replicas)."
+  ],
+  "sections": {
+    "1.1": {
+      "simple": [
+        "ML teams pass through three maturity levels. **Level 0 (manual)**: the scientist trains the model on their own computer, hands a file to the engineers, and nobody monitors after launch. **Level 1 (automated training pipeline)**: training runs automatically and repeats when new data arrives. **Level 2 (full automation)**: even the training pipeline's own code is tested and deployed automatically.",
+        "The usual exam question is: \"What is this team's next step?\". The answer is always **the very next level**, not a jump to the tools of the higher level. A team at level 0 starts with version control and a repeatable training pipeline, not a full platform."
+      ],
+      "example": "A small restaurant prepares food with no written recipes (level 0). The correct next step: write the recipes and standardise the quantities so the dish is the same every day. Jumping straight to a \"fully automated kitchen with robots\" before even writing the recipes will fail, because the machines do not know what to cook.",
+      "terms": [
+        {
+          "ar": "عمليات تعلّم الآلة",
+          "en": "MLOps",
+          "def": "Practices and tools for building, deploying, monitoring and updating models in an automated, reliable and repeatable way."
+        },
+        {
+          "ar": "مستويات النضج",
+          "en": "Maturity levels (0/1/2)",
+          "def": "A classification of how automated a team is: 0 manual, 1 automated training pipeline, 2 full automation of continuous integration and delivery."
+        },
+        {
+          "ar": "التسليم المستمر",
+          "en": "Continuous Delivery / Deployment — CD",
+          "def": "Releasing changes to production automatically, through successive stages, after they pass the tests."
+        },
+        {
+          "ar": "التدريب المستمر",
+          "en": "Continuous Training — CT",
+          "def": "Retraining the model automatically on a schedule, when new data arrives, or when performance drops."
+        },
+        {
+          "ar": "المُطلِق",
+          "en": "Trigger",
+          "def": "An event that starts a process automatically, such as \"10,000 new labels arrived\" or \"recall fell below 0.85\"."
+        }
+      ]
+    },
+    "1.2": {
+      "simple": [
+        "To be able to rebuild any model exactly, you must keep a **numbered version** of everything that produced it: the code, the data, the experiments and their results, the model itself, the environment it ran in (the libraries and their versions), and, for language models, the prompts and the RAG index version as well.",
+        "**Lineage** means being able to answer the question: \"For the model running in production now: which data, which code and which settings produced it, and who approved it?\". This is what the auditor asks for first."
+      ],
+      "example": "An auditor from the regulator asks: \"Why did your model reject this customer's financing application in March?\". To answer you need: the version of the model that was running in March, the data it was trained on, the settings, and who approved it. If these were not kept under version control, you have no answer and no evidence.",
+      "terms": [
+        {
+          "ar": "Git",
+          "en": "Git",
+          "def": "A common system for controlling code versions: it keeps every change, who made it and when, and allows returning to any version."
+        },
+        {
+          "ar": "DVC / lakeFS",
+          "en": "Data versioning tools",
+          "def": "Tools for managing versions of large data the way Git manages versions of code."
+        },
+        {
+          "ar": "تتبع التجارب",
+          "en": "Experiment tracking (MLflow, W&B)",
+          "def": "Recording every training experiment: the settings, the data, the results and the output files, so they can be compared later."
+        },
+        {
+          "ar": "ملف القفل",
+          "en": "Lock file",
+          "def": "A file that records the exact versions of every library used, so exactly the same environment is built every time."
+        },
+        {
+          "ar": "سجل الموجّهات",
+          "en": "Prompt registry",
+          "def": "A central store of prompt versions, like the model registry, to track which prompt was running and when."
+        }
+      ]
+    },
+    "1.3": {
+      "simple": [
+        "A **pipeline** turns \"a notebook that worked once\" into a process that repeats the same way every time. Its stages in order: data ingestion → validating it → building features → splitting → training → evaluation → comparison with the current production model → registration → approval → deployment → monitoring.",
+        "An **orchestrator** is a program that schedules these steps, runs them in order and tracks them. The exam rewards particular properties: **idempotent** steps, **caching** of the steps that did not change, **gates** that stop promotion automatically if a check fails, **environment separation**, and **infrastructure as code**. A tip: a small team on a managed cloud platform uses its native tools rather than building a complex cluster itself."
+      ],
+      "example": "A factory production line: raw materials come in, then are inspected, then cut, then assembled, then tested, then packaged. If a product fails the test, it is not packaged or shipped (the **gate**). If only the colour of the packaging changed, we do not remanufacture the product from the start; we only repeat the packaging (**step caching**).",
+      "terms": [
+        {
+          "ar": "خط العمل",
+          "en": "Pipeline",
+          "def": "An ordered chain of automated steps, each with specified inputs and outputs, executed the same way every time."
+        },
+        {
+          "ar": "المنسِّق",
+          "en": "Orchestrator (Airflow, Kubeflow)",
+          "def": "A system that schedules the pipeline's steps, runs them in the correct order, retries on failure and records what happened."
+        },
+        {
+          "ar": "البوابة",
+          "en": "Gate",
+          "def": "An automated check that stops the pipeline's progress if a condition is not met, such as \"performance is below the current model\"."
+        },
+        {
+          "ar": "البنية كشيفرة",
+          "en": "Infrastructure as Code (Terraform, Helm)",
+          "def": "Describing servers, networks and settings in versioned text files, instead of configuring them by hand, so they can be rebuilt and reviewed."
+        },
+        {
+          "ar": "GitOps",
+          "en": "GitOps",
+          "def": "An approach in which the state of deployed systems always matches what is in the Git repository. A change is a pull request, and a rollback is a revert to the previous version."
+        },
+        {
+          "ar": "طلب الدمج",
+          "en": "Pull request",
+          "def": "A proposed change to the code that colleagues review before it is merged into the main version."
+        }
+      ]
+    },
+    "1.4": {
+      "simple": [
+        "Before launching any model, here is the checklist in eight areas: **data** (documented, lawful, no leakage), **evaluation** (better than the current model with statistical confidence, no regression in critical cases), **performance** (speed under load), **security**, **governance** (documentation and approvals), **operations** (monitoring, runbook, on-call owner and rollback plan), **rollout** (a gradual plan with stop criteria), and **communication** (support knows, and the user is informed).",
+        "In \"What was missing?\" questions, look for the line that was not carried out. The important rule: **stop criteria are set before the rollout**, not during it, otherwise the decision becomes impressionistic under pressure."
+      ],
+      "example": "Before takeoff the pilot goes through a written checklist, however experienced: fuel, wings, instruments and the emergency plan. They do not decide \"when we return to the airport\" after the problem appears in the air; the rules are set in advance: \"if this happens, we return immediately\".",
+      "terms": [
+        {
+          "ar": "دليل التشغيل",
+          "en": "Runbook",
+          "def": "A written document of steps for what to do in specific situations, such as \"if this alert appears: check this, then roll back with that\"."
+        },
+        {
+          "ar": "المناوبة",
+          "en": "On-call",
+          "def": "A person responsible by role for responding to system failures at a given time, even outside working hours."
+        },
+        {
+          "ar": "الإصدار الدافئ",
+          "en": "Warm standby version",
+          "def": "The previous version is ready to run immediately when needed, with no loading time."
+        },
+        {
+          "ar": "معايير الإيقاف",
+          "en": "Stop criteria",
+          "def": "Conditions set in advance for stopping the rollout and rolling back, such as \"if the error rate rises above 1% or complaints above 20%\"."
+        }
+      ]
+    },
+    "1.5": {
+      "simple": [
+        "Three governance tools. The **feature store** (you saw it in Unit 02): each feature is defined once and used in training and serving in the same way. It earns its cost when several models share features, or real-time features are needed. The **model registry**: an official archive of every version, its state (staging, production, archived), and who approved it. Deployment points to the registry, and **rollback = promoting the previous version**. The **model card**: a document that describes the model.",
+        "**approvals scale with risk**: a low-risk model may be promoted automatically after passing the checks, whereas a high-risk model (credit, health, hiring or public services) needs human sign-off from named people, recorded in the registry."
+      ],
+      "example": "The **model card** is like a medicine leaflet: why it is used (the intended use), who it is not suitable for (the out-of-scope use), how it was tested and the results, the side effects (the limitations), and who the manufacturer is (the owner). This leaflet is the first thing the auditor asks for.",
+      "terms": [
+        {
+          "ar": "مراحل السجل",
+          "en": "Registry stages",
+          "def": "The model's states in the registry: none → staging → production → archived."
+        },
+        {
+          "ar": "بطاقة النموذج",
+          "en": "Model card",
+          "def": "A document that describes the intended and out-of-scope uses, the training data, performance overall and by slice, fairness, limitations, and the owner."
+        },
+        {
+          "ar": "تقييم المطابقة",
+          "en": "Conformity assessment",
+          "def": "A formal check that the system conforms to the requirements and principles, before and after deployment. The SDAIA principles require it for high-risk systems."
+        }
+      ]
+    },
+    "1.6": {
+      "simple": [
+        "Banks treat models as a source of **risk** that must be governed throughout its life, and this applies to all AI. Six elements: the **inventory** (a list of every model in the organisation, because you cannot govern what you do not know), **tiering** (stricter controls for the riskier models), **independent validation** (a team other than the developers reviews high-risk models, and has the right to block deployment), **monitoring and periodic review**, **use limits** (a model built for one purpose is not used for another without new validation), and **deliberate retirement**.",
+        "Tiering depends on two things: **impact** (on people's money, health and rights) and **autonomy** (does the model support a human's decision, or decide alone?). The table gives four categories, the last of which is **unacceptable** outright, such as social scoring of individuals."
+      ],
+      "example": "**Use limits**: a bank built a model to assess the risk of \"personal financing for employees\" and validated it. Then another department decided to use it to assess \"small-business financing\" because it \"works well\". But businesses have entirely different data and behaviour, and the model was never tested on them. This is a recurring root cause in failure scenarios.",
+      "terms": [
+        {
+          "ar": "إدارة مخاطر النماذج",
+          "en": "Model Risk Management — MRM",
+          "def": "A framework for governing models as a source of risk throughout their life: inventory, tiering, independent validation, monitoring, and retirement."
+        },
+        {
+          "ar": "جرد النماذج",
+          "en": "Model inventory",
+          "def": "A central list of every model in the organisation with its purpose, owner, data, risk level and state."
+        },
+        {
+          "ar": "التدريج",
+          "en": "Tiering",
+          "def": "Classifying models into risk categories, where each category determines the depth of validation, the approval level and the monitoring frequency."
+        },
+        {
+          "ar": "التحقق المستقل",
+          "en": "Independent validation",
+          "def": "A review carried out by a team separate from the developers, covering conceptual soundness, data, performance and fairness, with the right to block deployment."
+        },
+        {
+          "ar": "الإطار الوطني لإدارة مخاطر الذكاء الاصطناعي",
+          "en": "National AI Risk Management Framework",
+          "def": "A Saudi framework issued by SDAIA for assessing and treating the risks of AI systems. You will see it in Unit 10."
+        },
+        {
+          "ar": "التقييم الاجتماعي",
+          "en": "Social scoring",
+          "def": "Rating individuals with a general score based on their social behaviour that affects their rights. Classified as unacceptable risk."
+        }
+      ]
+    },
+    "1.7": {
+      "simple": [
+        "Auditors expect a specific set of documents, and the exam asks: \"Which document records this?\" or \"Which document is missing?\". Memorise each document with what it contains and the principle it serves.",
+        "The most important to memorise: the **use-case charter** (why we are building this and for whom), the **data sheet** (where the data came from and its legal basis), the **data protection impact assessment** (privacy risks), the **model card**, the **risk assessment**, the **validation report**, the **approval records** (who approved and when), the **monitoring plan**, the **disclosure texts**, and the **incident log**."
+      ],
+      "example": "A year later you are asked: \"How was this model approved?\". You need three documents together: the **validation report** (what the independent reviewers found, and were their findings closed?), the **approval record** (who signed, when, and under what conditions?), and **lineage** (which data and code produced this particular version?).",
+      "terms": [
+        {
+          "ar": "ميثاق حالة الاستخدام",
+          "en": "Use-case charter",
+          "def": "A document that specifies the problem, the users, the expected benefits, the risk level and the owner, before building starts."
+        },
+        {
+          "ar": "ورقة البيانات",
+          "en": "Data sheet",
+          "def": "A document that describes the data sources, how they were collected, their legal basis, classification, quality and known gaps."
+        },
+        {
+          "ar": "تقرير التحقق",
+          "en": "Validation report",
+          "def": "The results of the model's independent review, its findings, and the closure status of each finding."
+        },
+        {
+          "ar": "سجل الحوادث",
+          "en": "Incident log",
+          "def": "A log of the failures, breaches and leaks that occurred, the actions taken, and the notifications sent."
+        }
+      ]
+    },
+    "2.1": {
+      "simple": [
+        "**The most important table in the unit.** How do you launch a new model? Seven ways, each with its own risks and use. **Shadow**: the new model sees the real requests and predicts, but its results are shown to no one, only logged. No risk to anyone. **Canary**: a small percentage of users see the new one (1%, then 5%, then 25%, then 100%). **Blue–green**: two full environments, and the switch is all at once with the possibility of an instant return. **A/B**: a random split and a statistical comparison to find out which is better for the business. **Multi-armed bandit**: gradually shifting requests towards the winning variant during the experiment. **Rolling**: replacing replicas one after another. **Big bang**: the riskiest, and rarely the correct answer.",
+        "The skill required: reading the scenario and choosing the method. The cues are written at the end of the section, so memorise them."
+      ],
+      "example": "A restaurant wants to change the recipe of its most famous dish. **Shadow**: the cook prepares the new recipe next to the old one and only the staff taste it, while customers eat the old one. **Canary**: serve the new one to 1 table out of 20, then 5 tables, then everyone, and watch the reactions. **A/B**: half the customers, chosen randomly, get the new one, and we compare satisfaction statistically. **Blue–green**: two kitchens ready, and at exactly 12 o'clock everyone switches to the new one; if a problem appears, we return immediately to the old one.",
+      "terms": [
+        {
+          "ar": "النشر الظلي",
+          "en": "Shadow / dark launch",
+          "def": "Running the new model on a copy of the real requests and logging its results without showing them. It tests predictions and speed with no risk, but it does not measure its effect on user behaviour."
+        },
+        {
+          "ar": "الإطلاق الكناري",
+          "en": "Canary release",
+          "def": "Routing a small, growing percentage of users to the new version with monitoring and automatic rollback when the stop criteria are exceeded."
+        },
+        {
+          "ar": "الأزرق-الأخضر",
+          "en": "Blue–green deployment",
+          "def": "Two identical full environments, with the switch between them all at once, and an instant return. It needs double the capacity for a period."
+        },
+        {
+          "ar": "ماكينة القمار متعددة الأذرع",
+          "en": "Multi-armed bandit",
+          "def": "An experimentation method that gradually moves requests towards the better variant during the experiment itself, which reduces loss."
+        },
+        {
+          "ar": "الندم",
+          "en": "Regret",
+          "def": "The loss caused by showing the worse variant during the experiment, compared with showing the better one from the start."
+        },
+        {
+          "ar": "التحديث المتدحرج",
+          "en": "Rolling update",
+          "def": "Replacing the old replicas with the new ones one after another, so the versions run together for a short time."
+        },
+        {
+          "ar": "عديم الحالة",
+          "en": "Stateless",
+          "def": "A service that does not keep information between one request and the next, so any replica of it can be replaced by another without a problem."
+        }
+      ]
+    },
+    "2.2": {
+      "simple": [
+        "Monitoring has **four layers**, and each layer exposes problems the others do not see. **Infrastructure**: is the server working? Is it fast? Does it have errors? **Data**: is the incoming data sound? Has its distribution changed? **Model**: are its predictions still correct? **Business**: has it achieved the goal? Have complaints risen?",
+        "The most important lesson: a model can be **completely healthy at the infrastructure level** (fast, error-free) **and silently wrong in its predictions**. A green infrastructure dashboard does not mean the model is correct. Note four points: the average hides slices, confidence is not performance, silent default values fool the dashboards, and saturation is an early warning."
+      ],
+      "example": "A car: **infrastructure**: the engine runs and the tyres are inflated. **Data**: the fuel is the right type. **Model**: the navigation system directs you to the right road. **Business**: did you reach your destination at the required time? The engine may be excellent while the navigation takes you to the wrong city. The **silent default value**: the temperature sensor failed, so it now always reads \"25 degrees\". The dashboard is green, and the engine is burning.",
+      "terms": [
+        {
+          "ar": "الإشارات الذهبية الأربع",
+          "en": "Four golden signals",
+          "def": "Core metrics for any service in reliability engineering: latency, traffic (the number of requests), errors and saturation."
+        },
+        {
+          "ar": "هندسة الاعتمادية",
+          "en": "Site Reliability Engineering — SRE",
+          "def": "An engineering approach to operating systems with high reliability, with measured objectives, automation and incident management."
+        },
+        {
+          "ar": "التشبّع",
+          "en": "Saturation",
+          "def": "How full the resources are (the processor, memory and queue). A rise warns of problems before they show up in latency and errors."
+        },
+        {
+          "ar": "حداثة البيانات",
+          "en": "Freshness",
+          "def": "How long since the data was last updated. Data older than expected means a pipeline has stopped."
+        },
+        {
+          "ar": "التسميات المتأخرة",
+          "en": "Delayed labels",
+          "def": "The real answers that arrive days or weeks after the prediction, such as learning whether a transaction was fraud after the customer objected."
+        }
+      ]
+    },
+    "2.3": {
+      "simple": [
+        "How do we measure \"how much has the data changed\"? This table gives different statistical tools for different data types. The best known is **PSI**: we divide the feature's values into bins, and compare each bin's proportion in the training data with its proportion in the live data. The reading: **below 0.1** stable, **from 0.1 to 0.25** a moderate change, and **above 0.25** a major change.",
+        "**interpretation discipline** is the most important lesson: drift is **a signal to investigate, not an automatic order to retrain**. Ask: is it a data fault? A real change? Seasonality? Did it actually affect performance? A statistical trap: the KS test with millions of samples finds a \"significant difference\" even for trivial changes, so look at the **size** of the change, not at the p-value alone."
+      ],
+      "example": "PSI step by step for a feature split into two bins. In training: 50% and 50%. In reality now: 40% and 60%. First bin: (0.40 − 0.50) × ln(0.40 ÷ 0.50) = (−0.10) × (−0.223) = 0.022. Second bin: (0.60 − 0.50) × ln(0.60 ÷ 0.50) = 0.10 × 0.182 = 0.018. The total ≈ 0.04, which is less than 0.1, so stable. Note that every term is always positive, because the difference and the logarithm have the same sign.",
+      "terms": [
+        {
+          "ar": "مؤشر استقرار المجتمع",
+          "en": "Population Stability Index — PSI",
+          "def": "A number that measures how different a feature's distribution is between two periods. Below 0.1 stable, 0.1–0.25 moderate, above 0.25 major."
+        },
+        {
+          "ar": "اختبار كولموغوروف–سميرنوف",
+          "en": "Kolmogorov–Smirnov (KS) test",
+          "def": "A test that measures the largest distance between two cumulative distributions. With huge samples it becomes very sensitive to trivial changes."
+        },
+        {
+          "ar": "اختبار كاي تربيع",
+          "en": "Chi-square test",
+          "def": "A test that compares category frequencies between two periods for categorical data, such as the proportions of cities or device types."
+        },
+        {
+          "ar": "تباعد جنسن–شانون",
+          "en": "Jensen–Shannon divergence",
+          "def": "A measure of the distance between two distributions, between 0 (identical) and 1 (completely different)."
+        },
+        {
+          "ar": "مسافة فاسرشتاين",
+          "en": "Wasserstein distance",
+          "def": "A measure of the amount of \"effort\" needed to turn one distribution into another, in the feature's own units, which makes it easy to interpret."
+        },
+        {
+          "ar": "انجراف التنبؤات",
+          "en": "Prediction drift",
+          "def": "A change in the distribution of the model's own outputs, such as the share of \"fraud\" rising from 1% to 3%. An early warning when labels are delayed."
+        },
+        {
+          "ar": "دالة التوزيع التراكمي",
+          "en": "Cumulative Distribution Function — CDF",
+          "def": "For each value: the proportion of the data equal to it or below it."
+        }
+      ]
+    },
+    "2.4": {
+      "simple": [
+        "When do we retrain? Four types of triggers. **Scheduled** (every week or month): simple, but it may retrain unnecessarily or late. **Performance-based**: when actual performance drops, and this needs real answers quickly. **Drift-based**: when the real answers are delayed, but first confirm that the drift actually caused harm. **Event-based**: a new product, a new regulation, or a season.",
+        "The strict rule: **every retrained model goes through the same checks and the same gradual rollout**. Promoting a retrained model straight to 100% of users without checks is a **classic wrong answer**, even if its accuracy on paper is higher."
+      ],
+      "example": "Renewing a driving licence: it is not renewed automatically, but must pass the same medical examination every time. Likewise the updated model: \"we retrained it on newer data\" does not mean it is better. The new data may contain an error, or it may be worse with a particular group. This is known only by testing.",
+      "terms": [
+        {
+          "ar": "إعادة التدريب",
+          "en": "Retraining",
+          "def": "Training the model again on newer data to keep up with changes in reality."
+        },
+        {
+          "ar": "الحقيقة الأرضية",
+          "en": "Ground truth",
+          "def": "The actual correct answer that we learn later, such as \"did the customer actually repay?\". We use it to measure the model's real performance."
+        }
+      ]
+    },
+    "2.5": {
+      "simple": [
+        "A hidden problem: **the model's decisions create its own future training data**. If it is biased, it will create biased data, then train on it and become more biased. This table lists six loops of this kind.",
+        "The best known is **selection bias**: the credit model rejects a group, so we never find out whether they would have repaid, and the next model learns to reject them too. The **popularity loop** in recommendations. The **self-fulfilling prediction**. **model collapse** when models train on text generated by models. The recurring remedy: **a small amount of random exploration** that collects data outside the model's decisions."
+      ],
+      "example": "**Self-fulfilling prediction**: a model predicted that a particular neighbourhood is \"high in traffic violations\", so more inspectors were sent there, so more violations were recorded there (because someone is recording them), and the model trains on this data and becomes more certain that the neighbourhood is \"bad\". Meanwhile other neighbourhoods with the same violations are recorded by no one.",
+      "terms": [
+        {
+          "ar": "حلقة التغذية الراجعة",
+          "en": "Feedback loop",
+          "def": "A circle in which the model's decisions affect the data it will learn from later, so its errors or biases get amplified."
+        },
+        {
+          "ar": "استدلال الرفض",
+          "en": "Reject inference",
+          "def": "Methods for estimating what would have happened with the rejected cases whose outcome we do not know, to mitigate selection bias."
+        },
+        {
+          "ar": "انهيار النموذج",
+          "en": "Model collapse",
+          "def": "The degradation of the quality and diversity of models when they train on content generated by other models instead of human content."
+        },
+        {
+          "ar": "التسميم",
+          "en": "Poisoning",
+          "def": "Inserting deliberately crafted data into a model's training data to manipulate its behaviour."
+        },
+        {
+          "ar": "التعلم المباشر",
+          "en": "Online learning",
+          "def": "A model that updates itself continuously from new data as soon as it arrives, instead of retraining in batches."
+        }
+      ]
+    },
+    "3.1": {
+      "simple": [
+        "Three similar terms. **SLI**: the thing we measure, such as \"the percentage of requests that finish in under 300 ms\". **SLO**: the internal target, such as \"99% of requests under 300 ms over 30 days\". **SLA**: the contract with the customer, with penalties if it is not met. The internal target (SLO) is set tighter than the contract (SLA) to leave a safety margin.",
+        "The **error budget** = the failure that is permitted. With 99.9% availability, 0.1% downtime is allowed. An important idea: **components in series multiply**. If your system needs three components all working, its availability = the product of their availabilities, which is **lower than the weakest of them**."
+      ],
+      "example": "First calculation: a 30-day month = 30 × 24 × 60 = 43,200 minutes. A 99.9% budget = 0.001 × 43,200 = 43.2 minutes of permitted downtime a month only. Second calculation: your system depends on a front end (99.9%), a vector database (99.9%) and a model provider (99.5%). Total availability = 0.999 × 0.999 × 0.995 ≈ 0.993, that is only 99.3%. Like a chain of three links: if any link breaks, the chain falls.",
+      "terms": [
+        {
+          "ar": "مؤشر مستوى الخدمة",
+          "en": "Service Level Indicator — SLI",
+          "def": "A measured quantity that describes service quality, such as the percentage of successful or fast requests."
+        },
+        {
+          "ar": "هدف مستوى الخدمة",
+          "en": "Service Level Objective — SLO",
+          "def": "An internal target for an indicator over a specified period, such as \"99.9% availability over 30 days\"."
+        },
+        {
+          "ar": "ميزانية الخطأ",
+          "en": "Error budget",
+          "def": "The permitted amount of failure = 1 − the target. When it is exhausted, risky releases are frozen and the focus goes to reliability."
+        },
+        {
+          "ar": "النافذة المتحركة",
+          "en": "Rolling window",
+          "def": "A measurement period that moves with time, such as \"the last 30 days\" calculated every day, not \"the calendar month\"."
+        },
+        {
+          "ar": "الاعتمادية الصلبة",
+          "en": "Hard dependency",
+          "def": "A component whose failure stops your whole service, with no alternative."
+        }
+      ]
+    },
+    "3.2": {
+      "simple": [
+        "**Checks**: the system periodically asks each replica about its health. **Liveness probe**: \"Are you still working?\" and if it does not answer, it is restarted. **Readiness probe**: \"Are you ready to receive requests?\" Large models need minutes to load, so requests are not sent to them before they are ready. **Startup probe**: \"Give it time to start\" so that it is not killed while loading.",
+        "**disaster recovery** is measured with two numbers. **RPO**: how much data can we lose? (for example the last 15 minutes). **RTO**: how long until the service is back? (for example one hour). Four strategies, from the cheapest and slowest to the most expensive and fastest. An important warning: **replication is not a backup**, because it copies deletion and corruption immediately too."
+      ],
+      "example": "**Replication versus backup**: you have an important file on two computers synchronised instantly (replication). If one burns, the other is intact, excellent. But if you delete the file by mistake, it is deleted from both immediately. Yesterday's backup, on the other hand, keeps it. The **four strategies** are like contingency plans for a restaurant that burns down: (1) we have the recipes in a safe and rebuild from scratch (hours and days). (2) **Pilot light**: a standby kitchen equipped but switched off. (3) **Warm standby**: a small kitchen that is always running. (4) **Active–active**: two branches that always run at full capacity.",
+      "terms": [
+        {
+          "ar": "فحص الحياة والجاهزية والإقلاع",
+          "en": "Liveness / readiness / startup probes",
+          "def": "Periodic checks: liveness restarts what is hung, readiness holds back requests until it is ready, and startup gives time for slow loading."
+        },
+        {
+          "ar": "الإغلاق اللطيف",
+          "en": "Graceful shutdown / draining",
+          "def": "Finishing in-flight requests before stopping a replica, instead of cutting them off abruptly."
+        },
+        {
+          "ar": "هدف نقطة الاستعادة",
+          "en": "Recovery Point Objective — RPO",
+          "def": "The maximum acceptable data loss measured in time. RPO = 15 minutes means we accept losing the last 15 minutes of data at most."
+        },
+        {
+          "ar": "هدف زمن الاستعادة",
+          "en": "Recovery Time Objective — RTO",
+          "def": "The maximum acceptable time for the service to come back after the disaster."
+        },
+        {
+          "ar": "النسخ الاحتياطي والتكرار",
+          "en": "Backup / replication",
+          "def": "Backup: a copy at a point in time that protects against deletion and corruption. Replication: continuous copying that protects against losing a machine or a zone, but it copies mistakes too."
+        },
+        {
+          "ar": "نشط-نشط",
+          "en": "Active–active",
+          "def": "Two or more sites running together and serving requests at the same time, so that if one falls the other carries on immediately."
+        }
+      ]
+    },
+    "3.3": {
+      "simple": [
+        "An alert must fire on **what the user feels** (the service is slow, errors are high, the budget is being consumed), not on every internal detail. Every alert has an **owner** and **written steps**. Too many noisy alerts cause **alert fatigue**: the team ignores them, and so misses the real alert.",
+        "A smart method: **burn-rate alerts**. If the error budget is being consumed very fast (it will run out within hours or days) → wake the on-call person immediately. If it is being consumed slowly → open a ticket to work on later. After every incident: a **blameless review**, meaning we look for the system's causes, not for a person to blame."
+      ],
+      "example": "The calculation: the target is 99.9%, so 0.1% errors are permitted. Now the errors are 1%. Burn rate = 1% ÷ 0.1% = 10 times. A 30-day budget will run out in 30 ÷ 10 = 3 days, and this is urgent, so wake the on-call person. If the errors were 0.15%: the rate is 1.5 times, and the budget runs out in 20 days, and this is not urgent, so a ticket is enough. Like a car's fuel gauge: if it is dropping at an abnormal speed, stop now, and if it is dropping a little faster than usual, check the car this week.",
+      "terms": [
+        {
+          "ar": "إرهاق التنبيهات",
+          "en": "Alert fatigue",
+          "def": "So many unimportant alerts that the team starts ignoring all of them, including the real ones."
+        },
+        {
+          "ar": "معدل الاستهلاك",
+          "en": "Burn rate",
+          "def": "The speed of consuming the error budget compared with the permitted rate. 10 times means the monthly budget will run out in a tenth of the month."
+        },
+        {
+          "ar": "الاستدعاء الفوري والتذكرة",
+          "en": "Page / ticket",
+          "def": "Page: an urgent alert that wakes the on-call person immediately. Ticket: a task that is logged to be worked on during working hours."
+        },
+        {
+          "ar": "التذبذب",
+          "en": "Flapping",
+          "def": "An alert that fires, stops and returns repeatedly and quickly, so it annoys without benefit."
+        },
+        {
+          "ar": "مراجعة ما بعد الحادثة بلا لوم",
+          "en": "Blameless post-mortem",
+          "def": "An analysis of the incident that focuses on the system's causes, processes and how to prevent a recurrence, not on punishing a person."
+        },
+        {
+          "ar": "العمل الروتيني",
+          "en": "Toil",
+          "def": "Repetitive manual work with no lasting value that grows with load, such as restarting failed jobs by hand. It should be automated."
+        }
+      ]
+    },
+    "3.4": {
+      "simple": [
+        "When an incident occurs in a running model, the steps are six, in order: **detect** → **mitigate first** (stop the harm with a rollback or a fallback) → **diagnose** (look for the cause) → **fix and verify** through the normal pipeline and checks, not with a quick fix that bypasses them → **review blamelessly** → and if **personal data leaked**, follow the procedures of the Personal Data Protection Law.",
+        "The golden rule: **mitigate before diagnosing**. Do not look for the cause while the harm continues."
+      ],
+      "example": "Water leaking in the kitchen. The first step is not to look for the broken pipe, but to **close the main valve** to stop the damage. Then you look for the source calmly, then fix it properly, then ask: why did it break? How do we prevent that? In the model: complaints about rejected applications rose after the new release → bring back the old release immediately, then look for the cause.",
+      "terms": [
+        {
+          "ar": "التخفيف",
+          "en": "Mitigation",
+          "def": "Stopping or reducing the harm quickly, even before knowing the cause, such as rolling back to the previous version."
+        },
+        {
+          "ar": "الإصلاح الساخن",
+          "en": "Hotfix",
+          "def": "A quick fix that is deployed straight to production. It is dangerous if it bypasses the normal tests and checks."
+        }
+      ]
+    },
+    "3.5": {
+      "simple": [
+        "Every part of the system will fail one day. The expert designer decides in advance: **when each part fails, what does the product do?** So work continues at lower quality instead of stopping completely. This table gives each failure a fallback behaviour.",
+        "Three principles. **Fail safe, not just soft**: in important decisions the safe fallback is \"refer to a human\", not \"approve automatically\". **make degradation visible**: tell the user. **test fallbacks regularly**: a fallback that was never tested is a hope, not a design."
+      ],
+      "example": "The policy assistant while the vector database is down. **Bad failure**: the assistant answers from its general memory with no sources, and so invents a policy. **Soft failure**: \"I can't access the documents right now; try again shortly or contact Human Resources\". The fraud model while the feature store is down: **safe failure** is not \"accept all transactions\", but \"apply simple conservative rules, and put borderline cases up for review\".",
+      "terms": [
+        {
+          "ar": "التدهور اللطيف",
+          "en": "Graceful degradation",
+          "def": "Continuing the service with fewer functions or lower quality when part of it fails, instead of stopping completely."
+        },
+        {
+          "ar": "تسلسل البدائل",
+          "en": "Fallback chain",
+          "def": "A pre-arranged order of fallbacks: if the primary fails try the second, then the third, then the soft message."
+        },
+        {
+          "ar": "التخلص من الحمل",
+          "en": "Load shedding",
+          "def": "Rejecting or deferring low-priority requests under severe pressure to protect the important ones."
+        },
+        {
+          "ar": "الفشل الآمن",
+          "en": "Fail safe",
+          "def": "A design that makes the system choose the least harmful behaviour on failure, such as referring to a human instead of automatic approval."
+        }
+      ]
+    },
+    "3.6": {
+      "simple": [
+        "How do you know the contingency plans really work? **Test them deliberately**. This table lists tests: **fault injection** (kill a service deliberately and see whether the fallback works), a **zone failure drill**, **load tests** (2 to 4 times the peak), **data failures** (send corrupted data deliberately), **model failures** (deploy a bad model deliberately in the test environment), a **recovery drill**, and **security drills**.",
+        "**game days**: scheduled days on which the team runs these scenarios, so that runbooks turn from papers into habits. This is a direct application of the **Reliability & Safety** principle of the SDAIA principles."
+      ],
+      "example": "A fire evacuation drill at school. We do not wait for a real fire to find out whether the exits work and whether the students know the way. We try twice a year, and discover that one of the doors is locked, and that the third-floor class does not know where to gather. All of that is fixed before the real fire.",
+      "terms": [
+        {
+          "ar": "هندسة الفوضى / حقن الأعطال",
+          "en": "Chaos engineering / fault injection",
+          "def": "Causing deliberate failures in the system (stopping a service, or slowing a network) to make sure the resilience mechanisms work as designed."
+        },
+        {
+          "ar": "اختبار القفزة",
+          "en": "Spike test",
+          "def": "Sending a large sudden increase in requests to test the speed of scaling and the system's endurance."
+        },
+        {
+          "ar": "الاسم المستعار للنموذج",
+          "en": "Model alias (e.g. «latest»)",
+          "def": "A name that points to the provider's \"latest model\" and what it points to changes without notice. That is why the version is pinned."
+        },
+        {
+          "ar": "أيام التمارين",
+          "en": "Game days",
+          "def": "Scheduled exercises in which the team practises failure and recovery scenarios on the test environment."
+        }
+      ]
+    },
+    "3.7": {
+      "simple": [
+        "GPUs are very expensive, and running a large group of them (a fleet) needs discipline. Seven aspects: **health** (monitoring faults and temperature, and isolating a faulty unit automatically), **utilisation** (measure the GPU's own utilisation, not the ordinary processor's), **scheduling** (a separate pool for training and another for serving), **capacity**, **drivers**, **cost visibility** (an alert for idle units), and **security**.",
+        "The rule to memorise: **training tolerates interruption** if it saves its progress periodically, so a cheap type of machine that may be reclaimed (Spot) suits it. But **latency-sensitive serving does not tolerate interruption**, so it needs reserved or guaranteed machines."
+      ],
+      "example": "Car rental. **Booking a year ahead** (reserved): cheap but you pay even if you do not use it. **Daily rental** (on-demand): flexible but dearer. **Very cheap surplus cars** (Spot): the company may ask for them back at any moment. For a long trip that you can stop and resume later (training with checkpoints), they are excellent. But an ambulance (live serving) cannot be taken back halfway.",
+      "terms": [
+        {
+          "ar": "الأسطول",
+          "en": "Fleet",
+          "def": "A large group of similar machines (here GPUs) managed together."
+        },
+        {
+          "ar": "ECC وأخطاء Xid",
+          "en": "GPU error signals",
+          "def": "Indicators of faults in GPUs: memory errors (ECC) and processor fault codes (Xid). Monitoring them reveals the faulty units."
+        },
+        {
+          "ar": "الخنق الحراري",
+          "en": "Thermal throttling",
+          "def": "Automatically slowing the processor when it gets too hot, so performance drops."
+        },
+        {
+          "ar": "العزل والتصريف",
+          "en": "Cordon & drain",
+          "def": "Stopping the sending of new work to a faulty machine (cordon) and moving the running work off it (drain) before it is repaired."
+        },
+        {
+          "ar": "المثيلات الفورية",
+          "en": "Spot instances",
+          "def": "Surplus cloud capacity at a very low price, but the provider may reclaim it at any moment with short notice."
+        }
+      ]
+    },
+    "4.1": {
+      "simple": [
+        "**LLMOps** is MLOps for language models, and it has important differences. In traditional models behaviour changes only when the **weights** change. In language models it changes when the **prompt, the model version (which the provider may change without your knowledge), the RAG index, the tools and the settings** change. That is why all of these are pinned together and logged with every answer.",
+        "The golden rules are six: pin the provider's model version, evaluate after every change to the prompt, log the versions with every answer, collect user ratings and add the failures to the test set, set token budgets, and put guardrails on inputs and outputs."
+      ],
+      "example": "An employee edited a single word in the system prompt: \"Answer **briefly**\" instead of \"Answer clearly\". The change looked innocent. But the answers started dropping important conditions from the policies. Nobody noticed for two weeks, because there is no automated evaluation that runs after every change to the prompt. The fix: the prompt in a versioned registry, and the test set running with every change.",
+      "terms": [
+        {
+          "ar": "LLMOps",
+          "en": "LLM operations",
+          "def": "Practices for operating language-model applications: versioning prompts, models and indexes, continuous evaluation, guardrails, and cost."
+        },
+        {
+          "ar": "معدل الرفض",
+          "en": "Refusal rate",
+          "def": "The percentage of requests the model refused to answer. A sudden rise may mean a change in the model or the prompt."
+        },
+        {
+          "ar": "الاستناد للمصادر",
+          "en": "Groundedness",
+          "def": "How far the answer relies on the documents provided rather than on the model's general knowledge."
+        },
+        {
+          "ar": "كسر التنسيق",
+          "en": "Format breakage",
+          "def": "The model producing an unexpected format (incomplete JSON, for example), so the program that reads its output fails."
+        }
+      ]
+    },
+    "4.2": {
+      "simple": [
+        "The LLM application lifecycle has nine steps: define the scope and risks → choose the model on your own data → design the prompt and context → build the evaluation harness → guardrails → staged launch (internal, then shadow, then canary, then everyone) → operation → continuous improvement → model upgrade and retirement. Note step 8: **fine-tuning only when prompting and RAG reach their limit**.",
+        "The **LLM judge** (a model that evaluates a model) is useful but biased: it prefers the longer answer, the one shown first, the answers of its own family, and a confident tone. The remedy is seven practices, the most important being: written evaluation criteria, asking for the justification before the score, swapping the order of the answers, and verifying its agreement with humans before relying on it."
+      ],
+      "example": "**Internal use first** (dogfooding): a company launches a customer assistant. Before that its employees use it for two weeks. The employees know the correct answers, so they discover the mistakes quickly. **swapping the order** with the judge: we ask it \"which is better: A or B?\", then ask \"which is better: B or A?\". If its opinion changes with the order alone, it is biased towards position.",
+      "terms": [
+        {
+          "ar": "منظومة التقييم",
+          "en": "Evaluation harness",
+          "def": "A set of tests and metrics run automatically on every release: a golden set, an adversarial set, calibrated judges, and human review."
+        },
+        {
+          "ar": "الاستخدام الداخلي",
+          "en": "Dogfooding",
+          "def": "A company's employees using its product themselves before launching it to customers, to discover problems."
+        },
+        {
+          "ar": "الإتاحة العامة",
+          "en": "General availability — GA",
+          "def": "The stage at which the product becomes available to all users after the trial stages."
+        },
+        {
+          "ar": "اختبار القبول",
+          "en": "Acceptance test",
+          "def": "A test that the new alternative (a model or a version) must pass before it is officially adopted."
+        }
+      ]
+    },
+    "4.3": {
+      "simple": [
+        "**Guardrails** are checks at every stage of the request's journey. **On entry**: authentication, limits, detecting personal data (and redacting it or routing to an in-Kingdom model), and detecting injection attempts. **At retrieval**: permissions. **At tool use**: parameter validation, an allow-list of actions, and human approval. **On exit**: format validation, scanning for personal data and secrets, toxicity, and grounding in sources. **At logging**: redaction and limited retention.",
+        "The repeated rule: **permissions are enforced at the retrieval stage before the model sees the text**. An instruction in the prompt (\"do not reveal confidential information\") **is not an access control**."
+      ],
+      "example": "An airport. **On entry**: checking the passport and the ticket. **At security**: checking the bags. **Before the gate**: verifying that your ticket is for this particular flight. **At boarding**: matching your name. Each point detects something the others do not. It is not enough to tell the traveller \"please do not carry prohibited items\"; you must actually inspect.",
+      "terms": [
+        {
+          "ar": "حواجز الحماية",
+          "en": "Guardrails",
+          "def": "Checks and restrictions at every stage of request processing that prevent harmful or non-compliant inputs, outputs or actions."
+        },
+        {
+          "ar": "البيانات الشخصية المعرِّفة",
+          "en": "Personally Identifiable Information — PII",
+          "def": "Data that identifies a person: name, ID number, mobile number, address and email."
+        },
+        {
+          "ar": "قالب آمن",
+          "en": "Safe template response",
+          "def": "A fixed, pre-set answer given when a request is refused, such as \"I can't help with that; you can contact …\"."
+        }
+      ]
+    },
+    "4.4": {
+      "simple": [
+        "The cost of language models = **tokens per request × number of requests × price per token**. The levers for reducing it are ordered **from the safest to the least**: (1) remove token waste (shorter prompts, fewer chunks), (2) caching, (3) routing (simple requests to a small model), (4) batching for non-urgent work, (5) self-hosting for high, steady volume, and (6) quantised or distilled models.",
+        "An important cue in the exam: **a sudden jump in cost while the number of requests is steady** = usually a bug (an endless retry, or an agent stuck in a loop) or abuse, **not natural growth**."
+      ],
+      "example": "The month's bill rose from 10,000 to 35,000 SAR, and the number of users did not change. If it were natural growth, users would have increased. On investigation: an agent searching for information that does not exist, repeating the search 40 times per question instead of once. The fix is a maximum number of steps, not \"increase the budget\". If a jump of the same proportion in requests came from one unknown key, it is usually abuse.",
+      "terms": [
+        {
+          "ar": "التجميع",
+          "en": "Batching",
+          "def": "Gathering non-urgent requests and processing them together, often at a cheaper price from providers."
+        },
+        {
+          "ar": "الاستضافة الذاتية",
+          "en": "Self-hosting",
+          "def": "Running the model on your own machines instead of paying a provider per request. It saves money at high, steady volume."
+        }
+      ]
+    },
+    "4.5": {
+      "simple": [
+        "An organisation with many use cases builds a **shared internal platform**, so that each team does not rebuild the same tools and controls. The platform provides: governed data, a feature store, experiment tracking, training pipelines, a model registry with approvals, ready-made deployment templates, an LLM gateway, search services, an evaluation service, monitoring and cost, and a governance portal.",
+        "The platform is measured by the teams' success: the time from idea to first deployment, the percentage of models on the \"paved path\", and the percentage of them documented. The rule: **make the compliant way the easy way**."
+      ],
+      "example": "**The paved path**: in a large park, if the official path is winding and long, people will walk on the grass and make side paths. The smart fix: make the paved path the shortest and easiest, so everyone takes it willingly. Likewise the platform: if deploying through it (with all the controls) is faster than deploying outside it, nobody will get around the controls.",
+      "terms": [
+        {
+          "ar": "المنصة الداخلية",
+          "en": "Internal AI platform",
+          "def": "A set of shared tools and services that the organisation provides to all its teams to build, operate and govern AI in a unified way."
+        },
+        {
+          "ar": "المسار المعبَّد",
+          "en": "Paved path / golden path",
+          "def": "The ready-made unified way that the platform provides, with the controls built in, and it is the easiest for the teams."
+        },
+        {
+          "ar": "بوابة الحوكمة",
+          "en": "Governance portal",
+          "def": "A central interface for the inventory of models, their risk assessments, their documents and audit evidence."
+        }
+      ]
+    },
+    "4.6": {
+      "simple": [
+        "**Buying a model or an AI service transfers work, not accountability.** If a model you bought makes a mistake and people are harmed, you are the one responsible to them and to the regulators. That is why **due diligence** is needed before purchase and during use.",
+        "Seven axes of due diligence: **documentation** (where their data comes from, and what their limitations are), **data handling** (where is your data processed? Do they train on it? Does it leave the Kingdom?), **security**, **performance on your own data** before signing, **change management** (will they tell you before changing the model?), the **exit plan**, and the **allocation of responsibility in the contract**."
+      ],
+      "example": "A hospital buys a system from a company to read X-ray images. The company says: \"Our accuracy is 97%\". But on whose images? Perhaps on different X-ray machines and different patients. The hospital tries it on 500 images from its own archive before signing, and finds the accuracy is 89%. It writes into the contract: \"a minimum of 92% on our data, notice 60 days before any update, and export of our data on termination of the contract\".",
+      "terms": [
+        {
+          "ar": "العناية الواجبة",
+          "en": "Due diligence",
+          "def": "Systematic examination and verification of the vendor and its product before contracting and during the contract."
+        },
+        {
+          "ar": "المعالج الفرعي",
+          "en": "Sub-processor",
+          "def": "A third party the vendor uses to process your data, such as a cloud provider it uses."
+        },
+        {
+          "ar": "خطة الخروج",
+          "en": "Exit plan",
+          "def": "A plan for moving to another vendor when needed: exporting the data, moving the prompts and indexes, and ready alternatives."
+        },
+        {
+          "ar": "نقل الخطر",
+          "en": "Risk transfer",
+          "def": "Placing part of the risk on another party by contract or insurance. It does not remove the entity's responsibility to people and to the regulators."
+        }
+      ]
+    },
+    "4.7": {
+      "simple": [
+        "Responsible AI is **not a one-time review before launch**, but lives in day-to-day work. This table links operational practices to the SDAIA principles: fairness monitoring next to accuracy, complaint handling with an owner and a response time, privacy impact review at any change, tracking environmental impact, documenting incidents, and making sure human oversight is real.",
+        "Governance questions in the exam often hide in **operational stories**: a complaint queue with no owner, a fairness metric that nobody watches, and logs that are never deleted. Recognise them as governance failures that have operational solutions."
+      ],
+      "example": "**Nominal human oversight**: a system proposes rejecting applications, and an employee must review every proposal. But the data shows the employee approved 99.8% of the proposals, and the average review time is 3 seconds. This is not evidence that the model is excellent, but evidence that the employee \"rubber-stamps\" without actual review. The fix: measure the override rate and the review time, train the reviewers, and reduce the workload.",
+      "terms": [
+        {
+          "ar": "معدل التجاوز",
+          "en": "Override rate",
+          "def": "The percentage of times the human reviewer disagrees with the model's proposal. A rate close to zero may mean nominal oversight."
+        },
+        {
+          "ar": "الإشراف البشري",
+          "en": "Human oversight",
+          "def": "The role of the human in monitoring the system's decisions, reviewing them, and being able to change them or stop it."
+        },
+        {
+          "ar": "التظلم",
+          "en": "Grievance / appeal",
+          "def": "The affected person's objection to a decision made by the system and their request for it to be reviewed."
+        }
+      ]
+    }
+  }
+}
