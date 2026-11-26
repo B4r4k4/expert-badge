@@ -27,6 +27,8 @@
 @media print{ .mq-exp{display:block!important} }
 @media (max-width:1000px){ .reader{grid-template-columns:minmax(0,1fr)} .toc,.prose{min-width:0} }
 .prose{overflow-wrap:anywhere}
+.prose table{overflow-wrap:normal}
+.prose td:first-child{min-width:9em}
 
 /* beginner layer: plain idea, example, definitions, then the exam detail */
 .simple{background:var(--paper-2);border-radius:18px;padding:20px 24px;margin:0 0 16px}
